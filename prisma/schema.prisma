@@ -8,13 +8,14 @@ datasource db {
 }
 
 model Restaurant {
-  id          String             @id @default(cuid())
-  name        String
-  slug        String             @unique
-  phone       String?
-  address     String?
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  id              String             @id @default(cuid())
+  name            String
+  slug            String             @unique
+  restaurantEmail String @default("")
+  phone           String?
+  address         String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
   tables      RestaurantTable[]
   categories  Category[]
   menuItems   MenuItem[]

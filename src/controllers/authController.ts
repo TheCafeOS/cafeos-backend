@@ -3,29 +3,72 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/prisma.js';
 
+const generateSlug = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'restaurant';
+
+const buildUniqueSlug = async (restaurantName: string) => {
+  const baseSlug = generateSlug(restaurantName);
+  let slug = baseSlug;
+  let suffix = 1;
+
+  while (await prisma.restaurant.findUnique({ where: { slug } })) {
+    slug = `${baseSlug}-${suffix}`;
+    suffix += 1;
+  }
+
+  return slug;
+};
+
 export const register = async (req: Request, res: Response) => {
   try {
-    const { restaurantName, slug, ownerName, email, password, phone, address } = req.body;
+    const {
+      restaurantName,
+      restaurantEmail,
+      restaurantPhone,
+      address,
+      ownerName,
+      ownerEmail,
+      password,
+    } = req.body;
 
-    if (!restaurantName || !slug || !ownerName || !email || !password) {
-      return res.status(400).json({ message: 'Missing required fields' });
+    if (!restaurantName || !restaurantEmail || !restaurantPhone || !address || !ownerName || !ownerEmail || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields',
+      });
     }
 
-    const existingEmployee = await prisma.employee.findUnique({ where: { email } });
+    const normalizedRestaurantEmail = String(restaurantEmail).trim().toLowerCase();
+    const normalizedOwnerEmail = String(ownerEmail).trim().toLowerCase();
+
+    const existingEmployee = await prisma.employee.findUnique({
+      where: { email: normalizedOwnerEmail },
+    });
+
     if (existingEmployee) {
-      return res.status(409).json({ message: 'Email already registered' });
+      return res.status(409).json({
+        success: false,
+        message: 'An account with this owner email already exists.',
+      });
     }
+
+    const slug = await buildUniqueSlug(restaurantName);
 
     const restaurant = await prisma.restaurant.create({
       data: {
         name: restaurantName,
         slug,
-        phone,
+        restaurantEmail: normalizedRestaurantEmail,
+        phone: restaurantPhone,
         address,
         employees: {
           create: {
             name: ownerName,
-            email,
+            email: normalizedOwnerEmail,
             passwordHash: await bcrypt.hash(password, 10),
             role: 'OWNER',
           },
@@ -34,22 +77,36 @@ export const register = async (req: Request, res: Response) => {
     });
 
     const employee = await prisma.employee.findFirst({
-      where: { restaurantId: restaurant.id, email },
+      where: { restaurantId: restaurant.id, email: normalizedOwnerEmail },
       select: { id: true, restaurantId: true, email: true, role: true },
     });
 
-    const token = jwt.sign({ sub: employee?.id }, process.env.JWT_SECRET as string, {
+    if (!employee) {
+      return res.status(500).json({
+        success: false,
+        message: 'Registration failed',
+      });
+    }
+
+    const token = jwt.sign({ sub: employee.id }, process.env.JWT_SECRET as string, {
       expiresIn: '7d',
     });
 
     return res.status(201).json({
-      token,
-      employee,
-      restaurant,
+      success: true,
+      message: 'Restaurant registered successfully.',
+      data: {
+        token,
+        employee,
+        restaurant,
+      },
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: 'Registration failed' });
+    return res.status(500).json({
+      success: false,
+      message: 'Registration failed',
+    });
   }
 };
 
