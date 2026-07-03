@@ -17,6 +17,7 @@ import { initializeSocket } from "./lib/socket.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { successResponse } from "./utils/apiResponse.js";
 import { errorResponse } from "./utils/apiResponse.js";
+import { apiLimiter } from "./middleware/rateLimiter.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -31,9 +32,22 @@ app.use(
   }),
 );
 
+app.use(apiLimiter);
+
 app.use(morgan("dev"));
 
-app.use(express.json());
+app.use(
+  express.json({
+    limit: "1mb",
+  }),
+);
+
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: "1mb",
+  }),
+);
 
 initializeSocket(httpServer);
 
