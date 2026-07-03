@@ -15,7 +15,8 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 
 import { initializeSocket } from "./lib/socket.js";
 import { errorHandler } from "./middleware/errorHandler.js";
-
+import { successResponse } from "./utils/apiResponse.js";
+import { errorResponse } from "./utils/apiResponse.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -37,12 +38,13 @@ app.use(express.json());
 initializeSocket(httpServer);
 
 app.get("/health", (_req, res) => {
-  return res.json({
-    success: true,
-    status: "ok",
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-  });
+  return res.json(
+    successResponse("CafeOS API is healthy", {
+      status: "ok",
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+    }),
+  );
 });
 
 app.use("/auth", authRoutes);
@@ -57,10 +59,9 @@ app.use("/dashboard", dashboardRoutes);
  * 404 Handler
  */
 app.use((_req, res) => {
-  return res.status(404).json({
-    success: false,
-    message: "Route not found",
-  });
+  return res
+  .status(404)
+  .json(errorResponse("Route not found"));
 });
 
 /**
