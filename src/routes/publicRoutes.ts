@@ -4,7 +4,7 @@ import { getPublicMenu, createPublicOrder, getPublicOrder } from '../controllers
 const router = Router();
 
 router.get('/menu/:qrToken', getPublicMenu);
-router.post('/orders', createPublicOrder);
+router.post("/orders/:qrToken", createPublicOrder);
 router.get('/orders/:qrToken/:orderId', getPublicOrder);
 
 export default router;
