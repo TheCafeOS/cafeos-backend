@@ -11,6 +11,7 @@ import menuRoutes from './routes/menuRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import publicRoutes from './routes/publicRoutes.js';
 import { initializeSocket } from './lib/socket.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
 
 dotenv.config();
 
@@ -36,6 +37,7 @@ app.use('/tables', tableRoutes);
 app.use('/categories', categoryRoutes);
 app.use('/menu', menuRoutes);
 app.use('/orders', orderRoutes);
+app.use('/dashboard', dashboardRoutes);
 
 if (process.env.NODE_ENV !== 'test') {
   httpServer.listen(port, () => {
