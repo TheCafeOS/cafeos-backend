@@ -1,99 +1,71 @@
-import { Response } from 'express';
-import { prisma } from '../lib/prisma.js';
-import { AuthenticatedRequest } from '../middleware/auth.js';
+import { Response } from "express";
+import { AuthenticatedRequest } from "../middleware/auth.js";
+import * as menuService from "../services/menu.service.js";
 
-export const listMenuItems = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const menuItems = await prisma.menuItem.findMany({
-      where: { restaurantId: req.employee?.restaurantId },
-      include: { category: true },
-      orderBy: { createdAt: 'asc' },
-    });
+export const listMenuItems = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const menuItems = await menuService.getMenuItems(
+    req.employee!.restaurantId,
+  );
 
-    return res.json(menuItems);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Failed to fetch menu items' });
-  }
+  return res.json(menuItems);
 };
 
-export const createMenuItem = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const { name, description, price, categoryId, imageUrl, isAvailable } = req.body;
+export const createMenuItem = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const menuItem = await menuService.addMenuItem(
+    req.employee!.restaurantId,
+    req.body,
+  );
 
-    if (!name || !price) {
-      return res.status(400).json({ message: 'Menu item name and price are required' });
-    }
-
-    const menuItem = await prisma.menuItem.create({
-      data: {
-        restaurantId: req.employee?.restaurantId as string,
-        name,
-        description,
-        price,
-        categoryId,
-        imageUrl,
-        isAvailable: isAvailable ?? true,
-      },
-    });
-
-    return res.status(201).json(menuItem);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Failed to create menu item' });
-  }
+  return res.status(201).json(menuItem);
 };
 
-export const updateMenuItem = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const { name, description, price, categoryId, imageUrl, isAvailable } = req.body;
+export const updateMenuItem = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const id = Array.isArray(req.params.id)
+    ? req.params.id[0]
+    : req.params.id;
 
-    const updated = await prisma.menuItem.updateMany({
-      where: {
-        id,
-        restaurantId: req.employee?.restaurantId,
-      },
-      data: {
-        name,
-        description,
-        price,
-        categoryId,
-        imageUrl,
-        isAvailable,
-      },
+  const menuItem = await menuService.editMenuItem(
+    req.employee!.restaurantId,
+    id,
+    req.body,
+  );
+
+  if (!menuItem) {
+    return res.status(404).json({
+      message: "Menu item not found",
     });
-
-    if (updated.count === 0) {
-      return res.status(404).json({ message: 'Menu item not found' });
-    }
-
-    const menuItem = await prisma.menuItem.findUnique({ where: { id } });
-    return res.json(menuItem);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Failed to update menu item' });
   }
+
+  return res.json(menuItem);
 };
 
-export const deleteMenuItem = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+export const deleteMenuItem = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const id = Array.isArray(req.params.id)
+    ? req.params.id[0]
+    : req.params.id;
 
-    const deleted = await prisma.menuItem.deleteMany({
-      where: {
-        id,
-        restaurantId: req.employee?.restaurantId,
-      },
+  const deleted = await menuService.removeMenuItem(
+    req.employee!.restaurantId,
+    id,
+  );
+
+  if (!deleted) {
+    return res.status(404).json({
+      message: "Menu item not found",
     });
-
-    if (deleted.count === 0) {
-      return res.status(404).json({ message: 'Menu item not found' });
-    }
-
-    return res.status(204).send();
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Failed to delete menu item' });
   }
+
+  return res.sendStatus(204);
 };
