@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/prisma.js';
+import { env } from "../config/env.js";
 
 export interface AuthenticatedRequest extends Request {
   employee?: {
@@ -25,7 +26,7 @@ export const requireAuth = async (
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
+    const decoded = jwt.verify(token, env.JWT_SECRET) as {
       sub: string;
     };
 

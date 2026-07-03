@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/prisma.js';
+import { env } from "../config/env.js";
 
 const generateSlug = (value: string) =>
   value
@@ -88,7 +89,7 @@ export const register = async (req: Request, res: Response) => {
       });
     }
 
-    const token = jwt.sign({ sub: employee.id }, process.env.JWT_SECRET as string, {
+    const token = jwt.sign({ sub: employee.id }, env.JWT_SECRET, {
       expiresIn: '7d',
     });
 
@@ -128,7 +129,7 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ sub: employee.id }, process.env.JWT_SECRET as string, {
+    const token = jwt.sign({ sub: employee.id }, env.JWT_SECRET, {
       expiresIn: '7d',
     });
 

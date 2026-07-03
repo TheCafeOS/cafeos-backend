@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import helmet from "helmet";
-import dotenv from "dotenv";
+import { env } from "./config/env.js";
 import { createServer } from "http";
 
 import authRoutes from "./routes/authRoutes.js";
@@ -16,18 +16,17 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 import { initializeSocket } from "./lib/socket.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
-dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
 
-const port = Number(process.env.PORT) || 4000;
+const port = env.PORT;
 
 app.use(helmet());
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "*",
+    origin: env.CORS_ORIGIN,
   }),
 );
 
@@ -69,7 +68,7 @@ app.use((_req, res) => {
  */
 app.use(errorHandler);
 
-if (process.env.NODE_ENV !== "test") {
+if (env.NODE_ENV !== "test") {
   httpServer.listen(port, () => {
     console.log(`🚀 CafeOS Backend running on port ${port}`);
   });
