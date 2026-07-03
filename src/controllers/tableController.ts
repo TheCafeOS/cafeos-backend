@@ -28,7 +28,7 @@ export const createTable = async (req: AuthenticatedRequest, res: Response) => {
       data: {
         restaurantId: req.employee?.restaurantId as string,
         name,
-        qrCode: `https://cafeos.app/qr/${Math.random().toString(36).slice(2, 10)}`,
+        qrCode: `/qr/${Math.random().toString(36).slice(2, 10)}`,
       },
     });
 

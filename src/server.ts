@@ -8,6 +8,7 @@ import tableRoutes from './routes/tableRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
 import menuRoutes from './routes/menuRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
+import publicRoutes from './routes/publicRoutes.js';
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.get('/health', (_req, res) => {
 });
 
 app.use('/auth', authRoutes);
+app.use('/public', publicRoutes);
 app.use('/tables', tableRoutes);
 app.use('/categories', categoryRoutes);
 app.use('/menu', menuRoutes);
