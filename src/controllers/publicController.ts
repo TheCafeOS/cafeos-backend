@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma.js';
+import { broadcastOrderEvent } from '../lib/socket.js';
 
 export const getPublicMenu = async (req: Request, res: Response) => {
   try {
@@ -152,6 +153,16 @@ export const createPublicOrder = async (req: Request, res: Response) => {
           },
         },
       },
+    });
+
+    // Broadcast ORDER_CREATED event
+    broadcastOrderEvent(order.restaurantId, order.tableId, 'ORDER_CREATED', {
+      orderId: order.id,
+      status: order.status,
+      total: order.total,
+      itemCount: items.length,
+      customerPhone: order.customerPhone,
+      timestamp: order.createdAt,
     });
 
     return res.status(201).json({

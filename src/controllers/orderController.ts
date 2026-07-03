@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { AuthenticatedRequest } from '../middleware/auth.js';
+import { broadcastOrderEvent } from '../lib/socket.js';
 
 export const createOrder = async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -50,6 +51,16 @@ export const createOrder = async (req: AuthenticatedRequest, res: Response) => {
           })),
         },
       },
+    });
+
+    // Broadcast ORDER_CREATED event
+    broadcastOrderEvent(restaurantId, tableId, 'ORDER_CREATED', {
+      orderId: order.id,
+      status: order.status,
+      total: order.total,
+      itemCount: items.length,
+      customerPhone: order.customerPhone,
+      timestamp: order.createdAt,
     });
 
     return res.status(201).json(order);
@@ -102,19 +113,30 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const { status } = req.body;
 
-    const order = await prisma.order.updateMany({
+    // Fetch order before update to get tableId and restaurantId
+    const existingOrder = await prisma.order.findFirst({
       where: {
         id,
         restaurantId: req.employee?.restaurantId,
       },
-      data: { status },
     });
 
-    if (order.count === 0) {
+    if (!existingOrder) {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    const updatedOrder = await prisma.order.findUnique({ where: { id } });
+    const updatedOrder = await prisma.order.update({
+      where: { id },
+      data: { status },
+    });
+
+    // Broadcast ORDER_UPDATED event
+    broadcastOrderEvent(updatedOrder.restaurantId, updatedOrder.tableId, 'ORDER_UPDATED', {
+      orderId: updatedOrder.id,
+      status: updatedOrder.status,
+      timestamp: updatedOrder.updatedAt,
+    });
+
     return res.json(updatedOrder);
   } catch (error) {
     console.error(error);
