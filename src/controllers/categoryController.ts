@@ -1,86 +1,71 @@
-import { Response } from 'express';
-import { prisma } from '../lib/prisma.js';
-import { AuthenticatedRequest } from '../middleware/auth.js';
+import { Response } from "express";
+import { AuthenticatedRequest } from "../middleware/auth.js";
+import * as categoryService from "../services/category.service.js";
 
-export const listCategories = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const categories = await prisma.category.findMany({
-      where: { restaurantId: req.employee?.restaurantId },
-      orderBy: { createdAt: 'asc' },
-    });
+export const listCategories = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const categories = await categoryService.getCategories(
+    req.employee!.restaurantId,
+  );
 
-    return res.json(categories);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Failed to fetch categories' });
-  }
+  return res.json(categories);
 };
 
-export const createCategory = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const { name } = req.body;
+export const createCategory = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const category = await categoryService.addCategory(
+    req.employee!.restaurantId,
+    req.body.name,
+  );
 
-    if (!name) {
-      return res.status(400).json({ message: 'Category name is required' });
-    }
-
-    const category = await prisma.category.create({
-      data: {
-        restaurantId: req.employee?.restaurantId as string,
-        name,
-      },
-    });
-
-    return res.status(201).json(category);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Failed to create category' });
-  }
+  return res.status(201).json(category);
 };
 
-export const updateCategory = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const { name } = req.body;
+export const updateCategory = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const id = Array.isArray(req.params.id)
+    ? req.params.id[0]
+    : req.params.id;
 
-    const updated = await prisma.category.updateMany({
-      where: {
-        id,
-        restaurantId: req.employee?.restaurantId,
-      },
-      data: { name },
+  const category = await categoryService.editCategory(
+    req.employee!.restaurantId,
+    id,
+    req.body.name,
+  );
+
+  if (!category) {
+    return res.status(404).json({
+      message: "Category not found",
     });
-
-    if (updated.count === 0) {
-      return res.status(404).json({ message: 'Category not found' });
-    }
-
-    const category = await prisma.category.findUnique({ where: { id } });
-    return res.json(category);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Failed to update category' });
   }
+
+  return res.json(category);
 };
 
-export const deleteCategory = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+export const deleteCategory = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const id = Array.isArray(req.params.id)
+    ? req.params.id[0]
+    : req.params.id;
 
-    const deleted = await prisma.category.deleteMany({
-      where: {
-        id,
-        restaurantId: req.employee?.restaurantId,
-      },
+  const deleted = await categoryService.removeCategory(
+    req.employee!.restaurantId,
+    id,
+  );
+
+  if (!deleted) {
+    return res.status(404).json({
+      message: "Category not found",
     });
-
-    if (deleted.count === 0) {
-      return res.status(404).json({ message: 'Category not found' });
-    }
-
-    return res.status(204).send();
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Failed to delete category' });
   }
+
+  return res.sendStatus(204);
 };

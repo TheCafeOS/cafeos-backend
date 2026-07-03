@@ -1,90 +1,79 @@
-import { Request, Response } from 'express';
-import { prisma } from '../lib/prisma.js';
-import { AuthenticatedRequest } from '../middleware/auth.js';
+import { Response } from "express";
+import { AuthenticatedRequest } from "../middleware/auth.js";
+import * as tableService from "../services/table.service.js";
 
-export const listTables = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const tables = await prisma.restaurantTable.findMany({
-      where: { restaurantId: req.employee?.restaurantId },
-      orderBy: { createdAt: 'asc' },
-    });
+export const listTables = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const tables = await tableService.getTables(
+    req.employee!.restaurantId,
+  );
 
-    return res.json(tables);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Failed to fetch tables' });
-  }
+  return res.json(tables);
 };
 
-export const createTable = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const { name } = req.body;
+export const createTable = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const { name } = req.body;
 
-    if (!name) {
-      return res.status(400).json({ message: 'Table name is required' });
-    }
-
-    const table = await prisma.restaurantTable.create({
-      data: {
-        restaurantId: req.employee?.restaurantId as string,
-        name,
-        qrCode: `/qr/${Math.random().toString(36).slice(2, 10)}`,
-      },
+  if (!name) {
+    return res.status(400).json({
+      message: "Table name is required",
     });
-
-    return res.status(201).json(table);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Failed to create table' });
   }
+
+  const table = await tableService.addTable(
+    req.employee!.restaurantId,
+    name,
+  );
+
+  return res.status(201).json(table);
 };
 
-export const updateTable = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const { name, status } = req.body;
+export const updateTable = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const id = Array.isArray(req.params.id)
+    ? req.params.id[0]
+    : req.params.id;
 
-    const table = await prisma.restaurantTable.updateMany({
-      where: {
-        id,
-        restaurantId: req.employee?.restaurantId,
-      },
-      data: {
-        name,
-        status,
-      },
+  const table = await tableService.editTable(
+    req.employee!.restaurantId,
+    id,
+    req.body,
+  );
+
+  if (!table) {
+    return res.status(404).json({
+      message: "Table not found",
     });
-
-    if (table.count === 0) {
-      return res.status(404).json({ message: 'Table not found' });
-    }
-
-    const updated = await prisma.restaurantTable.findUnique({ where: { id } });
-    return res.json(updated);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Failed to update table' });
   }
+
+  return res.json(table);
 };
 
-export const deleteTable = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+export const deleteTable = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const id = Array.isArray(req.params.id)
+    ? req.params.id[0]
+    : req.params.id;
 
-    const deleted = await prisma.restaurantTable.deleteMany({
-      where: {
-        id,
-        restaurantId: req.employee?.restaurantId,
-      },
+  const deleted = await tableService.removeTable(
+    req.employee!.restaurantId,
+    id,
+  );
+
+  if (!deleted) {
+    return res.status(404).json({
+      message: "Table not found",
     });
-
-    if (deleted.count === 0) {
-      return res.status(404).json({ message: 'Table not found' });
-    }
-
-    return res.status(204).send();
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Failed to delete table' });
   }
+
+  return res.sendStatus(204);
 };
