@@ -4,8 +4,9 @@ import { AuthenticatedRequest } from "../middleware/auth.js";
 import * as orderService from "../services/order.service.js";
 
 import { successResponse } from "../utils/apiResponse.js";
-import { getRouteParam } from "../utils/request.js";
 import { getPaginationParams } from "../utils/pagination.js";
+import { getRouteParam } from "../utils/request.js";
+import { OrderStatus } from "../utils/orderStatus.js";
 
 export const createOrder = async (
   req: AuthenticatedRequest,
@@ -37,17 +38,23 @@ export const listOrders = async (
     req.query.limit as string | undefined,
   );
 
-  const result =
+  const orders =
     await orderService.getRestaurantOrders(
       req.employee!.restaurantId,
       page,
       limit,
+      {
+        status: req.query.status as OrderStatus | undefined,
+        tableId: req.query.tableId as string | undefined,
+        from: req.query.from as Date | undefined,
+        to: req.query.to as Date | undefined,
+      },
     );
 
   return res.json(
     successResponse(
       "Orders fetched successfully",
-      result,
+      orders,
     ),
   );
 };
@@ -77,11 +84,12 @@ export const updateOrderStatus = async (
 ) => {
   const orderId = getRouteParam(req.params.id);
 
-  const order = await orderService.updateOrderStatus(
-    req.employee!.restaurantId,
-    orderId,
-    req.body.status,
-  );
+  const order =
+    await orderService.updateOrderStatus(
+      req.employee!.restaurantId,
+      orderId,
+      req.body.status,
+    );
 
   return res.json(
     successResponse(

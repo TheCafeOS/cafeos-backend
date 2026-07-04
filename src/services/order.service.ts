@@ -12,6 +12,13 @@ type OrderItemInput = {
   quantity: number;
 };
 
+type OrderFilters = {
+  status?: OrderStatus;
+  tableId?: string;
+  from?: Date;
+  to?: Date;
+};
+
 const orderWithRelations = Prisma.validator<Prisma.OrderInclude>()({
   table: {
     select: {
@@ -170,27 +177,54 @@ export const getRestaurantOrders = async (
   restaurantId: string,
   page: number,
   limit: number,
+  filters: OrderFilters,
 ) => {
   const skip = (page - 1) * limit;
 
-  const [orders, totalItems] = await prisma.$transaction([
-    prisma.order.findMany({
-      where: {
-        restaurantId,
-      },
-      include: orderWithRelations,
-      orderBy: {
-        createdAt: "desc",
-      },
-      skip,
-      take: limit,
-    }),
-    prisma.order.count({
-      where: {
-        restaurantId,
-      },
-    }),
-  ]);
+  const where: Prisma.OrderWhereInput = {
+    restaurantId,
+  };
+
+  if (filters.status) {
+    where.status = filters.status;
+  }
+
+  if (filters.tableId) {
+    where.tableId = filters.tableId;
+  }
+
+  if (filters.from || filters.to) {
+    where.createdAt = {};
+
+    if (filters.from) {
+      where.createdAt.gte = filters.from;
+    }
+
+    if (filters.to) {
+      where.createdAt.lte = filters.to;
+    }
+  }
+
+  const [orders, totalItems] =
+    await prisma.$transaction([
+      prisma.order.findMany({
+        where,
+        include: orderWithRelations,
+        orderBy: {
+          createdAt: "desc",
+        },
+        skip,
+        take: limit,
+      }),
+
+      prisma.order.count({
+        where,
+      }),
+    ]);
+
+  const totalPages = Math.ceil(
+    totalItems / limit,
+  );
 
   return {
     orders,
@@ -198,8 +232,8 @@ export const getRestaurantOrders = async (
       page,
       limit,
       totalItems,
-      totalPages: Math.ceil(totalItems / limit),
-      hasNextPage: page < Math.ceil(totalItems / limit),
+      totalPages,
+      hasNextPage: page < totalPages,
       hasPreviousPage: page > 1,
     },
   };

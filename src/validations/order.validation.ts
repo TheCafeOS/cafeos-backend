@@ -43,9 +43,37 @@ export const updateOrderStatusSchema = z.object({
 });
 
 export const listOrdersSchema = z.object({
-  query: z.object({
-    page: z.coerce.number().int().min(1).optional(),
+  query: z
+    .object({
+      page: z.coerce.number().int().min(1).optional(),
 
-    limit: z.coerce.number().int().min(1).max(100).optional(),
-  }),
+      limit: z.coerce.number().int().min(1).max(100).optional(),
+
+      status: z
+        .enum([
+          ORDER_STATUS.PENDING,
+          ORDER_STATUS.CONFIRMED,
+          ORDER_STATUS.PREPARING,
+          ORDER_STATUS.READY,
+          ORDER_STATUS.COMPLETED,
+          ORDER_STATUS.CANCELLED,
+        ])
+        .optional(),
+
+      tableId: z.string().optional(),
+
+      from: z.coerce.date().optional(),
+
+      to: z.coerce.date().optional(),
+    })
+    .refine(
+      (query) =>
+        !query.from ||
+        !query.to ||
+        query.from <= query.to,
+      {
+        message: "Invalid date range.",
+        path: ["from"],
+      },
+    ),
 });
