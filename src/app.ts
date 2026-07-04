@@ -105,13 +105,15 @@ app.use(
 /**
  * Routes
  */
-app.use("/auth", authRoutes);
-app.use("/public", publicRoutes);
-app.use("/tables", tableRoutes);
-app.use("/categories", categoryRoutes);
-app.use("/menu", menuRoutes);
-app.use("/orders", orderRoutes);
-app.use("/dashboard", dashboardRoutes);
+const API_PREFIX = "/api/v1";
+
+app.use(`${API_PREFIX}/auth`, authRoutes);
+app.use(`${API_PREFIX}/public`, publicRoutes);
+app.use(`${API_PREFIX}/tables`, tableRoutes);
+app.use(`${API_PREFIX}/categories`, categoryRoutes);
+app.use(`${API_PREFIX}/menu`, menuRoutes);
+app.use(`${API_PREFIX}/orders`, orderRoutes);
+app.use(`${API_PREFIX}/dashboard`, dashboardRoutes);
 
 /**
  * 404
