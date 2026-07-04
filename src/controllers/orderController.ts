@@ -5,6 +5,7 @@ import * as orderService from "../services/order.service.js";
 
 import { successResponse } from "../utils/apiResponse.js";
 import { getRouteParam } from "../utils/request.js";
+import { getPaginationParams } from "../utils/pagination.js";
 
 export const createOrder = async (
   req: AuthenticatedRequest,
@@ -31,14 +32,22 @@ export const listOrders = async (
   req: AuthenticatedRequest,
   res: Response,
 ) => {
-  const orders = await orderService.getRestaurantOrders(
-    req.employee!.restaurantId,
+  const { page, limit } = getPaginationParams(
+    req.query.page as string | undefined,
+    req.query.limit as string | undefined,
   );
+
+  const result =
+    await orderService.getRestaurantOrders(
+      req.employee!.restaurantId,
+      page,
+      limit,
+    );
 
   return res.json(
     successResponse(
       "Orders fetched successfully",
-      orders,
+      result,
     ),
   );
 };

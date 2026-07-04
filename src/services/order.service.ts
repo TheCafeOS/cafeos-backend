@@ -168,16 +168,41 @@ async function createOrderForTable(
 
 export const getRestaurantOrders = async (
   restaurantId: string,
+  page: number,
+  limit: number,
 ) => {
-  return prisma.order.findMany({
-    where: {
-      restaurantId,
+  const skip = (page - 1) * limit;
+
+  const [orders, totalItems] = await prisma.$transaction([
+    prisma.order.findMany({
+      where: {
+        restaurantId,
+      },
+      include: orderWithRelations,
+      orderBy: {
+        createdAt: "desc",
+      },
+      skip,
+      take: limit,
+    }),
+    prisma.order.count({
+      where: {
+        restaurantId,
+      },
+    }),
+  ]);
+
+  return {
+    orders,
+    pagination: {
+      page,
+      limit,
+      totalItems,
+      totalPages: Math.ceil(totalItems / limit),
+      hasNextPage: page < Math.ceil(totalItems / limit),
+      hasPreviousPage: page > 1,
     },
-    include: orderWithRelations,
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  };
 };
 
 export const getRestaurantOrder = async (
