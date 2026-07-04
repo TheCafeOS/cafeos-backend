@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 import { broadcastOrderEvent } from "../lib/socket.js";
+import { AppError } from "../utils/AppError.js";
 
 type OrderItemInput = {
   menuItemId: string;
@@ -20,7 +21,7 @@ export const createRestaurantOrder = async (
   });
 
   if (!table) {
-    throw new Error("TABLE_NOT_FOUND");
+    throw new AppError("Table not found", 404);
   }
 
   return createOrderForTable(
@@ -43,11 +44,11 @@ export const createPublicOrder = async (
   });
 
   if (!table) {
-    throw new Error("INVALID_QR");
+    throw new AppError("Invalid QR code", 404);
   }
 
   if (table.status === "INACTIVE") {
-    throw new Error("TABLE_INACTIVE");
+    throw new AppError("This table is inactive", 403);
   }
 
   return createOrderForTable(
@@ -65,12 +66,12 @@ async function createOrderForTable(
   items: OrderItemInput[],
 ) {
   if (!items.length) {
-    throw new Error("EMPTY_ORDER");
+    throw new AppError("Items are required", 400);
   }
 
   for (const item of items) {
     if (item.quantity < 1) {
-      throw new Error("INVALID_QUANTITY");
+      throw new AppError("Quantity must be at least 1", 400);
     }
   }
 
@@ -84,18 +85,23 @@ async function createOrderForTable(
     },
   });
 
+  const menuItemMap = new Map(
+    menuItems.map((item) => [item.id, item]),
+  );
+
   if (menuItems.length !== items.length) {
-    throw new Error("INVALID_MENU_ITEMS");
+    throw new AppError(
+      "One or more menu items are invalid",
+      400,
+    );
   }
 
   const total = items.reduce((sum, item) => {
-    const menuItem = menuItems.find(
-      (m) => m.id === item.menuItemId,
-    );
+    const menuItem = menuItemMap.get(item.menuItemId)!;
 
     return (
       sum +
-      Number(menuItem!.price) * item.quantity
+      Number(menuItem.price) * item.quantity
     );
   }, 0);
 
@@ -110,9 +116,7 @@ async function createOrderForTable(
           menuItemId: item.menuItemId,
           quantity: item.quantity,
           price: Number(
-            menuItems.find(
-              (m) => m.id === item.menuItemId,
-            )!.price,
+            menuItemMap.get(item.menuItemId)!.price,
           ),
         })),
       },
@@ -184,7 +188,7 @@ export const updateOrderStatus = async (
   });
 
   if (!order) {
-    return null;
+    throw new AppError("Order not found", 404);
   }
 
   const updated = await prisma.order.update({
