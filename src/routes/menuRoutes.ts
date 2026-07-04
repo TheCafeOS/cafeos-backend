@@ -34,7 +34,7 @@ router.post(
   asyncHandler(createMenuItem),
 );
 
-router.put(
+router.patch(
   "/:id",
   requireAuth,
   requireRole("OWNER", "MANAGER"),

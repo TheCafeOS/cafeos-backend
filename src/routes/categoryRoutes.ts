@@ -34,7 +34,7 @@ router.post(
   asyncHandler(createCategory),
 );
 
-router.put(
+router.patch(
   "/:id",
   requireAuth,
   requireRole("OWNER", "MANAGER"),
