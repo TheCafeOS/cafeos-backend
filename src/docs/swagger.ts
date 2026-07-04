@@ -3,17 +3,62 @@ import swaggerJsdoc from "swagger-jsdoc";
 export const swaggerSpec = swaggerJsdoc({
   definition: {
     openapi: "3.0.3",
+
     info: {
       title: "CafeOS API",
       version: "1.0.0",
-      description: "The Operating System for Modern Restaurants",
+      description:
+        "REST API for CafeOS — The Operating System for Modern Restaurants.",
+      contact: {
+        name: "CafeOS",
+      },
+      license: {
+        name: "Proprietary",
+      },
     },
+
     servers: [
       {
-        url: "http://localhost:4000",
-        description: "Development Server",
+        url: "http://localhost:4000/api/v1",
+        description: "Local Development",
       },
     ],
+
+    tags: [
+      {
+        name: "Health",
+        description: "Application health endpoints",
+      },
+      {
+        name: "Authentication",
+        description: "Restaurant and employee authentication",
+      },
+      {
+        name: "Public",
+        description: "Public QR ordering APIs",
+      },
+      {
+        name: "Tables",
+        description: "Restaurant table management",
+      },
+      {
+        name: "Categories",
+        description: "Menu category management",
+      },
+      {
+        name: "Menu",
+        description: "Menu item management",
+      },
+      {
+        name: "Orders",
+        description: "Restaurant order management",
+      },
+      {
+        name: "Dashboard",
+        description: "Restaurant dashboard APIs",
+      },
+    ],
+
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -23,12 +68,14 @@ export const swaggerSpec = swaggerJsdoc({
         },
       },
     },
+
     security: [
       {
         bearerAuth: [],
       },
     ],
   },
+
   apis: [
     "./src/routes/*.ts",
     "./src/controllers/*.ts",
