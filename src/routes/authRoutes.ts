@@ -18,13 +18,14 @@ const router = Router();
  *       - Authentication
  *     summary: Register a new restaurant
  *     description: Creates a restaurant along with its owner account.
+ *     operationId: registerRestaurant
  *     security: []
  *     requestBody:
- *         required: true
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/RegisterRequest'
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RegisterRequest'
  *     responses:
  *       201:
  *         description: Restaurant registered successfully.
@@ -32,20 +33,12 @@ const router = Router();
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/SuccessResponse'
- *
- *        400:
- *         description: Validation failed.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
  *       409:
- *         description: Restaurant or owner already exists.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *         $ref: '#/components/responses/Conflict'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.post(
   "/register",
@@ -61,7 +54,8 @@ router.post(
  *     tags:
  *       - Authentication
  *     summary: Employee login
- *     description: Authenticates an employee and returns a JWT access token.
+ *     description: Authenticates an employee and returns an access token for subsequent authenticated requests.
+ *     operationId: loginEmployee
  *     security: []
  *     requestBody:
  *       required: true
@@ -76,20 +70,12 @@ router.post(
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/SuccessResponse'
- *
  *       400:
- *         description: Validation failed.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *
+ *         $ref: '#/components/responses/ValidationError'
  *       401:
- *         description: Invalid email or password.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
  */
 router.post(
   "/login",

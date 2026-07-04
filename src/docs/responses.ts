@@ -1,31 +1,66 @@
 export const responses = {
-  SuccessResponse: {
-    type: "object",
-    properties: {
-      success: {
-        type: "boolean",
-        example: true,
-      },
-      message: {
-        type: "string",
-        example: "Operation completed successfully.",
-      },
-      data: {
-        type: "object",
+  ValidationError: {
+    description: "Request validation failed.",
+    content: {
+      "application/json": {
+        schema: {
+          $ref: "#/components/schemas/ErrorResponse",
+        },
       },
     },
   },
 
-  ErrorResponse: {
-    type: "object",
-    properties: {
-      success: {
-        type: "boolean",
-        example: false,
+  Unauthorized: {
+    description: "Authentication required.",
+    content: {
+      "application/json": {
+        schema: {
+          $ref: "#/components/schemas/ErrorResponse",
+        },
       },
-      message: {
-        type: "string",
-        example: "Something went wrong.",
+    },
+  },
+
+  Forbidden: {
+    description: "Insufficient permissions.",
+    content: {
+      "application/json": {
+        schema: {
+          $ref: "#/components/schemas/ErrorResponse",
+        },
+      },
+    },
+  },
+
+  NotFound: {
+    description: "Resource not found.",
+    content: {
+      "application/json": {
+        schema: {
+          $ref: "#/components/schemas/ErrorResponse",
+        },
+      },
+    },
+  },
+
+  Conflict: {
+    description: "Resource conflict.",
+    content: {
+      "application/json": {
+        schema: {
+          $ref: "#/components/schemas/ErrorResponse",
+        },
+      },
+    },
+  },
+
+  InternalServerError: {
+    description: "Internal server error.",
+    content: {
+      "application/json": {
+        schema: {
+          $ref: "#/components/schemas/ErrorResponse",
+        },
       },
     },
   },
