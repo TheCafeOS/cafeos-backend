@@ -1,4 +1,5 @@
 import swaggerJsdoc from "swagger-jsdoc";
+import { components } from "./index.js";
 
 export const swaggerSpec = swaggerJsdoc({
   definition: {
@@ -60,6 +61,8 @@ export const swaggerSpec = swaggerJsdoc({
     ],
 
     components: {
+      ...components,
+
       securitySchemes: {
         bearerAuth: {
           type: "http",
