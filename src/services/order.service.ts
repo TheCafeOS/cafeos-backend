@@ -1,7 +1,10 @@
 import { prisma } from "../lib/prisma.js";
 import { broadcastOrderEvent } from "../lib/socket.js";
 import { AppError } from "../utils/AppError.js";
-import type { OrderStatus } from "../utils/orderStatus.js";
+import {
+  OrderStatus,
+  canTransitionOrderStatus,
+} from "../utils/orderStatus.js";
 
 type OrderItemInput = {
   menuItemId: string;
@@ -198,6 +201,15 @@ export const updateOrderStatus = async (
     throw new AppError("Order not found", 404);
   }
 
+  const currentStatus = order.status as OrderStatus;
+
+  if (!canTransitionOrderStatus(currentStatus, status)) {
+    throw new AppError(
+      "Invalid order status transition.",
+      409,
+    );
+  }
+
   const updated = await prisma.order.update({
     where: {
       id: orderId,
@@ -219,4 +231,4 @@ export const updateOrderStatus = async (
   );
 
   return updated;
-}
+};
