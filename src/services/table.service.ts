@@ -15,7 +15,7 @@ export const addTable = async (
     data: {
       restaurantId,
       name,
-      qrCode: `/qr/${crypto.randomUUID()}`,
+      qrCode: crypto.randomUUID(),
     },
   });
 };

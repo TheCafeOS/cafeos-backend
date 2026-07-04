@@ -17,7 +17,7 @@ export const getPublicMenu = async (
       });
     }
 
-    const table = await prisma.restaurantTable.findFirst({
+    const table = await prisma.restaurantTable.findUnique({
       where: {
         qrCode: `/qr/${qrToken}`,
       },
@@ -173,7 +173,7 @@ export const getPublicOrder = async (
     ? req.params.orderId[0]
     : req.params.orderId;
 
-    const table = await prisma.restaurantTable.findFirst({
+    const table = await prisma.restaurantTable.findUnique({
       where: {
         qrCode: `/qr/${qrToken}`,
       },
