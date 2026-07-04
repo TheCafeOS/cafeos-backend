@@ -48,7 +48,16 @@ export const listOrders = async (
         tableId: req.query.tableId as string | undefined,
         from: req.query.from as Date | undefined,
         to: req.query.to as Date | undefined,
-      },
+        sort: req.query.sort as
+          | "createdAt"
+          | "status"
+          | "total"
+          | undefined,
+        order: req.query.order as
+          | "asc"
+          | "desc"
+          | undefined,
+      }
     );
 
   return res.json(

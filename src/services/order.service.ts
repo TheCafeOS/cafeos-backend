@@ -17,6 +17,8 @@ type OrderFilters = {
   tableId?: string;
   from?: Date;
   to?: Date;
+  sort?: "createdAt" | "status" | "total";
+  order?: "asc" | "desc";
 };
 
 const orderWithRelations = Prisma.validator<Prisma.OrderInclude>()({
@@ -185,6 +187,11 @@ export const getRestaurantOrders = async (
     restaurantId,
   };
 
+  const orderBy: Prisma.OrderOrderByWithRelationInput = {
+    [filters.sort ?? "createdAt"]:
+      filters.order ?? "desc",
+  };
+
   if (filters.status) {
     where.status = filters.status;
   }
@@ -210,9 +217,7 @@ export const getRestaurantOrders = async (
       prisma.order.findMany({
         where,
         include: orderWithRelations,
-        orderBy: {
-          createdAt: "desc",
-        },
+        orderBy,
         skip,
         take: limit,
       }),

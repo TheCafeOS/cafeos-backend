@@ -65,6 +65,21 @@ export const listOrdersSchema = z.object({
       from: z.coerce.date().optional(),
 
       to: z.coerce.date().optional(),
+
+      sort: z
+        .enum([
+          "createdAt",
+          "status",
+          "total",
+        ])
+        .optional(),
+
+      order: z
+        .enum([
+          "asc",
+          "desc",
+        ])
+        .optional(),
     })
     .refine(
       (query) =>
