@@ -1,6 +1,7 @@
 import { prisma } from "../lib/prisma.js";
 import { broadcastOrderEvent } from "../lib/socket.js";
 import { AppError } from "../utils/AppError.js";
+import type { OrderStatus } from "../utils/orderStatus.js";
 
 type OrderItemInput = {
   menuItemId: string;
@@ -184,7 +185,7 @@ export const getRestaurantOrder = async (
 export const updateOrderStatus = async (
   restaurantId: string,
   orderId: string,
-  status: string,
+  status: OrderStatus,
 ) => {
   const order = await prisma.order.findFirst({
     where: {

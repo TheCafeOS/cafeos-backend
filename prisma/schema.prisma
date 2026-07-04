@@ -3,94 +3,95 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 model Restaurant {
-  id              String             @id @default(cuid())
+  id              String            @id @default(cuid())
   name            String
-  slug            String             @unique
-  restaurantEmail String @default("")
+  slug            String            @unique
   phone           String?
   address         String?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  tables      RestaurantTable[]
-  categories  Category[]
-  menuItems   MenuItem[]
-  employees   Employee[]
-  orders      Order[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  restaurantEmail String            @default("")
+  categories      Category[]
+  employees       Employee[]
+  menuItems       MenuItem[]
+  orders          Order[]
+  tables          RestaurantTable[]
 }
 
 model Employee {
   id           String     @id @default(cuid())
   restaurantId String
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   name         String
   email        String     @unique
   passwordHash String
   role         String     @default("OWNER")
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 }
 
 model RestaurantTable {
-  id            String      @id @default(cuid())
-  restaurantId  String
-  restaurant    Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  name          String
-  qrCode        String      @unique @default(uuid())
-  status        String      @default("AVAILABLE")
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  orders        Order[]
+  id           String     @id @default(cuid())
+  restaurantId String
+  name         String
+  qrCode       String     @unique @default(uuid())
+  status       String     @default("AVAILABLE")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  orders       Order[]
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@index([restaurantId])
 }
 
 model Category {
-  id            String      @id @default(cuid())
-  restaurantId  String
-  restaurant    Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  name          String
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  menuItems     MenuItem[]
+  id           String     @id @default(cuid())
+  restaurantId String
+  name         String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  menuItems    MenuItem[]
 
   @@index([restaurantId])
 }
 
 model MenuItem {
-  id            String      @id @default(cuid())
-  restaurantId  String
-  restaurant    Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  categoryId    String?
-  category      Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  name          String
-  description   String?
-  price         Decimal     @db.Decimal(10, 2)
-  isAvailable   Boolean     @default(true)
-  imageUrl      String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  orderItems    OrderItem[]
+  id           String      @id @default(cuid())
+  restaurantId String
+  categoryId   String?
+  name         String
+  description  String?
+  price        Decimal     @db.Decimal(10, 2)
+  isAvailable  Boolean     @default(true)
+  imageUrl     String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  category     Category?   @relation(fields: [categoryId], references: [id])
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  orderItems   OrderItem[]
 
   @@index([restaurantId])
   @@index([categoryId])
 }
 
 model Order {
-  id            String      @id @default(cuid())
+  id            String          @id @default(cuid())
   restaurantId  String
-  restaurant    Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   tableId       String
-  table         RestaurantTable @relation(fields: [tableId], references: [id], onDelete: Restrict)
   customerPhone String?
-  status        String      @default("PENDING")
-  total         Decimal     @db.Decimal(10, 2)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  status        String          @default("PENDING")
+  total         Decimal         @db.Decimal(10, 2)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  restaurant    Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  table         RestaurantTable @relation(fields: [tableId], references: [id])
   items         OrderItem[]
 
   @@index([restaurantId])
@@ -98,13 +99,13 @@ model Order {
 }
 
 model OrderItem {
-  id            String      @id @default(cuid())
-  orderId       String
-  order         Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  menuItemId    String
-  menuItem      MenuItem    @relation(fields: [menuItemId], references: [id], onDelete: Restrict)
-  quantity      Int
-  price         Decimal     @db.Decimal(10, 2)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id         String   @id @default(cuid())
+  orderId    String
+  menuItemId String
+  quantity   Int
+  price      Decimal  @db.Decimal(10, 2)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
