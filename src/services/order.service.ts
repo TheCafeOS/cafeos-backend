@@ -5,11 +5,32 @@ import {
   OrderStatus,
   canTransitionOrderStatus,
 } from "../utils/orderStatus.js";
+import { Prisma } from "@prisma/client";
 
 type OrderItemInput = {
   menuItemId: string;
   quantity: number;
 };
+
+const orderWithRelations = Prisma.validator<Prisma.OrderInclude>()({
+  table: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+  items: {
+    include: {
+      menuItem: {
+        select: {
+          id: true,
+          name: true,
+          imageUrl: true,
+        },
+      },
+    },
+  },
+});
 
 export const createRestaurantOrder = async (
   restaurantId: string,
@@ -125,10 +146,7 @@ async function createOrderForTable(
         })),
       },
     },
-    include: {
-      table: true,
-      items: true,
-    },
+    include: orderWithRelations,
   });
 
   broadcastOrderEvent(
@@ -155,9 +173,7 @@ export const getRestaurantOrders = async (
     where: {
       restaurantId,
     },
-    include: {
-      items: true,
-    },
+    include: orderWithRelations,
     orderBy: {
       createdAt: "desc",
     },
@@ -173,9 +189,7 @@ export const getRestaurantOrder = async (
       id: orderId,
       restaurantId,
     },
-    include: {
-      items: true,
-    },
+    include: orderWithRelations,
   });
 
   if (!order) {
@@ -217,6 +231,7 @@ export const updateOrderStatus = async (
     data: {
       status,
     },
+    include: orderWithRelations,
   });
 
   broadcastOrderEvent(
