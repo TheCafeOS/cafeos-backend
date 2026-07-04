@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "../utils/AppError.js";
 import { errorResponse } from "../utils/apiResponse.js";
+import { logger } from "../lib/logger.js";
 
 export const errorHandler = (
   err: Error,
@@ -13,6 +14,8 @@ export const errorHandler = (
       .status(err.statusCode)
       .json(errorResponse(err.message));
   }
+
+  logger.error(err);
 
   return res
     .status(500)

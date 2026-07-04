@@ -164,7 +164,7 @@ export const getRestaurantOrder = async (
   restaurantId: string,
   orderId: string,
 ) => {
-  return prisma.order.findFirst({
+  const order = await prisma.order.findFirst({
     where: {
       id: orderId,
       restaurantId,
@@ -173,6 +173,12 @@ export const getRestaurantOrder = async (
       items: true,
     },
   });
+
+  if (!order) {
+    throw new AppError("Order not found", 404);
+  }
+
+  return order;
 };
 
 export const updateOrderStatus = async (

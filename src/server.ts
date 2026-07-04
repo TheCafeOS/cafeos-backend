@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
-import morgan from "morgan";
+import pinoHttp from "pino-http";
+import { logger } from "./lib/logger.js";
 import helmet from "helmet";
 import { createServer } from "http";
 
@@ -72,7 +73,11 @@ app.use(
 /**
  * Logging
  */
-app.use(morgan("dev"));
+app.use(
+  pinoHttp({
+    logger,
+  }),
+);
 
 /**
  * Health Check
@@ -117,7 +122,9 @@ app.use(errorHandler);
  */
 if (env.NODE_ENV !== "test") {
   httpServer.listen(env.PORT, () => {
-    console.log(`🚀 CafeOS Backend running on port ${env.PORT}`);
+    logger.info(
+      `🚀 CafeOS Backend running on port ${env.PORT}`,
+    );
   });
 }
 

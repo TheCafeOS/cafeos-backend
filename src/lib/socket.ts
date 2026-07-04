@@ -1,31 +1,52 @@
-import { Server as HTTPServer } from 'http';
-import { Server, Socket } from 'socket.io';
+import { Server as HTTPServer } from "http";
+import { Server, Socket } from "socket.io";
+
+import { env } from "../config/env.js";
+import { logger } from "./logger.js";
 
 let io: Server;
 
 export const initializeSocket = (httpServer: HTTPServer) => {
   io = new Server(httpServer, {
     cors: {
-      origin: process.env.CORS_ORIGIN || '*',
-      methods: ['GET', 'POST'],
+      origin: env.CORS_ORIGIN.split(",").map(origin => origin.trim()),
+      methods: ["GET", "POST"],
     },
   });
 
   io.on('connection', (socket: Socket) => {
-    console.log(`Client connected: ${socket.id}`);
+    logger.info(
+      { socketId: socket.id },
+      "Client connected",
+    );
 
     socket.on('join_table', (tableId: string) => {
       socket.join(`table_${tableId}`);
-      console.log(`Socket ${socket.id} joined table_${tableId}`);
+      logger.info(
+        {
+          socketId: socket.id,
+          tableId,
+        },
+        "Joined table room",
+      );
     });
 
     socket.on('leave_table', (tableId: string) => {
       socket.leave(`table_${tableId}`);
-      console.log(`Socket ${socket.id} left table_${tableId}`);
+      logger.info(
+        {
+          socketId: socket.id,
+          tableId,
+        },
+        "Left table room",
+      );
     });
 
     socket.on('disconnect', () => {
-      console.log(`Client disconnected: ${socket.id}`);
+      logger.info(
+        { socketId: socket.id },
+        "Client disconnected",
+      );
     });
   });
 
@@ -43,7 +64,7 @@ export const broadcastOrderEvent = (
   restaurantId: string,
   tableId: string,
   event: string,
-  data: any
+  data: Record<string, unknown>
 ) => {
   io.to(`restaurant_${restaurantId}`).emit(event, {
     tableId,
