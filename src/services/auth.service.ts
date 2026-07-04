@@ -52,18 +52,6 @@ export const authService = {
       password,
     } = data;
 
-    if (
-      !restaurantName ||
-      !restaurantEmail ||
-      !restaurantPhone ||
-      !address ||
-      !ownerName ||
-      !ownerEmail ||
-      !password
-    ) {
-      throw new AppError("Missing required fields", 400);
-    }
-
     const normalizedRestaurantEmail = restaurantEmail.trim().toLowerCase();
     const normalizedOwnerEmail = ownerEmail.trim().toLowerCase();
 
@@ -127,13 +115,6 @@ export const authService = {
     password: string;
   }) {
     const { email, password } = data;
-
-    if (!email || !password) {
-      throw new AppError(
-        "Email and password are required",
-        400,
-      );
-    }
 
     const employee = await prisma.employee.findUnique({
       where: { email: email.toLowerCase() },
