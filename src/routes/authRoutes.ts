@@ -20,21 +20,32 @@ const router = Router();
  *     description: Creates a restaurant along with its owner account.
  *     security: []
  *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           example:
- *             restaurantName: CafeOS Demo
- *             ownerName: John Doe
- *             email: owner@example.com
- *             password: StrongPassword123!
+ *         required: true
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RegisterRequest'
  *     responses:
  *       201:
  *         description: Restaurant registered successfully.
- *       400:
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *
+ *        400:
  *         description: Validation failed.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
  *       409:
- *         description: Restaurant or email already exists.
+ *         description: Restaurant or owner already exists.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post(
   "/register",
@@ -56,16 +67,29 @@ router.post(
  *       required: true
  *       content:
  *         application/json:
- *           example:
- *             email: owner@example.com
- *             password: StrongPassword123!
+ *           schema:
+ *             $ref: '#/components/schemas/LoginRequest'
  *     responses:
  *       200:
  *         description: Login successful.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *
  *       400:
  *         description: Validation failed.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
  *       401:
- *         description: Invalid credentials.
+ *         description: Invalid email or password.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post(
   "/login",
