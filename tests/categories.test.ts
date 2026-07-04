@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
-import app from '../src/server.js';
+import app from "../src/app.js";
 
 describe('categories routes', () => {
   it('requires authentication for category listing', async () => {
