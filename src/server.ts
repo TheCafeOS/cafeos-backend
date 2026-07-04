@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import pinoHttp from "pino-http";
+import { pinoHttp } from "pino-http";
 import { logger } from "./lib/logger.js";
 import helmet from "helmet";
 import { createServer } from "http";
@@ -19,6 +19,8 @@ import { initializeSocket } from "./lib/socket.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { apiLimiter } from "./middleware/rateLimiter.js";
 import { successResponse, errorResponse } from "./utils/apiResponse.js";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./docs/swagger.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -91,6 +93,12 @@ app.get("/health", (_req, res) => {
     }),
   );
 });
+
+app.use(
+  "/api/docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec),
+);
 
 /**
  * Routes
