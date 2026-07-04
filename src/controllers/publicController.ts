@@ -41,7 +41,7 @@ export const createPublicOrder = async (
         id: order.id,
         status: order.status,
         total: order.total,
-        table: order.table.name,
+        table: order.table?.name ?? null,
         createdAt: order.createdAt,
       },
     ),

@@ -6,6 +6,7 @@ import {
   canTransitionOrderStatus,
 } from "../utils/orderStatus.js";
 import { Prisma } from "@prisma/client";
+import { toOrderResponse } from "../utils/order.mapper.js";
 
 type OrderItemInput = {
   menuItemId: string;
@@ -172,7 +173,7 @@ async function createOrderForTable(
     },
   );
 
-  return order;
+  return toOrderResponse(order);
 }
 
 export const getRestaurantOrders = async (
@@ -232,7 +233,7 @@ export const getRestaurantOrders = async (
   );
 
   return {
-    orders,
+    orders: orders.map(toOrderResponse),
     pagination: {
       page,
       limit,
@@ -260,7 +261,7 @@ export const getRestaurantOrder = async (
     throw new AppError("Order not found", 404);
   }
 
-  return order;
+  return toOrderResponse(order);
 };
 
 export const updateOrderStatus = async (
@@ -309,5 +310,5 @@ export const updateOrderStatus = async (
     },
   );
 
-  return updated;
+  return toOrderResponse(updated);
 };
