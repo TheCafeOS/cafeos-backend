@@ -2,8 +2,9 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import helmet from "helmet";
-import { env } from "./config/env.js";
 import { createServer } from "http";
+
+import { env } from "./config/env.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import tableRoutes from "./routes/tableRoutes.js";
@@ -15,27 +16,46 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 
 import { initializeSocket } from "./lib/socket.js";
 import { errorHandler } from "./middleware/errorHandler.js";
-import { successResponse } from "./utils/apiResponse.js";
-import { errorResponse } from "./utils/apiResponse.js";
 import { apiLimiter } from "./middleware/rateLimiter.js";
+import { successResponse, errorResponse } from "./utils/apiResponse.js";
 
 const app = express();
 const httpServer = createServer(app);
 
-const port = env.PORT;
+initializeSocket(httpServer);
 
-app.use(helmet());
+/**
+ * Express Configuration
+ */
+app.disable("x-powered-by");
+app.set("trust proxy", 1);
 
+/**
+ * Security
+ */
 app.use(
-  cors({
-    origin: env.CORS_ORIGIN,
+  helmet({
+    crossOriginResourcePolicy: {
+      policy: "cross-origin",
+    },
   }),
 );
 
+app.use(
+  cors({
+    origin: env.CORS_ORIGIN.split(",").map((origin) => origin.trim()),
+    credentials: true,
+  }),
+);
+
+/**
+ * Rate Limiting
+ */
 app.use(apiLimiter);
 
-app.use(morgan("dev"));
-
+/**
+ * Body Parsers
+ */
 app.use(
   express.json({
     limit: "1mb",
@@ -49,8 +69,14 @@ app.use(
   }),
 );
 
-initializeSocket(httpServer);
+/**
+ * Logging
+ */
+app.use(morgan("dev"));
 
+/**
+ * Health Check
+ */
 app.get("/health", (_req, res) => {
   return res.json(
     successResponse("CafeOS API is healthy", {
@@ -61,6 +87,9 @@ app.get("/health", (_req, res) => {
   );
 });
 
+/**
+ * Routes
+ */
 app.use("/auth", authRoutes);
 app.use("/public", publicRoutes);
 app.use("/tables", tableRoutes);
@@ -74,8 +103,8 @@ app.use("/dashboard", dashboardRoutes);
  */
 app.use((_req, res) => {
   return res
-  .status(404)
-  .json(errorResponse("Route not found"));
+    .status(404)
+    .json(errorResponse("Route not found"));
 });
 
 /**
@@ -83,9 +112,12 @@ app.use((_req, res) => {
  */
 app.use(errorHandler);
 
+/**
+ * Server
+ */
 if (env.NODE_ENV !== "test") {
-  httpServer.listen(port, () => {
-    console.log(`🚀 CafeOS Backend running on port ${port}`);
+  httpServer.listen(env.PORT, () => {
+    console.log(`🚀 CafeOS Backend running on port ${env.PORT}`);
   });
 }
 
