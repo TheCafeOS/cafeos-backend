@@ -78,6 +78,5 @@ export const swaggerSpec = swaggerJsdoc({
 
   apis: [
     "./src/routes/*.ts",
-    "./src/controllers/*.ts",
   ],
 });
