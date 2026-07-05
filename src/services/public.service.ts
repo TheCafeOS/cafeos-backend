@@ -8,7 +8,7 @@ export const getMenu = async (qrToken: string) => {
 
   const table = await prisma.restaurantTable.findUnique({
     where: {
-      qrCode: `/qr/${qrToken}`,
+      qrCode: qrToken,
     },
     include: {
       restaurant: true,
@@ -68,6 +68,7 @@ export const getMenu = async (qrToken: string) => {
       description: item.description,
       price: item.price,
       imageUrl: item.imageUrl,
+      isAvailable: item.isAvailable,
       categoryId: item.categoryId,
       category: item.category
         ? {
@@ -89,7 +90,7 @@ export const getOrder = async (
 
   const table = await prisma.restaurantTable.findUnique({
     where: {
-      qrCode: `/qr/${qrToken}`,
+      qrCode: qrToken,
     },
   });
 

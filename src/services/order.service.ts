@@ -74,7 +74,7 @@ export const createPublicOrder = async (
 ) => {
   const table = await prisma.restaurantTable.findFirst({
     where: {
-      qrCode: `/qr/${qrToken}`,
+      qrCode: qrToken,
     },
   });
 
