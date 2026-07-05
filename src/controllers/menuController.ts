@@ -79,3 +79,25 @@ export const deleteMenuItem = async (
     ),
   );
 };
+
+export const uploadMenuItemImage = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const id = Array.isArray(req.params.id)
+    ? req.params.id[0]
+    : req.params.id;
+
+  const menuItem = await menuService.uploadMenuImage(
+    req.employee!.restaurantId,
+    id,
+    req.file,
+  );
+
+  return res.json(
+    successResponse(
+      "Menu image uploaded successfully",
+      menuItem,
+    ),
+  );
+};

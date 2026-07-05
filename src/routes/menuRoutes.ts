@@ -17,6 +17,8 @@ import {
   createMenuItemSchema,
   updateMenuItemSchema,
 } from "../validations/menu.validation.js";
+import { uploadMenuImage } from "../middleware/upload.js";
+import { uploadMenuItemImage } from "../controllers/menuController.js";
 
 const router = Router();
 
@@ -40,6 +42,14 @@ router.patch(
   requireRole("OWNER", "MANAGER"),
   validate(updateMenuItemSchema),
   asyncHandler(updateMenuItem),
+);
+
+router.post(
+  "/:id/image",
+  requireAuth,
+  requireRole("OWNER", "MANAGER"),
+  uploadMenuImage.single("image"),
+  asyncHandler(uploadMenuItemImage),
 );
 
 router.delete(
