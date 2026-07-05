@@ -23,6 +23,7 @@ import {
   successResponse,
   errorResponse,
 } from "./utils/apiResponse.js";
+import { requestId } from "./middleware/requestId.js";
 
 const app = express();
 
@@ -71,12 +72,30 @@ app.use(
   }),
 );
 
+app.use(requestId);
+
 /**
  * Logging
  */
 app.use(
   pinoHttp({
     logger,
+
+    customProps: (req) => ({
+      requestId: req.requestId,
+    }),
+
+    customLogLevel: (_req, res, err) => {
+      if (err || res.statusCode >= 500) {
+        return "error";
+      }
+
+      if (res.statusCode >= 400) {
+        return "warn";
+      }
+
+      return "info";
+    },
   }),
 );
 
