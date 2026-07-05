@@ -1,11 +1,19 @@
 import { Router } from "express";
-import { login, register } from "../controllers/authController.js";
+
+import {
+  login,
+  refresh,
+  register,
+} from "../controllers/authController.js";
+
 import { authLimiter } from "../middleware/rateLimiter.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { validate } from "../middleware/validate.js";
+
 import {
   loginSchema,
   registerSchema,
+  refreshSchema,
 } from "../validations/auth.validation.js";
 
 const router = Router();
@@ -82,6 +90,13 @@ router.post(
   authLimiter,
   validate(loginSchema),
   asyncHandler(login),
+);
+
+router.post(
+  "/refresh",
+  authLimiter,
+  validate(refreshSchema),
+  asyncHandler(refresh),
 );
 
 export default router;

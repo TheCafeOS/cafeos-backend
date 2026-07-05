@@ -65,3 +65,9 @@ export const loginSchema = z.object({
 
   query: z.object({}),
 });
+
+export const refreshSchema = z.object({
+  body: z.object({
+    refreshToken: z.string().min(1),
+  }),
+});

@@ -26,6 +26,8 @@ const envSchema = z.object({
     .string()
     .default("*"),
 
+  JWT_REFRESH_SECRET: z.string().min(32),
+
   PUBLIC_APP_URL: z.string().url(),
 
   CLOUDINARY_CLOUD_NAME: z.string().optional(),

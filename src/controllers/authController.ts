@@ -30,3 +30,20 @@ export const login = async (
     ),
   );
 };
+
+export const refresh = async (
+  req: Request,
+  res: Response,
+) => {
+  const result =
+    await authService.refresh(
+      req.body.refreshToken,
+    );
+
+  return res.json(
+    successResponse(
+      "Access token refreshed.",
+      result,
+    ),
+  );
+};

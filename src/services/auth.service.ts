@@ -1,7 +1,11 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "../lib/prisma.js";
 import { AppError } from "../utils/AppError.js";
-import { generateAccessToken } from "../utils/jwt.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+} from "../utils/jwt.js";
 
 const generateSlug = (value: string): string =>
   value
@@ -95,7 +99,8 @@ export const authService = {
     }
 
     return {
-      token: generateAccessToken(employee.id),
+      accessToken: generateAccessToken(employee.id),
+      refreshToken: generateRefreshToken(employee.id),
       employee,
       restaurant,
     };
@@ -125,7 +130,8 @@ export const authService = {
     }
 
     return {
-      token: generateAccessToken(employee.id),
+      accessToken: generateAccessToken(employee.id),
+      refreshToken: generateRefreshToken(employee.id),
       employee: {
         id: employee.id,
         restaurantId: employee.restaurantId,
@@ -134,4 +140,31 @@ export const authService = {
       },
     };
   },
+
+    async refresh(refreshToken: string) {
+    let payload;
+
+    try {
+      payload = verifyRefreshToken(refreshToken);
+    } catch {
+      throw new AppError("Invalid refresh token", 401);
+    }
+
+    const employee = await prisma.employee.findUnique({
+      where: {
+        id: payload.sub,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!employee) {
+      throw new AppError("Invalid refresh token", 401);
+    }
+
+    return {
+      accessToken: generateAccessToken(employee.id),
+    };
+  }
 };
