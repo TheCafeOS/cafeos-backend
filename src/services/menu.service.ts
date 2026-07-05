@@ -132,24 +132,45 @@ export const uploadMenuImage = async (
     throw new AppError("Menu item not found.", 404);
   }
 
-  if (menuItem.imagePublicId) {
-    await cloudinary.uploader.destroy(
-      menuItem.imagePublicId,
-    );
-  }
-
+  // 1. Upload the new image first
   const uploaded = await uploadBuffer(
     file.buffer,
     restaurantId,
   );
 
-  return prisma.menuItem.update({
-    where: {
-      id: menuItemId,
-    },
-    data: {
-      imageUrl: uploaded.secure_url,
-      imagePublicId: uploaded.public_id,
-    },
-  });
+  let updatedMenuItem;
+
+  try {
+    // 2. Update the database
+    updatedMenuItem = await prisma.menuItem.update({
+      where: {
+        id: menuItemId,
+      },
+      data: {
+        imageUrl: uploaded.secure_url,
+        imagePublicId: uploaded.public_id,
+      },
+    });
+  } catch (error) {
+    // Roll back the newly uploaded image if DB update fails
+    await cloudinary.uploader
+      .destroy(uploaded.public_id)
+      .catch(() => {});
+
+    throw error;
+  }
+
+  // 3. Delete the previous image (best effort)
+  if (menuItem.imagePublicId) {
+    cloudinary.uploader
+      .destroy(menuItem.imagePublicId)
+      .catch((error) => {
+        console.error(
+          "Failed to delete previous Cloudinary image:",
+          error,
+        );
+      });
+  }
+
+  return updatedMenuItem;
 };
