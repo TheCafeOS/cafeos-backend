@@ -1,4 +1,6 @@
 import { prisma } from "../lib/prisma.js";
+import QRCode from "qrcode";
+import { AppError } from "../utils/AppError.js";
 
 export const getTables = async (restaurantId: string) => {
   return prisma.restaurantTable.findMany({
@@ -58,3 +60,29 @@ export const removeTable = async (
 
   return deleted.count > 0;
 };
+
+export async function generateTableQr(
+  restaurantId: string,
+  tableId: string
+): Promise<Buffer> {
+  const table = await prisma.restaurantTable.findFirst({
+    where: {
+      id: tableId,
+      restaurantId,
+    },
+    select: {
+      qrCode: true,
+    },
+  });
+
+  if (!table) {
+    throw new AppError("Table not found", 404);
+  }
+
+  return QRCode.toBuffer(table.qrCode, {
+    type: "png",
+    errorCorrectionLevel: "M",
+    margin: 2,
+    width: 512,
+  });
+}

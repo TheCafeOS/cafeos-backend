@@ -26,6 +26,8 @@ const envSchema = z.object({
     .string()
     .default("*"),
 
+  PUBLIC_APP_URL: z.string().url(),
+
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
 
   CLOUDINARY_API_KEY: z.string().optional(),

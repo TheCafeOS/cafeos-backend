@@ -3,6 +3,7 @@ import { Router } from "express";
 import {
   createTable,
   deleteTable,
+  downloadQr,
   listTables,
   updateTable,
 } from "../controllers/tableController.js";
@@ -43,6 +44,12 @@ router.delete(
   requireAuth,
   requireRole("OWNER"),
   asyncHandler(deleteTable),
+);
+
+router.get(
+  "/:id/qr",
+  requireAuth,
+  asyncHandler(downloadQr),
 );
 
 export default router;

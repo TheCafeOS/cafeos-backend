@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { AuthenticatedRequest } from "../middleware/auth.js";
 import * as tableService from "../services/table.service.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const listTables = async (
   req: AuthenticatedRequest,
@@ -76,4 +77,30 @@ export const deleteTable = async (
   }
 
   return res.sendStatus(204);
+};
+
+export const downloadQr = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const id = Array.isArray(req.params.id)
+    ? req.params.id[0]
+    : req.params.id;
+
+  const png = await tableService.generateTableQr(
+    req.employee!.restaurantId,
+    id,
+  );
+
+  res.setHeader(
+    "Content-Type",
+    "image/png",
+  );
+
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="table-${id}.png"`,
+  );
+
+  res.send(png);
 };
