@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { AuthenticatedRequest } from "../middleware/auth.js";
 import * as menuService from "../services/menu.service.js";
+import { successResponse } from "../utils/apiResponse.js";
 
 export const listMenuItems = async (
   req: AuthenticatedRequest,
@@ -10,7 +11,12 @@ export const listMenuItems = async (
     req.employee!.restaurantId,
   );
 
-  return res.json(menuItems);
+  return res.json(
+    successResponse(
+      "Menu items fetched successfully",
+      menuItems,
+    ),
+  );
 };
 
 export const createMenuItem = async (
@@ -22,7 +28,12 @@ export const createMenuItem = async (
     req.body,
   );
 
-  return res.status(201).json(menuItem);
+  return res.status(201).json(
+    successResponse(
+      "Menu item created successfully",
+      menuItem,
+    ),
+  );
 };
 
 export const updateMenuItem = async (
@@ -39,13 +50,12 @@ export const updateMenuItem = async (
     req.body,
   );
 
-  if (!menuItem) {
-    return res.status(404).json({
-      message: "Menu item not found",
-    });
-  }
-
-  return res.json(menuItem);
+  return res.json(
+    successResponse(
+      "Menu item updated successfully",
+      menuItem,
+    ),
+  );
 };
 
 export const deleteMenuItem = async (
@@ -61,11 +71,11 @@ export const deleteMenuItem = async (
     id,
   );
 
-  if (!deleted) {
-    return res.status(404).json({
-      message: "Menu item not found",
-    });
-  }
 
-  return res.sendStatus(204);
+  return res.json(
+    successResponse(
+      "Menu item deleted successfully",
+      null,
+    ),
+  );
 };

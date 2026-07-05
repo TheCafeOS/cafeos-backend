@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma.js";
+import { AppError } from "../utils/AppError.js";
 
 export const getMenuItems = async (restaurantId: string) => {
   return prisma.menuItem.findMany({
@@ -53,7 +54,7 @@ export const editMenuItem = async (
   });
 
   if (updated.count === 0) {
-    return null;
+    throw new AppError("Menu item not found", 404);
   }
 
   return prisma.menuItem.findUnique({
@@ -74,5 +75,7 @@ export const removeMenuItem = async (
     },
   });
 
-  return deleted.count > 0;
+  if (deleted.count === 0) {
+    throw new AppError("Menu item not found", 404);
+  }
 };
