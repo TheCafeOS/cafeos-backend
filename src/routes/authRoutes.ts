@@ -40,7 +40,7 @@ const router = Router();
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SuccessResponse'
+ *               $ref: '#/components/schemas/RegisterResponse'
  *       400:
  *         $ref: '#/components/responses/ValidationError'
  *       409:
@@ -62,7 +62,7 @@ router.post(
  *     tags:
  *       - Authentication
  *     summary: Employee login
- *     description: Authenticates an employee and returns an access token for subsequent authenticated requests.
+ *     description: Authenticates an employee and returns an access token and refresh token for subsequent authenticated requests.
  *     operationId: loginEmployee
  *     security: []
  *     requestBody:
@@ -77,7 +77,7 @@ router.post(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/SuccessResponse'
+ *               $ref: '#/components/schemas/LoginResponse'
  *       400:
  *         $ref: '#/components/responses/ValidationError'
  *       401:
@@ -92,6 +92,36 @@ router.post(
   asyncHandler(login),
 );
 
+/**
+ * @swagger
+ * /auth/refresh:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: Refresh access token
+ *     description: Exchanges a valid refresh token for a new access token.
+ *     operationId: refreshAccessToken
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RefreshTokenRequest'
+ *     responses:
+ *       200:
+ *         description: Access token refreshed successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RefreshTokenResponse'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ */
 router.post(
   "/refresh",
   authLimiter,

@@ -63,4 +63,183 @@ export const schemas = {
       },
     },
   },
+
+RefreshTokenRequest: {
+  type: "object",
+  required: ["refreshToken"],
+  properties: {
+    refreshToken: {
+      type: "string",
+      example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    },
+  },
+},
+
+Employee: {
+  type: "object",
+  properties: {
+    id: {
+      type: "string",
+      format: "uuid",
+    },
+    restaurantId: {
+      type: "string",
+      format: "uuid",
+    },
+    email: {
+      type: "string",
+      format: "email",
+      example: "owner@example.com",
+    },
+    role: {
+      type: "string",
+      enum: [
+        "OWNER",
+        "MANAGER",
+        "STAFF",
+      ],
+      example: "OWNER",
+    },
+  },
+},
+
+
+RefreshTokenResponse: {
+  type: "object",
+  properties: {
+    success: {
+      type: "boolean",
+      example: true,
+    },
+    message: {
+      type: "string",
+      example: "Access token refreshed.",
+    },
+    data: {
+      type: "object",
+      properties: {
+        accessToken: {
+          type: "string",
+          description: "JWT access token",
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        },
+      },
+    },
+  },
+},
+
+ErrorResponse: {
+  type: "object",
+  properties: {
+    success: {
+      type: "boolean",
+      example: false,
+    },
+    message: {
+      type: "string",
+      example: "Invalid credentials",
+    },
+    requestId: {
+      type: "string",
+      format: "uuid",
+    },
+  },
+},
+
+Restaurant: {
+  type: "object",
+  properties: {
+    id: {
+      type: "string",
+      format: "uuid",
+    },
+    name: {
+      type: "string",
+      example: "CafeOS Demo",
+    },
+    slug: {
+      type: "string",
+      example: "cafeos-demo",
+    },
+    restaurantEmail: {
+      type: "string",
+      format: "email",
+    },
+    phone: {
+      type: "string",
+      nullable: true,
+    },
+    address: {
+      type: "string",
+      nullable: true,
+    },
+  },
+},
+
+LoginResponse: {
+  type: "object",
+  properties: {
+    success: {
+      type: "boolean",
+      example: true,
+    },
+    message: {
+      type: "string",
+      example: "Login successful.",
+    },
+    data: {
+      type: "object",
+      properties: {
+        accessToken: {
+          type: "string",
+          description: "JWT access token",
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        },
+        refreshToken: {
+          type: "string",
+          description: "JWT refresh token",
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        },
+        employee: {
+          $ref: "#/components/schemas/Employee",
+        },
+      },
+    },
+  },
+},
+
+RegisterResponse: {
+  type: "object",
+  properties: {
+    success: {
+      type: "boolean",
+      example: true,
+    },
+    message: {
+      type: "string",
+      example: "Restaurant registered successfully.",
+    },
+    data: {
+      type: "object",
+      properties: {
+      accessToken: {
+        type: "string",
+        description: "JWT access token",
+        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      },
+        refreshToken: {
+          type: "string",
+          description: "JWT refresh token",
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        },
+        employee: {
+          $ref: "#/components/schemas/Employee",
+        },
+        restaurant: {
+          $ref: "#/components/schemas/Restaurant",
+        },
+      },
+    },
+  },
+},
 };
