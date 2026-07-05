@@ -1,9 +1,7 @@
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-
 import { prisma } from "../lib/prisma.js";
-import { env } from "../config/env.js";
 import { AppError } from "../utils/AppError.js";
+import { generateAccessToken } from "../utils/jwt.js";
 
 const generateSlug = (value: string): string =>
   value
@@ -24,13 +22,6 @@ const buildUniqueSlug = async (restaurantName: string): Promise<string> => {
 
   return slug;
 };
-
-const generateToken = (employeeId: string): string =>
-  jwt.sign(
-    { sub: employeeId },
-    env.JWT_SECRET,
-    { expiresIn: "7d" },
-  );
 
 export const authService = {
   async register(data: {
@@ -104,7 +95,7 @@ export const authService = {
     }
 
     return {
-      token: generateToken(employee.id),
+      token: generateAccessToken(employee.id),
       employee,
       restaurant,
     };
@@ -134,7 +125,7 @@ export const authService = {
     }
 
     return {
-      token: generateToken(employee.id),
+      token: generateAccessToken(employee.id),
       employee: {
         id: employee.id,
         restaurantId: employee.restaurantId,
