@@ -13,6 +13,13 @@ export const createTableSchema = z.object({
 export const updateTableSchema = z.object({
   body: z.object({
     name: z.string().trim().min(1).max(50).optional(),
-    status: z.enum(["AVAILABLE", "OCCUPIED"]).optional(),
+    status: z
+  .enum([
+    "AVAILABLE",
+    "OCCUPIED",
+    "RESERVED",
+    "INACTIVE",
+  ])
+  .optional(),
   }),
 });

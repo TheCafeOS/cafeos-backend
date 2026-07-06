@@ -8,6 +8,13 @@ datasource db {
   directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
+enum TableStatus {
+  AVAILABLE
+  OCCUPIED
+  RESERVED
+  INACTIVE
+}
+
 model Restaurant {
   id              String            @id @default(cuid())
   name            String
@@ -37,15 +44,15 @@ model Employee {
 }
 
 model RestaurantTable {
-  id           String     @id @default(cuid())
+  id           String       @id @default(cuid())
   restaurantId String
   name         String
-  qrCode       String     @unique @default(uuid())
-  status       String     @default("AVAILABLE")
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  qrCode       String       @unique @default(uuid())
+  status       TableStatus  @default(AVAILABLE)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
   orders       Order[]
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant   Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@index([restaurantId])
 }

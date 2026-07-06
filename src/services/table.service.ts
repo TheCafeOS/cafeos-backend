@@ -1,3 +1,4 @@
+import { TableStatus } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import QRCode from "qrcode";
 import { AppError } from "../utils/AppError.js";
@@ -27,7 +28,7 @@ export const editTable = async (
   id: string,
   data: {
     name?: string;
-    status?: string;
+    status?: TableStatus;
   },
 ) => {
   const updated = await prisma.restaurantTable.updateMany({
