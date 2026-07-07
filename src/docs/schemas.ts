@@ -297,4 +297,34 @@ UpdateOrderStatusRequest: {
   },
 },
 
+CreateTableRequest: {
+  type: "object",
+  required: ["name"],
+  properties: {
+    name: {
+      type: "string",
+      example: "Table 1",
+    },
+  },
+},
+
+UpdateTableRequest: {
+  type: "object",
+  properties: {
+    name: {
+      type: "string",
+      example: "VIP Table",
+    },
+    status: {
+      type: "string",
+      enum: [
+        "AVAILABLE",
+        "OCCUPIED",
+        "RESERVED",
+        "INACTIVE",
+      ],
+      example: "AVAILABLE",
+    },
+  },
+},
 };
