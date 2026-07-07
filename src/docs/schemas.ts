@@ -327,4 +327,25 @@ UpdateTableRequest: {
     },
   },
 },
+
+CreateCategoryRequest: {
+  type: "object",
+  required: ["name"],
+  properties: {
+    name: {
+      type: "string",
+      example: "Beverages",
+    },
+  },
+},
+
+UpdateCategoryRequest: {
+  type: "object",
+  properties: {
+    name: {
+      type: "string",
+      example: "Hot Beverages",
+    },
+  },
+},
 };
