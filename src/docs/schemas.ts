@@ -348,4 +348,54 @@ UpdateCategoryRequest: {
     },
   },
 },
+
+CreateMenuItemRequest: {
+  type: "object",
+  required: ["name", "price"],
+  properties: {
+    categoryId: {
+      type: "string",
+      nullable: true,
+      example: "cmf8cat123",
+    },
+    name: {
+      type: "string",
+      example: "Margherita Pizza",
+    },
+    description: {
+      type: "string",
+      example: "Classic cheese pizza",
+    },
+    price: {
+      type: "number",
+      example: 299,
+    },
+    isAvailable: {
+      type: "boolean",
+      example: true,
+    },
+  },
+},
+
+UpdateMenuItemRequest: {
+  type: "object",
+  properties: {
+    categoryId: {
+      type: "string",
+      nullable: true,
+    },
+    name: {
+      type: "string",
+    },
+    description: {
+      type: "string",
+    },
+    price: {
+      type: "number",
+    },
+    isAvailable: {
+      type: "boolean",
+    },
+  },
+},
 };
