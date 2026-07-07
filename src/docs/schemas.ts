@@ -242,4 +242,59 @@ RegisterResponse: {
     },
   },
 },
+
+CreateOrderRequest: {
+  type: "object",
+  required: ["tableId", "items"],
+  properties: {
+    tableId: {
+      type: "string",
+      example: "cmf8abc123xyz",
+    },
+    customerPhone: {
+      type: "string",
+      nullable: true,
+      example: "+919876543210",
+    },
+    items: {
+      type: "array",
+      minItems: 1,
+      items: {
+        type: "object",
+        required: ["menuItemId", "quantity"],
+        properties: {
+          menuItemId: {
+            type: "string",
+            example: "cmf8menu123xyz",
+          },
+          quantity: {
+            type: "integer",
+            minimum: 1,
+            example: 2,
+          },
+        },
+      },
+    },
+  },
+},
+
+UpdateOrderStatusRequest: {
+  type: "object",
+  required: ["status"],
+  properties: {
+    status: {
+      type: "string",
+      enum: [
+        "PENDING",
+        "CONFIRMED",
+        "PREPARING",
+        "READY",
+        "COMPLETED",
+        "CANCELLED",
+      ],
+      example: "CONFIRMED",
+    },
+  },
+},
+
 };
