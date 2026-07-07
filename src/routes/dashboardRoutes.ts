@@ -16,6 +16,30 @@ import { recentOrdersSchema } from "../validations/dashboard.validation.js";
 
 const router = Router();
 
+/**
+ * @swagger
+ * /dashboard/today:
+ *   get:
+ *     tags:
+ *       - Dashboard
+ *     summary: Get today's dashboard statistics
+ *     description: Returns today's revenue, total orders, completed orders and average order value for the authenticated restaurant.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Dashboard statistics fetched successfully.
+ *       401:
+ *         description: Unauthorized.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Forbidden.
+ *       500:
+ *         description: Internal server error.
+ */
 router.get(
   "/today",
   requireAuth,
@@ -23,6 +47,26 @@ router.get(
   asyncHandler(getTodayStats),
 );
 
+/**
+ * @swagger
+ * /dashboard/orders/status:
+ *   get:
+ *     tags:
+ *       - Dashboard
+ *     summary: Get order counts by status
+ *     description: Returns the number of orders grouped by status for the authenticated restaurant.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Order status breakdown fetched successfully.
+ *       401:
+ *         description: Unauthorized.
+ *       403:
+ *         description: Forbidden.
+ *       500:
+ *         description: Internal server error.
+ */
 router.get(
   "/orders/status",
   requireAuth,
@@ -30,6 +74,36 @@ router.get(
   asyncHandler(getOrdersByStatus),
 );
 
+/**
+ * @swagger
+ * /dashboard/orders/recent:
+ *   get:
+ *     tags:
+ *       - Dashboard
+ *     summary: Get recent orders
+ *     description: Returns the most recent orders for the authenticated restaurant.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *           default: 10
+ *         description: Number of recent orders to return.
+ *     responses:
+ *       200:
+ *         description: Recent orders fetched successfully.
+ *       401:
+ *         description: Unauthorized.
+ *       403:
+ *         description: Forbidden.
+ *       500:
+ *         description: Internal server error.
+ */
 router.get(
   "/orders/recent",
   requireAuth,
@@ -38,6 +112,26 @@ router.get(
   asyncHandler(getRecentOrders),
 );
 
+/**
+ * @swagger
+ * /dashboard/summary:
+ *   get:
+ *     tags:
+ *       - Dashboard
+ *     summary: Get dashboard summary
+ *     description: Returns today's statistics, order status breakdown and recent orders for the authenticated restaurant.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Dashboard summary fetched successfully.
+ *       401:
+ *         description: Unauthorized.
+ *       403:
+ *         description: Forbidden.
+ *       500:
+ *         description: Internal server error.
+ */
 router.get(
   "/summary",
   requireAuth,
