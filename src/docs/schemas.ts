@@ -398,4 +398,138 @@ UpdateMenuItemRequest: {
     },
   },
 },
+
+PublicOrderSummary: {
+  type: "object",
+  properties: {
+    id: {
+      type: "string",
+      example: "cmf8abc123xyz",
+    },
+    status: {
+      type: "string",
+      enum: [
+        "PENDING",
+        "CONFIRMED",
+        "PREPARING",
+        "READY",
+        "COMPLETED",
+        "CANCELLED",
+      ],
+    },
+    total: {
+      type: "number",
+      example: 499,
+    },
+    table: {
+      type: "string",
+      nullable: true,
+      example: "Table 5",
+    },
+    createdAt: {
+      type: "string",
+      format: "date-time",
+    },
+  },
+},
+
+PublicOrderSummaryResponse: {
+  type: "object",
+  properties: {
+    success: {
+      type: "boolean",
+      example: true,
+    },
+    message: {
+      type: "string",
+      example: "Order created successfully",
+    },
+    data: {
+      $ref: "#/components/schemas/PublicOrderSummary",
+    },
+  },
+},
+
+PublicOrder: {
+  type: "object",
+  properties: {
+    id: {
+      type: "string",
+    },
+    status: {
+      type: "string",
+      enum: [
+        "PENDING",
+        "CONFIRMED",
+        "PREPARING",
+        "READY",
+        "COMPLETED",
+        "CANCELLED",
+      ],
+    },
+    total: {
+      type: "number",
+    },
+    customerPhone: {
+      type: "string",
+      nullable: true,
+    },
+    createdAt: {
+      type: "string",
+      format: "date-time",
+    },
+    updatedAt: {
+      type: "string",
+      format: "date-time",
+    },
+    items: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+          },
+          quantity: {
+            type: "integer",
+          },
+          price: {
+            type: "number",
+          },
+          menuItem: {
+            type: "object",
+            properties: {
+              id: {
+                type: "string",
+              },
+              name: {
+                type: "string",
+              },
+              price: {
+                type: "number",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+},
+
+PublicOrderResponse: {
+  type: "object",
+  properties: {
+    success: {
+      type: "boolean",
+      example: true,
+    },
+    message: {
+      type: "string",
+      example: "Order fetched successfully",
+    },
+    data: {
+      $ref: "#/components/schemas/PublicOrder",
+    },
+  },
+},
 };
