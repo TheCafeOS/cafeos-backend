@@ -16,6 +16,7 @@ type OrderItemInput = {
 type OrderFilters = {
   status?: OrderStatus;
   tableId?: string;
+  search?: string;
   from?: Date;
   to?: Date;
   sort?: "createdAt" | "status" | "total";
@@ -201,17 +202,32 @@ export const getRestaurantOrders = async (
     where.tableId = filters.tableId;
   }
 
-  if (filters.from || filters.to) {
-    where.createdAt = {};
+  if (filters.search?.trim()) {
+  const search = filters.search.trim();
 
-    if (filters.from) {
-      where.createdAt.gte = filters.from;
-    }
-
-    if (filters.to) {
-      where.createdAt.lte = filters.to;
-    }
-  }
+  where.OR = [
+    {
+      id: {
+        contains: search,
+        mode: "insensitive",
+      },
+    },
+    {
+      customerPhone: {
+        contains: search,
+        mode: "insensitive",
+      },
+    },
+    {
+      table: {
+        name: {
+          contains: search,
+          mode: "insensitive",
+        },
+      },
+    },
+  ];
+}
 
   const [orders, totalItems] =
     await prisma.$transaction([

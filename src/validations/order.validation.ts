@@ -59,6 +59,13 @@ export const listOrdersSchema = z.object({
           ORDER_STATUS.CANCELLED,
         ])
         .optional(),
+      
+       search: z
+      .string()
+      .trim()
+      .min(1)
+      .max(100)
+      .optional(),  
 
       tableId: z.string().optional(),
 

@@ -46,6 +46,7 @@ export const listOrders = async (
       {
         status: req.query.status as OrderStatus | undefined,
         tableId: req.query.tableId as string | undefined,
+        search: req.query.search as string | undefined,
         from: req.query.from as Date | undefined,
         to: req.query.to as Date | undefined,
         sort: req.query.sort as
