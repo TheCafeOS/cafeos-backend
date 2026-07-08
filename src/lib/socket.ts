@@ -9,8 +9,9 @@ let io: Server;
 export const initializeSocket = (httpServer: HTTPServer) => {
   io = new Server(httpServer, {
     cors: {
-      origin: env.CORS_ORIGIN.split(",").map(origin => origin.trim()),
+      origin: env.corsOrigins,
       methods: ["GET", "POST"],
+      credentials: true,
     },
   });
 
