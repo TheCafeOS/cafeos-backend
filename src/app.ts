@@ -46,9 +46,19 @@ app.use(
 
 app.use(
   cors({
-    origin: env.CORS_ORIGIN.split(",").map((origin) => origin.trim()),
+    origin(origin, callback) {
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (env.corsOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
-  }),
+  })
 );
 
 /**
