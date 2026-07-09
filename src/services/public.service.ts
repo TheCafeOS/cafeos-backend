@@ -135,3 +135,20 @@ export const getOrder = async (
     })),
   };
 };
+
+export const getTableIdByQrToken = async (qrToken: string) => {
+  const table = await prisma.restaurantTable.findUnique({
+    where: {
+      qrCode: qrToken,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!table) {
+    throw new AppError("Invalid QR code", 404);
+  }
+
+  return table.id;
+};

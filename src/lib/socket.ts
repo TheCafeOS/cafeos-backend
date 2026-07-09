@@ -3,6 +3,7 @@ import { Server, Socket } from "socket.io";
 
 import { env } from "../config/env.js";
 import { logger } from "./logger.js";
+import { prisma } from "./prisma.js";
 
 let io: Server;
 
@@ -30,6 +31,21 @@ export const initializeSocket = (httpServer: HTTPServer) => {
         },
         "Joined table room",
       );
+    });
+
+    socket.on("join_qr", async (qrToken: string) => {
+      const table = await prisma.restaurantTable.findUnique({
+        where: {
+          qrCode: qrToken,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (!table) return;
+
+      socket.join(`table_${table.id}`);
     });
 
     socket.on('leave_table', (tableId: string) => {
