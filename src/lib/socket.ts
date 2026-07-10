@@ -3,7 +3,9 @@ import { Server, Socket } from "socket.io";
 
 import { env } from "../config/env.js";
 import { logger } from "./logger.js";
-import { prisma } from "./prisma.js";
+import { getTableIdByQrToken } from "../services/public.service.js";
+import { verifyAccessToken } from "../utils/jwt.js";
+import { authService } from "../services/auth.service.js";
 
 let io: Server;
 
@@ -16,7 +18,32 @@ export const initializeSocket = (httpServer: HTTPServer) => {
     },
   });
 
+  io.use(async (socket, next) => {
+    try {
+      const token = socket.handshake.auth?.token;
+
+      if (!token) {
+        return next();
+      }
+
+      const payload = verifyAccessToken(token);
+
+      const employee = await authService.getEmployeeForSocket(payload.sub);
+
+      socket.data.restaurantId = employee.restaurantId;
+
+      next();
+    } catch {
+      next(new Error("Unauthorized"));
+    }
+  });
+
   io.on('connection', (socket: Socket) => {
+    const restaurantId = socket.data.restaurantId;
+
+    if (restaurantId) {
+      socket.join(`restaurant_${restaurantId}`);
+    }
     logger.info(
       { socketId: socket.id },
       "Client connected",
@@ -33,20 +60,14 @@ export const initializeSocket = (httpServer: HTTPServer) => {
       );
     });
 
-    socket.on("join_qr", async (qrToken: string) => {
-      const table = await prisma.restaurantTable.findUnique({
-        where: {
-          qrCode: qrToken,
-        },
-        select: {
-          id: true,
-        },
-      });
-
-      if (!table) return;
-
-      socket.join(`table_${table.id}`);
-    });
+  socket.on("join_qr", async (qrToken: string) => {
+    try {
+      const tableId = await getTableIdByQrToken(qrToken);
+      socket.join(`table_${tableId}`);
+    } catch {
+      // Ignore invalid QR token
+    }
+  });
 
     socket.on('leave_table', (tableId: string) => {
       socket.leave(`table_${tableId}`);

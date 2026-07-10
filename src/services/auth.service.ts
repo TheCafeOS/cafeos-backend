@@ -166,5 +166,22 @@ export const authService = {
     return {
       accessToken: generateAccessToken(employee.id),
     };
+  },
+
+  async getEmployeeForSocket(employeeId: string) {
+  const employee = await prisma.employee.findUnique({
+    where: {
+      id: employeeId,
+    },
+    select: {
+      restaurantId: true,
+    },
+  });
+
+  if (!employee) {
+    throw new AppError("Unauthorized", 401);
   }
+
+  return employee;
+}
 };
