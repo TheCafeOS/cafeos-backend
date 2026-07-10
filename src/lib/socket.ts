@@ -32,6 +32,15 @@ export const initializeSocket = (httpServer: HTTPServer) => {
 
       socket.data.restaurantId = employee.restaurantId;
 
+      logger.info(
+        {
+          socketId: socket.id,
+          employeeId: payload.sub,
+          restaurantId: employee.restaurantId,
+        },
+        "Socket authenticated",
+      );
+
       next();
     } catch {
       next(new Error("Unauthorized"));
@@ -44,6 +53,16 @@ export const initializeSocket = (httpServer: HTTPServer) => {
     if (restaurantId) {
       socket.join(`restaurant_${restaurantId}`);
     }
+
+    logger.info(
+      {
+        socketId: socket.id,
+        restaurantId,
+        rooms: [...socket.rooms],
+      },
+      "Owner joined restaurant room",
+    );
+
     logger.info(
       { socketId: socket.id },
       "Client connected",
@@ -104,9 +123,20 @@ export const broadcastOrderEvent = (
   event: string,
   data: Record<string, unknown>
 ) => {
+  logger.info(
+    {
+      restaurantId,
+      tableId,
+      event,
+      data,
+    },
+    "Broadcasting order event",
+  );
+
   io.to(`restaurant_${restaurantId}`).emit(event, {
     tableId,
     ...data,
   });
+
   io.to(`table_${tableId}`).emit(event, data);
 };
