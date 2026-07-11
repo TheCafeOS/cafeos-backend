@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 
 import { authService } from "../services/auth.service.js";
 import { successResponse } from "../utils/apiResponse.js";
+import { AuthenticatedRequest } from "../middleware/auth.js";
 
 export const register = async (
   req: Request,
@@ -44,6 +45,23 @@ export const refresh = async (
     successResponse(
       "Access token refreshed.",
       result,
+    ),
+  );
+};
+
+export const changePassword = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  await authService.changePassword(
+    req.employee!.id,
+    req.body.currentPassword,
+    req.body.newPassword,
+  );
+
+  return res.json(
+    successResponse(
+      "Password changed successfully",
     ),
   );
 };

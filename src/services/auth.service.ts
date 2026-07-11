@@ -183,5 +183,39 @@ export const authService = {
   }
 
   return employee;
+},
+
+async changePassword(
+  employeeId: string,
+  currentPassword: string,
+  newPassword: string,
+) {
+  const employee = await prisma.employee.findUnique({
+    where: {
+      id: employeeId,
+    },
+  });
+
+  if (!employee) {
+    throw new AppError("Employee not found", 404);
+  }
+
+  const validPassword = await bcrypt.compare(
+    currentPassword,
+    employee.passwordHash,
+  );
+
+  if (!validPassword) {
+    throw new AppError("Current password is incorrect", 401);
+  }
+
+  await prisma.employee.update({
+    where: {
+      id: employeeId,
+    },
+    data: {
+      passwordHash: await bcrypt.hash(newPassword, 10),
+    },
+  });
 }
 };

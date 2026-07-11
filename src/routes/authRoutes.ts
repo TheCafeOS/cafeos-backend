@@ -15,6 +15,9 @@ import {
   registerSchema,
   refreshSchema,
 } from "../validations/auth.validation.js";
+import { changePassword } from "../controllers/authController.js";
+import { changePasswordSchema } from "../validations/auth.validation.js";
+import { requireAuth } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -127,6 +130,60 @@ router.post(
   authLimiter,
   validate(refreshSchema),
   asyncHandler(refresh),
+);
+
+/**
+ * @swagger
+ * /auth/change-password:
+ *   patch:
+ *     tags:
+ *       - Authentication
+ *     summary: Change password
+ *     description: Changes the password of the authenticated employee.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *                 example: OldPassword123
+ *               newPassword:
+ *                 type: string
+ *                 example: NewPassword123
+ *     responses:
+ *       200:
+ *         description: Password changed successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Password changed successfully
+ *       400:
+ *         description: Validation error.
+ *       401:
+ *         description: Unauthorized or current password is incorrect.
+ *       500:
+ *         description: Internal server error.
+ */
+router.patch(
+  "/change-password",
+  requireAuth,
+  validate(changePasswordSchema),
+  asyncHandler(changePassword),
 );
 
 export default router;
