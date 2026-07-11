@@ -1,6 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, NextFunction } from 'express';
 import { verifyAccessToken } from "../utils/jwt.js";
 import { prisma } from '../lib/prisma.js';
+import { AppError } from "../utils/AppError.js";
 
 export interface AuthenticatedRequest extends Request {
   employee?: {
@@ -13,13 +14,13 @@ export interface AuthenticatedRequest extends Request {
 
 export const requireAuth = async (
   req: AuthenticatedRequest,
-  res: Response,
+  _: unknown,
   next: NextFunction,
 ) => {
   const authHeader = req.headers.authorization;
 
-  if (!authHeader?.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Missing or invalid token' });
+  if (!authHeader?.startsWith("Bearer ")) {
+    throw new AppError("Missing or invalid token", 401);
   }
 
   const token = authHeader.split(' ')[1];
@@ -33,12 +34,16 @@ export const requireAuth = async (
     });
 
     if (!employee) {
-      return res.status(401).json({ message: 'Invalid token' });
+      throw new AppError("Invalid token", 401);
     }
 
     req.employee = employee;
     next();
-  } catch {
-    return res.status(401).json({ message: 'Invalid token' });
-  }
+  } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+
+      throw new AppError("Invalid token", 401);
+    }
 };
