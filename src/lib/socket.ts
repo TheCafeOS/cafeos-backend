@@ -32,52 +32,27 @@ export const initializeSocket = (httpServer: HTTPServer) => {
 
       socket.data.restaurantId = employee.restaurantId;
 
-      logger.info(
-        {
-          socketId: socket.id,
-          employeeId: payload.sub,
-          restaurantId: employee.restaurantId,
-        },
-        "Socket authenticated",
-      );
-
       next();
     } catch {
       next(new Error("Unauthorized"));
     }
   });
 
-  io.on('connection', (socket: Socket) => {
-    const restaurantId = socket.data.restaurantId;
+  io.on("connection", (socket: Socket) => {
+  const restaurantId = socket.data.restaurantId;
 
-    if (restaurantId) {
-      socket.join(`restaurant_${restaurantId}`);
-    }
+  if (restaurantId) {
+    socket.join(`restaurant_${restaurantId}`);
+  }
 
-    logger.info(
-      {
-        socketId: socket.id,
-        restaurantId,
-        rooms: [...socket.rooms],
-      },
-      "Owner joined restaurant room",
-    );
+  logger.info(
+    { socketId: socket.id },
+    "Client connected",
+  );
 
-    logger.info(
-      { socketId: socket.id },
-      "Client connected",
-    );
-
-    socket.on('join_table', (tableId: string) => {
-      socket.join(`table_${tableId}`);
-      logger.info(
-        {
-          socketId: socket.id,
-          tableId,
-        },
-        "Joined table room",
-      );
-    });
+  socket.on("join_table", (tableId: string) => {
+    socket.join(`table_${tableId}`);
+  });
 
   socket.on("join_qr", async (qrToken: string) => {
     try {
@@ -88,31 +63,24 @@ export const initializeSocket = (httpServer: HTTPServer) => {
     }
   });
 
-    socket.on('leave_table', (tableId: string) => {
-      socket.leave(`table_${tableId}`);
-      logger.info(
-        {
-          socketId: socket.id,
-          tableId,
-        },
-        "Left table room",
-      );
-    });
-
-    socket.on('disconnect', () => {
-      logger.info(
-        { socketId: socket.id },
-        "Client disconnected",
-      );
-    });
+  socket.on("leave_table", (tableId: string) => {
+    socket.leave(`table_${tableId}`);
   });
+
+  socket.on("disconnect", () => {
+    logger.info(
+      { socketId: socket.id },
+      "Client disconnected",
+    );
+  });
+});
 
   return io;
 };
 
 export const getIO = () => {
   if (!io) {
-    throw new Error('Socket.IO not initialized');
+    throw new Error("Socket.IO not initialized");
   }
   return io;
 };
@@ -121,22 +89,14 @@ export const broadcastOrderEvent = (
   restaurantId: string,
   tableId: string,
   event: string,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
 ) => {
-  logger.info(
-    {
-      restaurantId,
-      tableId,
-      event,
-      data,
-    },
-    "Broadcasting order event",
-  );
+  const socket = getIO();
 
-  io.to(`restaurant_${restaurantId}`).emit(event, {
+  socket.to(`restaurant_${restaurantId}`).emit(event, {
     tableId,
     ...data,
   });
 
-  io.to(`table_${tableId}`).emit(event, data);
+  socket.to(`table_${tableId}`).emit(event, data);
 };
