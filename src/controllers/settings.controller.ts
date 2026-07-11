@@ -1,0 +1,22 @@
+import { Response } from "express";
+
+import { AuthenticatedRequest } from "../middleware/auth.js";
+import * as settingsService from "../services/settings.service.js";
+
+import { successResponse } from "../utils/apiResponse.js";
+
+export const getSettings = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const settings = await settingsService.getSettings(
+    req.employee!.restaurantId,
+  );
+
+  return res.json(
+    successResponse(
+      "Settings fetched successfully",
+      settings,
+    ),
+  );
+};

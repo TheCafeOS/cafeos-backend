@@ -24,6 +24,7 @@ import {
   errorResponse,
 } from "./utils/apiResponse.js";
 import { requestId } from "./middleware/requestId.js";
+import settingsRoutes from "./routes/settings.routes.js";
 
 const app = express();
 
@@ -143,6 +144,7 @@ app.use(`${API_PREFIX}/categories`, categoryRoutes);
 app.use(`${API_PREFIX}/menu`, menuRoutes);
 app.use(`${API_PREFIX}/orders`, orderRoutes);
 app.use(`${API_PREFIX}/dashboard`, dashboardRoutes);
+app.use(`${API_PREFIX}/settings`, settingsRoutes);
 
 /**
  * 404
