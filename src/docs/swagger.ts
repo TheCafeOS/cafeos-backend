@@ -58,6 +58,10 @@ export const swaggerSpec = swaggerJsdoc({
         name: "Dashboard",
         description: "Restaurant dashboard APIs",
       },
+      {
+        name: "Settings",
+        description: "Restaurant settings management",
+      },
     ],
 
     components: {

@@ -532,4 +532,71 @@ PublicOrderResponse: {
     },
   },
 },
+
+ChangePasswordRequest: {
+  type: "object",
+  required: ["currentPassword", "newPassword"],
+  properties: {
+    currentPassword: {
+      type: "string",
+      example: "OldPassword123!",
+    },
+    newPassword: {
+      type: "string",
+      minLength: 12,
+      maxLength: 128,
+      description:
+        "Must contain at least one uppercase letter, one lowercase letter, one number, and one special character.",
+      example: "NewPassword123!",
+    },
+  },
+},
+
+SettingsUpdateRequest: {
+  type: "object",
+  properties: {
+    name: {
+      type: "string",
+      example: "CafeOS Demo",
+    },
+    restaurantEmail: {
+      type: "string",
+      format: "email",
+      example: "contact@cafeos.com",
+    },
+    phone: {
+      type: "string",
+      example: "+91 9876543210",
+    },
+    address: {
+      type: "string",
+      example: "123 Main Street, Dehradun",
+    },
+  },
+},
+
+SettingsResponse: {
+  type: "object",
+  properties: {
+    success: {
+      type: "boolean",
+      example: true,
+    },
+    message: {
+      type: "string",
+      example: "Settings fetched successfully.",
+    },
+    data: {
+      type: "object",
+      properties: {
+        restaurant: {
+          $ref: "#/components/schemas/Restaurant",
+        },
+        owner: {
+          $ref: "#/components/schemas/Employee",
+        },
+      },
+    },
+  },
+},
 };
