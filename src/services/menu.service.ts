@@ -3,6 +3,7 @@ import { Readable } from "stream";
 import { prisma } from "../lib/prisma.js";
 import cloudinary from "../config/cloudinary.js";
 import { AppError } from "../utils/AppError.js";
+import { logger } from "../lib/logger.js";
 
 export const getMenuItems = async (restaurantId: string) => {
   return prisma.menuItem.findMany({
@@ -29,6 +30,18 @@ export const addMenuItem = async (
     isAvailable?: boolean;
   },
 ) => {
+  if (data.categoryId) {
+    const category = await prisma.category.findFirst({
+      where: {
+        id: data.categoryId,
+        restaurantId,
+      },
+    });
+
+    if (!category) {
+      throw new AppError("Category not found", 404);
+    }
+  }
   return prisma.menuItem.create({
     data: {
       restaurantId,
@@ -50,6 +63,18 @@ export const editMenuItem = async (
     isAvailable?: boolean;
   },
 ) => {
+  if (data.categoryId) {
+    const category = await prisma.category.findFirst({
+      where: {
+        id: data.categoryId,
+        restaurantId,
+      },
+    });
+
+    if (!category) {
+      throw new AppError("Category not found", 404);
+    }
+  }
   const updated = await prisma.menuItem.updateMany({
     where: {
       id,
@@ -165,9 +190,13 @@ export const uploadMenuImage = async (
     cloudinary.uploader
       .destroy(menuItem.imagePublicId)
       .catch((error) => {
-        console.error(
-          "Failed to delete previous Cloudinary image:",
-          error,
+        logger.error(
+          {
+            err: error,
+            menuItemId,
+            publicId: menuItem.imagePublicId,
+          },
+          "Failed to delete previous Cloudinary image",
         );
       });
   }
