@@ -74,7 +74,7 @@ export const refreshSchema = z.object({
 
 export const changePasswordSchema = z.object({
   body: z.object({
-    currentPassword: z.string().min(8),
-    newPassword: z.string().min(8),
+    currentPassword: z.string().min(1, "Current password is required."),
+    newPassword: passwordSchema,
   }),
 });

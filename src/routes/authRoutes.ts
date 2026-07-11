@@ -4,6 +4,7 @@ import {
   login,
   refresh,
   register,
+  changePassword,
 } from "../controllers/authController.js";
 
 import { authLimiter } from "../middleware/rateLimiter.js";
@@ -15,7 +16,6 @@ import {
   registerSchema,
   refreshSchema,
 } from "../validations/auth.validation.js";
-import { changePassword } from "../controllers/authController.js";
 import { changePasswordSchema } from "../validations/auth.validation.js";
 import { requireAuth } from "../middleware/auth.js";
 
