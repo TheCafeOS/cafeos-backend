@@ -219,3 +219,15 @@ async changePassword(
   });
 }
 };
+
+export const getAuthenticatedEmployee = async (employeeId: string) => {
+  return prisma.employee.findUnique({
+    where: { id: employeeId },
+    select: {
+      id: true,
+      restaurantId: true,
+      email: true,
+      role: true,
+    },
+  });
+};

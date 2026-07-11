@@ -1,6 +1,6 @@
 import { Request, NextFunction } from 'express';
 import { verifyAccessToken } from "../utils/jwt.js";
-import { prisma } from '../lib/prisma.js';
+import { getAuthenticatedEmployee } from "../services/auth.service.js";
 import { AppError } from "../utils/AppError.js";
 
 export interface AuthenticatedRequest extends Request {
@@ -28,10 +28,7 @@ export const requireAuth = async (
   try {
     const decoded = verifyAccessToken(token);
 
-    const employee = await prisma.employee.findUnique({
-      where: { id: decoded.sub },
-      select: { id: true, restaurantId: true, email: true, role: true },
-    });
+    const employee = await getAuthenticatedEmployee(decoded.sub);
 
     if (!employee) {
       throw new AppError("Invalid token", 401);
