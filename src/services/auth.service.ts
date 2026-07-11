@@ -27,6 +27,8 @@ const buildUniqueSlug = async (restaurantName: string): Promise<string> => {
   return slug;
 };
 
+const SALT_ROUNDS = 10;
+
 export const authService = {
   async register(data: {
     restaurantName: string;
@@ -74,7 +76,7 @@ export const authService = {
           create: {
             name: ownerName,
             email: normalizedOwnerEmail,
-            passwordHash: await bcrypt.hash(password, 10),
+            passwordHash: await bcrypt.hash(password, SALT_ROUNDS),
             role: "OWNER",
           },
         },
@@ -113,7 +115,7 @@ export const authService = {
     const { email, password } = data;
 
     const employee = await prisma.employee.findUnique({
-      where: { email: email.toLowerCase() },
+      where: { email: email.trim().toLowerCase() },
     });
 
     if (!employee) {
@@ -214,13 +216,12 @@ async changePassword(
       id: employeeId,
     },
     data: {
-      passwordHash: await bcrypt.hash(newPassword, 10),
+      passwordHash: await bcrypt.hash(newPassword, SALT_ROUNDS),
     },
   });
-}
-};
+},
 
-export const getAuthenticatedEmployee = async (employeeId: string) => {
+async getAuthenticatedEmployee(employeeId: string){
   return prisma.employee.findUnique({
     where: { id: employeeId },
     select: {
@@ -230,4 +231,5 @@ export const getAuthenticatedEmployee = async (employeeId: string) => {
       role: true,
     },
   });
+}
 };
