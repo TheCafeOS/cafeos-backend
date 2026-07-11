@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma.js";
+import { AppError } from "../utils/AppError.js";
 
 export const getCategories = async (restaurantId: string) => {
   return prisma.category.findMany({
@@ -26,23 +27,23 @@ export const editCategory = async (
   id: string,
   name: string,
 ) => {
-  const updated = await prisma.category.updateMany({
+  const category = await prisma.category.findFirst({
     where: {
       id,
       restaurantId,
     },
-    data: {
-      name,
-    },
   });
 
-  if (updated.count === 0) {
-    return null;
+  if (!category) {
+    throw new AppError("Category not found", 404);
   }
 
-  return prisma.category.findUnique({
+  return prisma.category.update({
     where: {
       id,
+    },
+    data: {
+      name,
     },
   });
 };
@@ -51,12 +52,20 @@ export const removeCategory = async (
   restaurantId: string,
   id: string,
 ) => {
-  const deleted = await prisma.category.deleteMany({
+  const category = await prisma.category.findFirst({
     where: {
       id,
       restaurantId,
     },
   });
 
-  return deleted.count > 0;
+  if (!category) {
+    throw new AppError("Category not found", 404);
+  }
+
+  await prisma.category.delete({
+    where: {
+      id,
+    },
+  });
 };
