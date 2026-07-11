@@ -60,6 +60,10 @@ export const createRestaurantOrder = async (
     throw new AppError("Table not found", 404);
   }
 
+  if (table.status === "INACTIVE") {
+    throw new AppError("This table is inactive", 403);
+  }
+
   return createOrderForTable(
     table.restaurantId,
     table.id,

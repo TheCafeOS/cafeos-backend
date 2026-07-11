@@ -98,6 +98,10 @@ export const getOrder = async (
     throw new AppError("Invalid QR code", 404);
   }
 
+  if (table.status === "INACTIVE") {
+    throw new AppError("This table is inactive", 403);
+  }
+
   const order = await prisma.order.findFirst({
     where: {
       id: orderId,
