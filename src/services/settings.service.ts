@@ -35,3 +35,32 @@ export const getSettings = async (restaurantId: string) => {
     owner: restaurant.employees[0] ?? null,
   };
 };
+
+export const updateSettings = async (
+  restaurantId: string,
+  data: {
+    name: string;
+    restaurantEmail: string;
+    phone?: string | null;
+    address?: string | null;
+  },
+) => {
+  const restaurant = await prisma.restaurant.findUnique({
+    where: {
+      id: restaurantId,
+    },
+  });
+
+  if (!restaurant) {
+    throw new AppError("Restaurant not found", 404);
+  }
+
+  await prisma.restaurant.update({
+    where: {
+      id: restaurantId,
+    },
+    data,
+  });
+
+  return getSettings(restaurantId);
+};

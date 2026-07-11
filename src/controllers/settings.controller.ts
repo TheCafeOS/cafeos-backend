@@ -20,3 +20,21 @@ export const getSettings = async (
     ),
   );
 };
+
+export const updateSettings = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const settings =
+    await settingsService.updateSettings(
+      req.employee!.restaurantId,
+      req.body,
+    );
+
+  return res.json(
+    successResponse(
+      "Settings updated successfully",
+      settings,
+    ),
+  );
+};
