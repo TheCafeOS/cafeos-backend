@@ -31,20 +31,22 @@ export const editTable = async (
     status?: TableStatus;
   },
 ) => {
-  const updated = await prisma.restaurantTable.updateMany({
+  const table = await prisma.restaurantTable.findFirst({
     where: {
       id,
       restaurantId,
     },
-    data,
   });
 
-  if (updated.count === 0) {
-    return null;
+  if (!table) {
+    throw new AppError("Table not found", 404);
   }
 
-  return prisma.restaurantTable.findUnique({
-    where: { id },
+  return prisma.restaurantTable.update({
+    where: {
+      id,
+    },
+    data,
   });
 };
 
@@ -52,14 +54,22 @@ export const removeTable = async (
   restaurantId: string,
   id: string,
 ) => {
-  const deleted = await prisma.restaurantTable.deleteMany({
+  const table = await prisma.restaurantTable.findFirst({
     where: {
       id,
       restaurantId,
     },
   });
 
-  return deleted.count > 0;
+  if (!table) {
+    throw new AppError("Table not found", 404);
+  }
+
+  await prisma.restaurantTable.delete({
+    where: {
+      id,
+    },
+  });
 };
 
 export async function generateTableQr(

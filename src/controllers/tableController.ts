@@ -1,7 +1,8 @@
 import { Response } from "express";
 import { AuthenticatedRequest } from "../middleware/auth.js";
 import * as tableService from "../services/table.service.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
+import { successResponse } from "../utils/apiResponse.js";
+import { getRouteParam } from "../utils/request.js";
 
 export const listTables = async (
   req: AuthenticatedRequest,
@@ -11,7 +12,12 @@ export const listTables = async (
     req.employee!.restaurantId,
   );
 
-  return res.json(tables);
+  return res.json(
+    successResponse(
+      "Tables fetched successfully",
+      tables,
+    ),
+  );
 };
 
 export const createTable = async (
@@ -20,27 +26,24 @@ export const createTable = async (
 ) => {
   const { name } = req.body;
 
-  if (!name) {
-    return res.status(400).json({
-      message: "Table name is required",
-    });
-  }
-
   const table = await tableService.addTable(
     req.employee!.restaurantId,
     name,
   );
 
-  return res.status(201).json(table);
+  return res.status(201).json(
+    successResponse(
+      "Table created successfully",
+      table,
+    ),
+  );
 };
 
 export const updateTable = async (
   req: AuthenticatedRequest,
   res: Response,
 ) => {
-  const id = Array.isArray(req.params.id)
-    ? req.params.id[0]
-    : req.params.id;
+  const id = getRouteParam(req.params.id);
 
   const table = await tableService.editTable(
     req.employee!.restaurantId,
@@ -48,44 +51,33 @@ export const updateTable = async (
     req.body,
   );
 
-  if (!table) {
-    return res.status(404).json({
-      message: "Table not found",
-    });
-  }
-
-  return res.json(table);
+  return res.json(
+    successResponse(
+      "Table updated successfully",
+      table,
+    ),
+  );
 };
 
 export const deleteTable = async (
   req: AuthenticatedRequest,
   res: Response,
 ) => {
-  const id = Array.isArray(req.params.id)
-    ? req.params.id[0]
-    : req.params.id;
+  const id = getRouteParam(req.params.id);
 
-  const deleted = await tableService.removeTable(
-    req.employee!.restaurantId,
-    id,
-  );
+  await tableService.removeTable(
+  req.employee!.restaurantId,
+  id,
+);
 
-  if (!deleted) {
-    return res.status(404).json({
-      message: "Table not found",
-    });
-  }
-
-  return res.sendStatus(204);
+return res.sendStatus(204);
 };
 
 export const downloadQr = async (
   req: AuthenticatedRequest,
   res: Response,
 ) => {
-  const id = Array.isArray(req.params.id)
-    ? req.params.id[0]
-    : req.params.id;
+  const id = getRouteParam(req.params.id);
 
   const png = await tableService.generateTableQr(
     req.employee!.restaurantId,
