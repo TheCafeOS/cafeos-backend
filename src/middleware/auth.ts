@@ -20,7 +20,7 @@ export const requireAuth = async (
   const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith("Bearer ")) {
-    throw new AppError("Missing or invalid token", 401);
+    return next(new AppError("Missing or invalid token", 401));
   }
 
   const token = authHeader.split(' ')[1];
@@ -31,16 +31,16 @@ export const requireAuth = async (
     const employee = await authService.getAuthenticatedEmployee(decoded.sub);
 
     if (!employee) {
-      throw new AppError("Invalid token", 401);
+      return next(new AppError("Invalid token", 401));
     }
 
     req.employee = employee;
     next();
   } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-
-      throw new AppError("Invalid token", 401);
+      return next(
+        error instanceof AppError
+          ? error
+          : new AppError("Invalid token", 401),
+      );
     }
 };

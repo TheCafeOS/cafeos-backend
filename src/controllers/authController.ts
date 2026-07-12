@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { authService } from "../services/auth.service.js";
 import { successResponse } from "../utils/apiResponse.js";
 import { AuthenticatedRequest } from "../middleware/auth.js";
+import { logger } from "../lib/logger.js";
 
 export const register = async (
   req: Request,
@@ -23,6 +24,15 @@ export const login = async (
   res: Response,
 ) => {
   const result = await authService.login(req.body);
+
+  // This is temporary for debugging. Remove it after testing.
+  logger.info(
+    {
+      requestId: req.requestId,
+      email: req.body.email,
+    },
+    "Login request received",
+  );
 
   return res.json(
     successResponse(
