@@ -6,6 +6,7 @@ import {
   generateRefreshToken,
   verifyRefreshToken,
 } from "../utils/jwt.js";
+import { env } from "../config/env.js";
 
 const generateSlug = (value: string): string =>
   value
@@ -39,6 +40,14 @@ export const authService = {
     ownerEmail: string;
     password: string;
   }) {
+
+    if (!env.ALLOW_PUBLIC_REGISTRATION) {
+      throw new AppError(
+        "Registration is disabled. Please contact CafeOS to onboard your restaurant.",
+        403,
+      );
+    }
+    
     const {
       restaurantName,
       restaurantEmail,
