@@ -16,14 +16,34 @@ enum TableStatus {
 }
 
 model Restaurant {
-  id              String            @id @default(cuid())
+  id              String   @id @default(cuid())
   name            String
-  slug            String            @unique
+  slug            String   @unique
   phone           String?
   address         String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  restaurantEmail String            @default("")
+  restaurantEmail String   @default("")
+
+  // Branding
+  logoUrl         String?
+  coverImageUrl   String?
+
+  // Profile
+  tagline         String?
+  description     String?
+  cuisineType     String?
+
+  // Social Links
+  website         String?
+  instagram       String?
+  facebook        String?
+  customLink      String?
+
+  // Theme
+  themeColor      String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
   categories      Category[]
   employees       Employee[]
   menuItems       MenuItem[]
