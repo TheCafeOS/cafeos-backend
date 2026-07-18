@@ -1,5 +1,9 @@
 import { prisma } from "../lib/prisma.js";
 import { AppError } from "../utils/AppError.js";
+import {
+  uploadImage,
+  deleteImage,
+} from "./cloudinary.service.js";
 
 export const getSettings = async (restaurantId: string) => {
   const restaurant = await prisma.restaurant.findUnique({
@@ -90,6 +94,53 @@ export const updateSettings = async (
     },
     data,
   });
+
+  return getSettings(restaurantId);
+};
+
+export const uploadRestaurantLogo = async (
+  restaurantId: string,
+  file?: Express.Multer.File,
+) => {
+  if (!file) {
+    throw new AppError("Logo image is required.", 400);
+  }
+
+  const restaurant = await prisma.restaurant.findUnique({
+    where: {
+      id: restaurantId,
+    },
+  });
+
+  if (!restaurant) {
+    throw new AppError("Restaurant not found", 404);
+  }
+
+  // Upload new logo first
+  const uploaded = await uploadImage(
+    file.buffer,
+    `cafeos/restaurants/${restaurantId}/logos`,
+  );
+
+  try {
+    await prisma.restaurant.update({
+      where: {
+        id: restaurantId,
+      },
+      data: {
+        logoUrl: uploaded.secureUrl,
+        logoPublicId: uploaded.publicId,
+      },
+    });
+  } catch (error) {
+    await deleteImage(uploaded.publicId).catch(() => {});
+
+    throw error;
+  }
+
+  if (restaurant.logoPublicId) {
+    deleteImage(restaurant.logoPublicId).catch(() => {});
+  }
 
   return getSettings(restaurantId);
 };

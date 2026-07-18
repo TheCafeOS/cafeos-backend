@@ -38,3 +38,21 @@ export const updateSettings = async (
     ),
   );
 };
+
+export const uploadRestaurantLogo = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const settings =
+    await settingsService.uploadRestaurantLogo(
+      req.employee!.restaurantId,
+      req.file,
+    );
+
+  return res.json(
+    successResponse(
+      "Restaurant logo uploaded successfully.",
+      settings,
+    ),
+  );
+};

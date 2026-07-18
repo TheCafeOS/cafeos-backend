@@ -1,12 +1,14 @@
 import { Router } from "express";
-
-import { getSettings } from "../controllers/settings.controller.js";
-
 import { requireAuth } from "../middleware/auth.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { updateSettings } from "../controllers/settings.controller.js";
 import { validate } from "../middleware/validate.js";
 import { updateSettingsSchema } from "../validations/settings.validation.js";
+import { uploadImage } from "../middleware/upload.js";
+import {
+  getSettings,
+  updateSettings,
+  uploadRestaurantLogo,
+} from "../controllers/settings.controller.js";
 
 const router = Router();
 
@@ -21,6 +23,13 @@ router.patch(
   requireAuth,
   validate(updateSettingsSchema),
   asyncHandler(updateSettings),
+);
+
+router.patch(
+  "/logo",
+  requireAuth,
+  uploadImage.single("image"),
+  asyncHandler(uploadRestaurantLogo),
 );
 
 export default router;
