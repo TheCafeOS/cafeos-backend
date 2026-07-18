@@ -173,6 +173,66 @@ Restaurant: {
       type: "string",
       nullable: true,
     },
+
+    logoUrl: {
+      type: "string",
+      nullable: true,
+      example: "https://res.cloudinary.com/demo/logo.png",
+    },
+
+    coverImageUrl: {
+      type: "string",
+      nullable: true,
+      example: "https://res.cloudinary.com/demo/cover.jpg",
+    },
+
+    tagline: {
+      type: "string",
+      nullable: true,
+      example: "Fresh Coffee Everyday",
+    },
+
+    description: {
+      type: "string",
+      nullable: true,
+      example: "Modern café serving handcrafted beverages.",
+    },
+
+    cuisineType: {
+      type: "string",
+      nullable: true,
+      example: "Cafe",
+    },
+
+    website: {
+      type: "string",
+      nullable: true,
+      example: "https://cafeos.com",
+    },
+
+    instagram: {
+      type: "string",
+      nullable: true,
+      example: "https://instagram.com/cafeos",
+    },
+
+    facebook: {
+      type: "string",
+      nullable: true,
+      example: "https://facebook.com/cafeos",
+    },
+
+    customLink: {
+      type: "string",
+      nullable: true,
+      example: "https://linktr.ee/cafeos",
+    },
+
+    themeColor: {
+      type: "string",
+      nullable: true,
+      example: "#F97316",
+    },
   },
 },
 
@@ -571,6 +631,46 @@ SettingsUpdateRequest: {
     address: {
       type: "string",
       example: "123 Main Street, Dehradun",
+    },
+
+    tagline: {
+      type: "string",
+      example: "Fresh Coffee Everyday",
+    },
+
+    description: {
+      type: "string",
+      example: "Modern café serving handcrafted beverages.",
+    },
+
+    cuisineType: {
+      type: "string",
+      example: "Cafe",
+    },
+
+    website: {
+      type: "string",
+      example: "https://cafeos.com",
+    },
+
+    instagram: {
+      type: "string",
+      example: "https://instagram.com/cafeos",
+    },
+
+    facebook: {
+      type: "string",
+      example: "https://facebook.com/cafeos",
+    },
+
+    customLink: {
+      type: "string",
+      example: "https://linktr.ee/cafeos",
+    },
+
+    themeColor: {
+      type: "string",
+      example: "#F97316",
     },
   },
 },
