@@ -25,7 +25,10 @@ model Restaurant {
 
   // Branding
   logoUrl         String?
+  logoPublicId    String?
+
   coverImageUrl   String?
+  coverPublicId   String?
 
   // Profile
   tagline         String?
