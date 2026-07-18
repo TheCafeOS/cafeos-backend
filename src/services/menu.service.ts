@@ -1,9 +1,11 @@
-import { Readable } from "stream";
-
 import { prisma } from "../lib/prisma.js";
-import cloudinary from "../config/cloudinary.js";
 import { AppError } from "../utils/AppError.js";
 import { logger } from "../lib/logger.js";
+
+import {
+  uploadImage,
+  deleteImage,
+} from "./cloudinary.service.js";
 
 export const getMenuItems = async (restaurantId: string) => {
   return prisma.menuItem.findMany({
@@ -110,32 +112,6 @@ export const removeMenuItem = async (
   }
 };
 
-const uploadBuffer = (
-  buffer: Buffer,
-  restaurantId: string,
-): Promise<{
-  secure_url: string;
-  public_id: string;
-}> =>
-  new Promise((resolve, reject) => {
-    const upload = cloudinary.uploader.upload_stream(
-      {
-        folder: `cafeos/restaurants/${restaurantId}/menu`,
-      },
-      (error, result) => {
-        if (error || !result) {
-          return reject(error);
-        }
-
-        resolve({
-          secure_url: result.secure_url,
-          public_id: result.public_id,
-        });
-      },
-    );
-
-    Readable.from(buffer).pipe(upload);
-  });
 
 export const uploadMenuImage = async (
   restaurantId: string,
@@ -158,9 +134,9 @@ export const uploadMenuImage = async (
   }
 
   // 1. Upload the new image first
-  const uploaded = await uploadBuffer(
+  const uploaded = await uploadImage(
     file.buffer,
-    restaurantId,
+    `cafeos/restaurants/${restaurantId}/menu`,
   );
 
   let updatedMenuItem;
@@ -172,24 +148,20 @@ export const uploadMenuImage = async (
         id: menuItemId,
       },
       data: {
-        imageUrl: uploaded.secure_url,
-        imagePublicId: uploaded.public_id,
+        imageUrl: uploaded.secureUrl,
+        imagePublicId: uploaded.publicId,
       },
     });
   } catch (error) {
     // Roll back the newly uploaded image if DB update fails
-    await cloudinary.uploader
-      .destroy(uploaded.public_id)
-      .catch(() => {});
+    await deleteImage(uploaded.publicId).catch(() => {});
 
     throw error;
   }
 
   // 3. Delete the previous image (best effort)
   if (menuItem.imagePublicId) {
-    cloudinary.uploader
-      .destroy(menuItem.imagePublicId)
-      .catch((error) => {
+    deleteImage(menuItem.imagePublicId).catch((error) => {
         logger.error(
           {
             err: error,
