@@ -31,6 +31,20 @@ export const getSettings = async (restaurantId: string) => {
       restaurantEmail: restaurant.restaurantEmail,
       phone: restaurant.phone,
       address: restaurant.address,
+
+      logoUrl: restaurant.logoUrl,
+      coverImageUrl: restaurant.coverImageUrl,
+
+      tagline: restaurant.tagline,
+      description: restaurant.description,
+      cuisineType: restaurant.cuisineType,
+
+      website: restaurant.website,
+      instagram: restaurant.instagram,
+      facebook: restaurant.facebook,
+      customLink: restaurant.customLink,
+
+      themeColor: restaurant.themeColor,
     },
     owner: restaurant.employees[0] ?? null,
   };
@@ -38,12 +52,27 @@ export const getSettings = async (restaurantId: string) => {
 
 export const updateSettings = async (
   restaurantId: string,
-  data: {
+    data: {
     name: string;
     restaurantEmail: string;
+
     phone?: string | null;
     address?: string | null;
-  },
+
+    logoUrl?: string | null;
+    coverImageUrl?: string | null;
+
+    tagline?: string | null;
+    description?: string | null;
+    cuisineType?: string | null;
+
+    website?: string | null;
+    instagram?: string | null;
+    facebook?: string | null;
+    customLink?: string | null;
+
+    themeColor?: string | null;
+  }
 ) => {
   const restaurant = await prisma.restaurant.findUnique({
     where: {
