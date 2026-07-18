@@ -11,7 +11,7 @@ import {
 import { requireAuth } from "../middleware/auth.js";
 import { requireRole } from "../middleware/authorize.js";
 import { validate } from "../middleware/validate.js";
-import { uploadMenuImage } from "../middleware/upload.js";
+import { uploadImage } from "../middleware/upload.js";
 
 import { asyncHandler } from "../utils/asyncHandler.js";
 
@@ -153,7 +153,7 @@ router.post(
   "/:id/image",
   requireAuth,
   requireRole("OWNER", "MANAGER"),
-  uploadMenuImage.single("image"),
+  uploadImage.single("image"),
   asyncHandler(uploadMenuItemImage),
 );
 

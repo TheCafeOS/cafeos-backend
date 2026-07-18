@@ -9,11 +9,21 @@ const allowedMimeTypes = new Set([
   "image/webp",
 ]);
 
-export const uploadMenuImage = multer({
+/**
+ * Generic image upload middleware.
+ *
+ * Supports:
+ * - Restaurant logos
+ * - Restaurant covers
+ * - Menu item images
+ * - Category images
+ * - Employee avatars
+ */
+export const uploadImage = multer({
   storage,
 
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5 MB
+    fileSize: 5 * 1024 * 1024,
   },
 
   fileFilter: (_req, file, cb) => {
