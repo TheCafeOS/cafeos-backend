@@ -8,6 +8,7 @@ import {
   getSettings,
   updateSettings,
   uploadRestaurantLogo,
+  uploadRestaurantCover,
 } from "../controllers/settings.controller.js";
 
 const router = Router();
@@ -30,6 +31,13 @@ router.patch(
   requireAuth,
   uploadImage.single("image"),
   asyncHandler(uploadRestaurantLogo),
+);
+
+router.patch(
+  "/cover",
+  requireAuth,
+  uploadImage.single("image"),
+  asyncHandler(uploadRestaurantCover),
 );
 
 export default router;

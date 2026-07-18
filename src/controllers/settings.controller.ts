@@ -56,3 +56,21 @@ export const uploadRestaurantLogo = async (
     ),
   );
 };
+
+export const uploadRestaurantCover = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const settings =
+    await settingsService.uploadRestaurantCover(
+      req.employee!.restaurantId,
+      req.file,
+    );
+
+  return res.json(
+    successResponse(
+      "Restaurant cover uploaded successfully.",
+      settings,
+    ),
+  );
+};

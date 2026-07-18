@@ -144,3 +144,49 @@ export const uploadRestaurantLogo = async (
 
   return getSettings(restaurantId);
 };
+
+export const uploadRestaurantCover = async (
+  restaurantId: string,
+  file?: Express.Multer.File,
+) => {
+  if (!file) {
+    throw new AppError("Cover image is required.", 400);
+  }
+
+  const restaurant = await prisma.restaurant.findUnique({
+    where: {
+      id: restaurantId,
+    },
+  });
+
+  if (!restaurant) {
+    throw new AppError("Restaurant not found", 404);
+  }
+
+  const uploaded = await uploadImage(
+    file.buffer,
+    `cafeos/restaurants/${restaurantId}/covers`,
+  );
+
+  try {
+    await prisma.restaurant.update({
+      where: {
+        id: restaurantId,
+      },
+      data: {
+        coverImageUrl: uploaded.secureUrl,
+        coverPublicId: uploaded.publicId,
+      },
+    });
+  } catch (error) {
+    await deleteImage(uploaded.publicId).catch(() => {});
+
+    throw error;
+  }
+
+  if (restaurant.coverPublicId) {
+    deleteImage(restaurant.coverPublicId).catch(() => {});
+  }
+
+  return getSettings(restaurantId);
+};
