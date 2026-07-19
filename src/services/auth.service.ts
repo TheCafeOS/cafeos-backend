@@ -7,6 +7,7 @@ import {
   verifyRefreshToken,
 } from "../utils/jwt.js";
 import { env } from "../config/env.js";
+import { EmployeeRole } from "@prisma/client";
 
 const generateSlug = (value: string): string =>
   value
@@ -86,7 +87,7 @@ export const authService = {
             name: ownerName,
             email: normalizedOwnerEmail,
             passwordHash: await bcrypt.hash(password, SALT_ROUNDS),
-            role: "OWNER",
+            role: EmployeeRole.OWNER,
           },
         },
       },
@@ -110,12 +111,21 @@ export const authService = {
     }
 
     return {
-      accessToken: generateAccessToken(employee.id),
-      refreshToken: generateRefreshToken(employee.id),
+      accessToken: generateAccessToken(
+        employee.id,
+        employee.restaurantId,
+        employee.role,
+      ),
+      refreshToken: generateRefreshToken(
+        employee.id,
+        employee.restaurantId,
+        employee.role,
+      ),
       employee,
       restaurant,
     };
   },
+  
 
   async login(data: {
     email: string;
@@ -131,6 +141,14 @@ export const authService = {
       throw new AppError("Invalid credentials", 401);
     }
 
+    if (employee.deletedAt) {
+      throw new AppError("Account not found", 401);
+    }
+
+    if (!employee.isActive) {
+      throw new AppError("Account has been deactivated", 403);
+    }
+
     const validPassword = await bcrypt.compare(
       password,
       employee.passwordHash,
@@ -140,9 +158,24 @@ export const authService = {
       throw new AppError("Invalid credentials", 401);
     }
 
+    await prisma.employee.update({
+      where: { id: employee.id },
+      data: {
+        lastLoginAt: new Date(),
+      },
+    });
+
     return {
-      accessToken: generateAccessToken(employee.id),
-      refreshToken: generateRefreshToken(employee.id),
+      accessToken: generateAccessToken(
+        employee.id,
+        employee.restaurantId,
+        employee.role,
+      ),
+      refreshToken: generateRefreshToken(
+        employee.id,
+        employee.restaurantId,
+        employee.role,
+      ),
       employee: {
         id: employee.id,
         restaurantId: employee.restaurantId,
@@ -167,6 +200,10 @@ export const authService = {
       },
       select: {
         id: true,
+        restaurantId: true,
+        role: true,
+        isActive: true,
+        deletedAt: true,
       },
     });
 
@@ -174,8 +211,20 @@ export const authService = {
       throw new AppError("Invalid refresh token", 401);
     }
 
+    if (employee.deletedAt) {
+      throw new AppError("Invalid refresh token", 401);
+    }
+
+    if (!employee.isActive) {
+      throw new AppError("Account has been deactivated", 403);
+    }
+
     return {
-      accessToken: generateAccessToken(employee.id),
+      accessToken: generateAccessToken(
+        employee.id,
+        employee.restaurantId,
+        employee.role,
+      ),
     };
   },
 
@@ -230,14 +279,18 @@ async changePassword(
   });
 },
 
-async getAuthenticatedEmployee(employeeId: string){
+async getAuthenticatedEmployee(employeeId: string) {
   return prisma.employee.findUnique({
-    where: { id: employeeId },
+    where: {
+      id: employeeId,
+    },
     select: {
       id: true,
       restaurantId: true,
       email: true,
       role: true,
+      isActive: true,
+      deletedAt: true,
     },
   });
 }

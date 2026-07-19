@@ -1,10 +1,11 @@
 import { NextFunction, Response } from "express";
+import type { EmployeeRole } from "@prisma/client";
 
 import { AuthenticatedRequest } from "./auth.js";
 import { AppError } from "../utils/AppError.js";
 
 export const requireRole =
-  (...roles: string[]) =>
+  (...roles: EmployeeRole[]) =>
   (
     req: AuthenticatedRequest,
     _res: Response,

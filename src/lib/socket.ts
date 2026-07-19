@@ -5,7 +5,6 @@ import { env } from "../config/env.js";
 import { logger } from "./logger.js";
 import { getTableIdByQrToken } from "../services/public.service.js";
 import { verifyAccessToken } from "../utils/jwt.js";
-import { authService } from "../services/auth.service.js";
 
 let io: Server;
 
@@ -28,9 +27,9 @@ export const initializeSocket = (httpServer: HTTPServer) => {
 
       const payload = verifyAccessToken(token);
 
-      const employee = await authService.getEmployeeForSocket(payload.sub);
-
-      socket.data.restaurantId = employee.restaurantId;
+      socket.data.employeeId = payload.sub;
+      socket.data.restaurantId = payload.restaurantId;
+      socket.data.role = payload.role;
 
       next();
     } catch {

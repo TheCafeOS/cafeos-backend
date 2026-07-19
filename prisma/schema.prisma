@@ -8,6 +8,12 @@ datasource db {
   directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
+enum EmployeeRole {
+  OWNER
+  MANAGER
+  STAFF
+}
+
 enum TableStatus {
   AVAILABLE
   OCCUPIED
@@ -60,7 +66,10 @@ model Employee {
   name         String
   email        String     @unique
   passwordHash String
-  role         String     @default("OWNER")
+  role         EmployeeRole @default(OWNER)
+  isActive     Boolean      @default(true)
+  lastLoginAt  DateTime?
+  deletedAt    DateTime?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)

@@ -1,15 +1,23 @@
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 
-interface TokenPayload {
+export interface TokenPayload {
   sub: string;
+  restaurantId: string;
+  role: "OWNER" | "MANAGER" | "STAFF";
 }
 
 export const generateAccessToken = (
-  employeeId: string,
+  sub: string,
+  restaurantId: string,
+  role: "OWNER" | "MANAGER" | "STAFF",
 ): string =>
   jwt.sign(
-    { sub: employeeId },
+    {
+      sub,
+      restaurantId,
+      role,
+    },
     env.JWT_SECRET,
     {
       expiresIn: "15m",
@@ -17,10 +25,16 @@ export const generateAccessToken = (
   );
 
 export const generateRefreshToken = (
-  employeeId: string,
+  sub: string,
+  restaurantId: string,
+  role: "OWNER" | "MANAGER" | "STAFF",
 ): string =>
   jwt.sign(
-    { sub: employeeId },
+    {
+      sub,
+      restaurantId,
+      role,
+    },
     env.JWT_REFRESH_SECRET,
     {
       expiresIn: "7d",

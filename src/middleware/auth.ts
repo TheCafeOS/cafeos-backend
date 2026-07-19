@@ -2,13 +2,14 @@ import { Request, NextFunction } from 'express';
 import { verifyAccessToken } from "../utils/jwt.js";
 import { authService } from "../services/auth.service.js";
 import { AppError } from "../utils/AppError.js";
+import type { EmployeeRole } from "@prisma/client";
 
 export interface AuthenticatedRequest extends Request {
   employee?: {
     id: string;
     restaurantId: string;
     email: string;
-    role: string;
+    role: EmployeeRole;
   };
 }
 
@@ -32,6 +33,14 @@ export const requireAuth = async (
 
     if (!employee) {
       return next(new AppError("Invalid token", 401));
+    }
+
+    if (employee.deletedAt) {
+      return next(new AppError("Account not found", 401));
+    }
+
+    if (!employee.isActive) {
+      return next(new AppError("Account has been deactivated", 403));
     }
 
     req.employee = employee;

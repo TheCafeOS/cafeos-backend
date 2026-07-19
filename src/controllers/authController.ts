@@ -25,15 +25,6 @@ export const login = async (
 ) => {
   const result = await authService.login(req.body);
 
-  // This is temporary for debugging. Remove it after testing.
-  logger.info(
-    {
-      requestId: req.requestId,
-      email: req.body.email,
-    },
-    "Login request received",
-  );
-
   return res.json(
     successResponse(
       "Login successful.",

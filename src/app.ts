@@ -25,6 +25,7 @@ import {
 } from "./utils/apiResponse.js";
 import { requestId } from "./middleware/requestId.js";
 import settingsRoutes from "./routes/settings.routes.js";
+import employeeRoutes from "./routes/employeeRoutes.js";
 
 const app = express();
 
@@ -145,6 +146,7 @@ app.use(`${API_PREFIX}/menu`, menuRoutes);
 app.use(`${API_PREFIX}/orders`, orderRoutes);
 app.use(`${API_PREFIX}/dashboard`, dashboardRoutes);
 app.use(`${API_PREFIX}/settings`, settingsRoutes);
+app.use(`${API_PREFIX}/employees`, employeeRoutes);
 
 /**
  * 404

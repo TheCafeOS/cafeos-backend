@@ -64,8 +64,8 @@ router.post(
  *   post:
  *     tags:
  *       - Authentication
- *     summary: Employee login
- *     description: Authenticates an employee and returns an access token and refresh token for subsequent authenticated requests.
+ *     summary: User login
+ *     description: Authenticates a restaurant employee (Owner, Manager, or Staff) and returns access and refresh tokens.
  *     operationId: loginEmployee
  *     security: []
  *     requestBody:
