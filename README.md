@@ -413,7 +413,7 @@ For major changes, please open an issue first to discuss your proposal.
 
 # 📜 License
 
-This project is licensed under the MIT License.
+This project is proprietary software. The source code is publicly available for portfolio and evaluation purposes only. All rights are reserved by the author.
 
 ---
 
