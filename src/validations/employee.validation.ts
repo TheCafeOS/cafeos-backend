@@ -5,7 +5,7 @@ const employeeRoleEnum = z.enum([
   "STAFF",
 ]);
 
-export const createEmployeeSchema = z.object({
+export const createEmployeeRequest = z.object({
   body: z.object({
     name: z
       .string()
@@ -28,7 +28,17 @@ export const createEmployeeSchema = z.object({
   }),
 });
 
-export const updateEmployeeSchema = z.object({
+export const getEmployeeRequest = z.object({
+  params: z.object({
+    id: z.string().cuid(),
+  }),
+});
+
+export const updateEmployeeRequest = z.object({
+  params: z.object({
+    id: z.string().cuid(),
+  }),
+
   body: z.object({
     name: z
       .string()
@@ -41,13 +51,17 @@ export const updateEmployeeSchema = z.object({
   }),
 });
 
-export const updateEmployeeStatusSchema = z.object({
+export const updateEmployeeStatusRequest = z.object({
+  params: z.object({
+    id: z.string().cuid(),
+  }),
+
   body: z.object({
     isActive: z.boolean(),
   }),
 });
 
-export const employeeIdSchema = z.object({
+export const deleteEmployeeRequest = z.object({
   params: z.object({
     id: z.string().cuid(),
   }),
