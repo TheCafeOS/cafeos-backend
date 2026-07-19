@@ -27,8 +27,7 @@ export const addMenuItem = async (
     name: string;
     description?: string;
     price: number;
-    categoryId?: string;
-    imageUrl?: string;
+    categoryId?: string;  
     isAvailable?: boolean;
   },
 ) => {
@@ -61,7 +60,6 @@ export const editMenuItem = async (
     description?: string;
     price?: number;
     categoryId?: string;
-    imageUrl?: string;
     isAvailable?: boolean;
   },
 ) => {

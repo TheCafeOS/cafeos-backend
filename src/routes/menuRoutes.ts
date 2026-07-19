@@ -149,7 +149,7 @@ router.patch(
  *       404:
  *         description: Menu item not found.
  */
-router.post(
+router.patch(
   "/:id/image",
   requireAuth,
   requireRole("OWNER", "MANAGER"),

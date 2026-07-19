@@ -6,7 +6,6 @@ export const createMenuItemSchema = z.object({
     description: z.string().max(500).optional(),
     price: z.number().positive("Price must be greater than 0"),
     categoryId: z.string().optional(),
-    imageUrl: z.string().url().optional(),
     isAvailable: z.boolean().optional(),
   }),
 });
@@ -17,7 +16,6 @@ export const updateMenuItemSchema = z.object({
     description: z.string().max(500).optional(),
     price: z.number().positive().optional(),
     categoryId: z.string().optional(),
-    imageUrl: z.string().url().optional(),
     isAvailable: z.boolean().optional(),
   }),
 });
