@@ -127,7 +127,7 @@ app.get("/health", (_req, res) => {
  * Swagger
  */
 app.use(
-  "/api/docs",
+  "/api-docs",
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpec),
 );
