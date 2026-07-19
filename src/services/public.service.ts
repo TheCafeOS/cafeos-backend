@@ -11,7 +11,18 @@ export const getMenu = async (qrToken: string) => {
       qrCode: qrToken,
     },
     include: {
-      restaurant: true,
+      restaurant: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          logoUrl: true,
+          coverImageUrl: true,
+          tagline: true,
+          cuisineType: true,
+          themeColor: true,
+        },
+      },
     },
   });
 
@@ -57,6 +68,14 @@ export const getMenu = async (qrToken: string) => {
       id: table.restaurant.id,
       name: table.restaurant.name,
       slug: table.restaurant.slug,
+
+      logoUrl: table.restaurant.logoUrl,
+      coverImageUrl: table.restaurant.coverImageUrl,
+
+      tagline: table.restaurant.tagline,
+      cuisineType: table.restaurant.cuisineType,
+
+      themeColor: table.restaurant.themeColor,
     },
     categories: categories.map((category) => ({
       id: category.id,
