@@ -8,6 +8,10 @@ import {
 } from "../utils/jwt.js";
 import { env } from "../config/env.js";
 import { EmployeeRole } from "@prisma/client";
+import { AuditAction } from "@prisma/client";
+
+import { auditService } from "./audit.service.js";
+import { AuditEntity } from "../constants/audit.js";
 
 const generateSlug = (value: string): string =>
   value
@@ -164,6 +168,21 @@ export const authService = {
         lastLoginAt: new Date(),
       },
     });
+    
+    await auditService.log({
+      restaurantId: employee.restaurantId,
+      employeeId: employee.id,
+
+      action: AuditAction.LOGIN,
+
+      entity: AuditEntity.Employee,
+      entityId: employee.id,
+
+      metadata: {
+        email: employee.email,
+        role: employee.role,
+      },
+    });
 
     return {
       accessToken: generateAccessToken(
@@ -276,6 +295,16 @@ async changePassword(
     data: {
       passwordHash: await bcrypt.hash(newPassword, SALT_ROUNDS),
     },
+  });
+  
+  await auditService.log({
+    restaurantId: employee.restaurantId,
+    employeeId: employee.id,
+
+    action: AuditAction.PASSWORD_CHANGED,
+
+    entity: AuditEntity.Employee,
+    entityId: employee.id,
   });
 },
 

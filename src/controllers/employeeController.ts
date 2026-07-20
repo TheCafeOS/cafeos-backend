@@ -10,6 +10,7 @@ export const createEmployee = async (
 ) => {
   const employee = await employeeService.createEmployee(
     req.employee!.restaurantId,
+    req.employee!.id,
     req.body,
   );
 
@@ -61,6 +62,7 @@ export const updateEmployee = async (
   const employee = await employeeService.updateEmployee(
     req.employee!.restaurantId,
     req.params.id as string,
+    req.employee!.id,
     req.body,
   );
 

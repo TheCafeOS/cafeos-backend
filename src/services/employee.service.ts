@@ -1,15 +1,20 @@
 import bcrypt from "bcryptjs";
-import { EmployeeRole } from "@prisma/client";
-
 import { prisma } from "../lib/prisma.js";
 import { AppError } from "../utils/AppError.js";
+import {
+  AuditAction,
+  EmployeeRole,
+} from "@prisma/client";
+import { auditService } from "./audit.service.js";
+import { AuditEntity } from "../constants/audit.js";
 
 const SALT_ROUNDS = 10;
 
 export const employeeService = {
   async createEmployee(
     restaurantId: string,
-    data: {
+    currentEmployeeId: string,
+    data:{
       name: string;
       email: string;
       password: string;
@@ -51,195 +56,259 @@ export const employeeService = {
         createdAt: true,
       },
     });
+    await auditService.log({
+      restaurantId,
+      employeeId: currentEmployeeId,
+
+      action: AuditAction.EMPLOYEE_CREATED,
+
+      entity: AuditEntity.Employee,
+      entityId: employee.id,
+
+      metadata: {
+        name: employee.name,
+        email: employee.email,
+        role: employee.role,
+      },
+    });
 
     return employee;
   },
 
   async listEmployees(restaurantId: string) {
-  return prisma.employee.findMany({
-    where: {
-      restaurantId,
-      deletedAt: null,
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      isActive: true,
-      lastLoginAt: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-},
-
-async getEmployeeById(
-  restaurantId: string,
-  employeeId: string,
-) {
-  const employee = await prisma.employee.findFirst({
-    where: {
-      id: employeeId,
-      restaurantId,
-      deletedAt: null,
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      isActive: true,
-      lastLoginAt: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
-
-  if (!employee) {
-    throw new AppError("Employee not found.", 404);
-  }
-
-  return employee;
-},
-
-async updateEmployee(
-  restaurantId: string,
-  employeeId: string,
-  data: {
-    name?: string;
-    role?: EmployeeRole;
+    return prisma.employee.findMany({
+      where: {
+        restaurantId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+        lastLoginAt: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
   },
-) {
-  const employee = await prisma.employee.findFirst({
-    where: {
-      id: employeeId,
-      restaurantId,
-      deletedAt: null,
-    },
-  });
 
-  if (!employee) {
-    throw new AppError("Employee not found.", 404);
-  }
+  async getEmployeeById(
+    restaurantId: string,
+    employeeId: string,
+  ) {
+    const employee = await prisma.employee.findFirst({
+      where: {
+        id: employeeId,
+        restaurantId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+        lastLoginAt: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
 
-  if (employee.role === EmployeeRole.OWNER) {
-    throw new AppError("Owner account cannot be modified.", 403);
-  }
+    if (!employee) {
+      throw new AppError("Employee not found.", 404);
+    }
 
-  const updatedEmployee = await prisma.employee.update({
-    where: {
-      id: employee.id,
-    },
+    return employee;
+  },
+
+  async updateEmployee(
+    restaurantId: string,
+    employeeId: string,
+    currentEmployeeId: string,
     data: {
-      ...(data.name !== undefined && {
-        name: data.name.trim(),
-      }),
-      ...(data.role !== undefined && {
-        role: data.role,
-      }),
+      name?: string;
+      role?: EmployeeRole;
     },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      isActive: true,
-      lastLoginAt: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
+  ) {
+    const employee = await prisma.employee.findFirst({
+      where: {
+        id: employeeId,
+        restaurantId,
+        deletedAt: null,
+      },
+    });
 
-  return updatedEmployee;
-},
+    if (!employee) {
+      throw new AppError("Employee not found.", 404);
+    }
 
-async updateEmployeeStatus(
-  restaurantId: string,
-  employeeId: string,
-  currentEmployeeId: string,
-  isActive: boolean,
-) {
-  const employee = await prisma.employee.findFirst({
-    where: {
-      id: employeeId,
+    if (employee.role === EmployeeRole.OWNER) {
+      throw new AppError("Owner account cannot be modified.", 403);
+    }
+
+    const updatedEmployee = await prisma.employee.update({
+      where: {
+        id: employee.id,
+      },
+      data: {
+        ...(data.name !== undefined && {
+          name: data.name.trim(),
+        }),
+        ...(data.role !== undefined && {
+          role: data.role,
+        }),
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+        lastLoginAt: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+      await auditService.log({
       restaurantId,
-      deletedAt: null,
-    },
-  });
+      employeeId: currentEmployeeId,
 
-  if (!employee) {
-    throw new AppError("Employee not found.", 404);
-  }
+      action: AuditAction.EMPLOYEE_UPDATED,
 
-  if (employee.role === EmployeeRole.OWNER) {
-    throw new AppError("Owner account cannot be deactivated.", 403);
-  }
+      entity: AuditEntity.Employee,
+      entityId: updatedEmployee.id,
 
-  if (employee.id === currentEmployeeId) {
-    throw new AppError("You cannot change your own account status.", 403);
-  }
+      metadata: {
+        name: updatedEmployee.name,
+        role: updatedEmployee.role,
+      },
+    });
 
-  const updatedEmployee = await prisma.employee.update({
-    where: {
-      id: employee.id,
-    },
-    data: {
-      isActive,
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      isActive: true,
-      lastLoginAt: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
+    return updatedEmployee;
+  },
 
-  return updatedEmployee;
-},
+  async updateEmployeeStatus(
+    restaurantId: string,
+    employeeId: string,
+    currentEmployeeId: string,
+    isActive: boolean,
+  ) {
+    const employee = await prisma.employee.findFirst({
+      where: {
+        id: employeeId,
+        restaurantId,
+        deletedAt: null,
+      },
+    });
 
-async deleteEmployee(
-  restaurantId: string,
-  employeeId: string,
-  currentEmployeeId: string,
-) {
-  const employee = await prisma.employee.findFirst({
-    where: {
-      id: employeeId,
+    if (!employee) {
+      throw new AppError("Employee not found.", 404);
+    }
+
+    if (employee.role === EmployeeRole.OWNER) {
+      throw new AppError("Owner account cannot be deactivated.", 403);
+    }
+
+    if (employee.id === currentEmployeeId) {
+      throw new AppError("You cannot change your own account status.", 403);
+    }
+
+    const updatedEmployee = await prisma.employee.update({
+      where: {
+        id: employee.id,
+      },
+      data: {
+        isActive,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+        lastLoginAt: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+      await auditService.log({
       restaurantId,
-      deletedAt: null,
-    },
-  });
+      employeeId: currentEmployeeId,
 
-  if (!employee) {
-    throw new AppError("Employee not found.", 404);
+      action: AuditAction.EMPLOYEE_STATUS_CHANGED,
+
+      entity: AuditEntity.Employee,
+      entityId: updatedEmployee.id,
+
+      metadata: {
+        isActive: updatedEmployee.isActive,
+      },
+    });
+
+    return updatedEmployee;
+  },
+
+  async deleteEmployee(
+    restaurantId: string,
+    employeeId: string,
+    currentEmployeeId: string,
+  ) {
+    const employee = await prisma.employee.findFirst({
+      where: {
+        id: employeeId,
+        restaurantId,
+        deletedAt: null,
+      },
+    });
+
+    if (!employee) {
+      throw new AppError("Employee not found.", 404);
+    }
+
+    if (employee.role === EmployeeRole.OWNER) {
+      throw new AppError("Owner account cannot be deleted.", 403);
+    }
+
+    if (employee.id === currentEmployeeId) {
+      throw new AppError("You cannot delete your own account.", 403);
+    }
+
+    const deletedEmployee = await prisma.employee.update({
+      where: {
+        id: employee.id,
+      },
+      data: {
+        deletedAt: new Date(),
+        isActive: false,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
+
+    await auditService.log({
+      restaurantId,
+      employeeId: currentEmployeeId,
+
+      action: AuditAction.EMPLOYEE_DELETED,
+
+      entity: AuditEntity.Employee,
+      entityId: deletedEmployee.id,
+
+      metadata: {
+        name: deletedEmployee.name,
+        email: deletedEmployee.email,
+      },
+    });
   }
-
-  if (employee.role === EmployeeRole.OWNER) {
-    throw new AppError("Owner account cannot be deleted.", 403);
-  }
-
-  if (employee.id === currentEmployeeId) {
-    throw new AppError("You cannot delete your own account.", 403);
-  }
-
-  await prisma.employee.update({
-    where: {
-      id: employee.id,
-    },
-    data: {
-      deletedAt: new Date(),
-      isActive: false,
-    },
-  });
-},
-
 };
 

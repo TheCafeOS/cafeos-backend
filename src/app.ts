@@ -26,6 +26,7 @@ import {
 import { requestId } from "./middleware/requestId.js";
 import settingsRoutes from "./routes/settings.routes.js";
 import employeeRoutes from "./routes/employeeRoutes.js";
+import auditRoutes from "./routes/auditRoutes.js";
 
 const app = express();
 
@@ -147,6 +148,7 @@ app.use(`${API_PREFIX}/orders`, orderRoutes);
 app.use(`${API_PREFIX}/dashboard`, dashboardRoutes);
 app.use(`${API_PREFIX}/settings`, settingsRoutes);
 app.use(`${API_PREFIX}/employees`, employeeRoutes);
+app.use(`${API_PREFIX}/audit-logs`, auditRoutes);
 
 /**
  * 404

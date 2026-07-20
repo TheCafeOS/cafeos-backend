@@ -21,6 +21,35 @@ enum TableStatus {
   INACTIVE
 }
 
+enum AuditAction {
+  LOGIN
+  LOGOUT
+  PASSWORD_CHANGED
+
+  EMPLOYEE_CREATED
+  EMPLOYEE_UPDATED
+  EMPLOYEE_STATUS_CHANGED
+  EMPLOYEE_DELETED
+
+  CATEGORY_CREATED
+  CATEGORY_UPDATED
+  CATEGORY_DELETED
+
+  MENU_CREATED
+  MENU_UPDATED
+  MENU_DELETED
+
+  TABLE_CREATED
+  TABLE_UPDATED
+  TABLE_DELETED
+
+  ORDER_CREATED
+  ORDER_STATUS_CHANGED
+  ORDER_CANCELLED
+
+  SETTINGS_UPDATED
+}
+
 model Restaurant {
   id              String   @id @default(cuid())
   name            String
@@ -55,6 +84,7 @@ model Restaurant {
 
   categories      Category[]
   employees       Employee[]
+  auditLogs       AuditLog[]
   menuItems       MenuItem[]
   orders          Order[]
   tables          RestaurantTable[]
@@ -73,6 +103,31 @@ model Employee {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  auditLogs    AuditLog[]
+}
+
+model AuditLog {
+  id           String @id @default(cuid())
+
+  restaurantId String
+  employeeId   String?
+
+  action AuditAction
+
+  entity   String
+  entityId String?
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  employee   Employee?  @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+
+  @@index([restaurantId])
+  @@index([employeeId])
+  @@index([action])
+  @@index([createdAt])
 }
 
 model RestaurantTable {

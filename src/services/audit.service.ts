@@ -1,0 +1,74 @@
+import {
+  AuditAction,
+  Prisma,
+} from "@prisma/client";
+
+import { prisma } from "../lib/prisma.js";
+
+export interface AuditLogInput {
+  restaurantId: string;
+  employeeId?: string | null;
+
+  action: AuditAction;
+
+  entity: string;
+  entityId?: string |null;
+
+  metadata?: Prisma.InputJsonValue;
+}
+
+export const auditService = {
+  async log(data: AuditLogInput) {
+    return prisma.auditLog.create({
+      data,
+    });
+  },
+
+  async listLogs(
+    restaurantId: string,
+    page: number,
+    limit: number,
+  ) {
+    const skip = (page - 1) * limit;
+
+    const [logs, total] = await prisma.$transaction([
+      prisma.auditLog.findMany({
+        where: {
+          restaurantId,
+        },
+        include: {
+          employee: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        skip,
+        take: limit,
+      }),
+
+      prisma.auditLog.count({
+        where: {
+          restaurantId,
+        },
+      }),
+    ]);
+
+    return {
+      logs,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  },
+};
+
