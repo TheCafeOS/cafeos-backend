@@ -35,12 +35,8 @@ export const requireAuth = async (
       return next(new AppError("Invalid token", 401));
     }
 
-    if (employee.deletedAt) {
-      return next(new AppError("Account not found", 401));
-    }
-
-    if (!employee.isActive) {
-      return next(new AppError("Account has been deactivated", 403));
+    if (employee.deletedAt || !employee.isActive) {
+      return next(new AppError("Unauthorized", 401));
     }
 
     req.employee = employee;
