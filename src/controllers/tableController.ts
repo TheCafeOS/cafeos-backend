@@ -26,9 +26,11 @@ export const createTable = async (
 ) => {
   const { name } = req.body;
 
-  const table = await tableService.addTable(
+  const table = 
+  await tableService.addTable(
     req.employee!.restaurantId,
-    name,
+    req.employee!.id,
+    req.body.name,
   );
 
   return res.status(201).json(
@@ -45,9 +47,11 @@ export const updateTable = async (
 ) => {
   const id = getRouteParam(req.params.id);
 
-  const table = await tableService.editTable(
+  const table = 
+  await tableService.editTable(
     req.employee!.restaurantId,
-    id,
+    req.employee!.id,
+    getRouteParam(req.params.id),
     req.body,
   );
 
@@ -66,9 +70,10 @@ export const deleteTable = async (
   const id = getRouteParam(req.params.id);
 
   await tableService.removeTable(
-  req.employee!.restaurantId,
-  id,
-);
+    req.employee!.restaurantId,
+    req.employee!.id,
+    getRouteParam(req.params.id),
+  );
 
 return res.sendStatus(204);
 };

@@ -5,7 +5,12 @@ import {
   OrderStatus,
   canTransitionOrderStatus,
 } from "../utils/orderStatus.js";
-import { Prisma } from "@prisma/client";
+import {
+  AuditAction,
+  Prisma,
+} from "@prisma/client";
+import { auditService } from "./audit.service.js";
+import { AuditEntity } from "../constants/audit.js";
 import { toOrderResponse } from "../utils/order.mapper.js";
 
 type OrderItemInput = {
@@ -45,6 +50,7 @@ const orderWithRelations = Prisma.validator<Prisma.OrderInclude>()({
 
 export const createRestaurantOrder = async (
   restaurantId: string,
+  currentEmployeeId: string,
   tableId: string,
   customerPhone: string | null,
   items: OrderItemInput[],
@@ -66,6 +72,7 @@ export const createRestaurantOrder = async (
 
   return createOrderForTable(
     table.restaurantId,
+    currentEmployeeId,
     table.id,
     customerPhone,
     items,
@@ -93,6 +100,7 @@ export const createPublicOrder = async (
 
   return createOrderForTable(
     table.restaurantId,
+    null,
     table.id,
     customerPhone,
     items,
@@ -101,6 +109,7 @@ export const createPublicOrder = async (
 
 async function createOrderForTable(
   restaurantId: string,
+  currentEmployeeId: string | null,
   tableId: string,
   customerPhone: string | null,
   items: OrderItemInput[],
@@ -162,6 +171,23 @@ async function createOrderForTable(
       },
     },
     include: orderWithRelations,
+  });
+
+  await auditService.log({
+    restaurantId,
+    employeeId: currentEmployeeId,
+
+    action: AuditAction.ORDER_CREATED,
+
+    entity: AuditEntity.Order,
+    entityId: order.id,
+
+    metadata: {
+      tableId: order.tableId,
+      total: order.total,
+      itemCount: order.items.length,
+      customerPhone: order.customerPhone,
+    },
   });
 
   broadcastOrderEvent(
@@ -286,6 +312,7 @@ export const getRestaurantOrder = async (
 
 export const updateOrderStatus = async (
   restaurantId: string,
+  currentEmployeeId: string,
   orderId: string,
   status: OrderStatus,
 ) => {
@@ -317,6 +344,22 @@ export const updateOrderStatus = async (
       status,
     },
     include: orderWithRelations,
+  });
+
+  await auditService.log({
+    restaurantId,
+    employeeId: currentEmployeeId,
+
+    action: AuditAction.ORDER_STATUS_CHANGED,
+
+    entity: AuditEntity.Order,
+    entityId: updated.id,
+
+    metadata: {
+      previousStatus: currentStatus,
+      newStatus: updated.status,
+      tableId: updated.tableId,
+    },
   });
 
   broadcastOrderEvent(

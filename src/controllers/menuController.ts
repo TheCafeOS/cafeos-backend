@@ -26,6 +26,7 @@ export const createMenuItem = async (
 ) => {
   const menuItem = await menuService.addMenuItem(
     req.employee!.restaurantId,
+    req.employee!.id,
     req.body,
   );
 
@@ -45,6 +46,7 @@ export const updateMenuItem = async (
 
   const menuItem = await menuService.editMenuItem(
     req.employee!.restaurantId,
+    req.employee!.id,
     id,
     req.body,
   );
@@ -65,9 +67,9 @@ export const deleteMenuItem = async (
 
   await menuService.removeMenuItem(
     req.employee!.restaurantId,
+    req.employee!.id,
     id,
   );
-
 
   return res.json(
     successResponse(

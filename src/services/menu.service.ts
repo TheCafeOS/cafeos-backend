@@ -6,6 +6,10 @@ import {
   uploadImage,
   deleteImage,
 } from "./cloudinary.service.js";
+import { AuditAction } from "@prisma/client";
+
+import { auditService } from "./audit.service.js";
+import { AuditEntity } from "../constants/audit.js";
 
 export const getMenuItems = async (restaurantId: string) => {
   return prisma.menuItem.findMany({
@@ -23,6 +27,7 @@ export const getMenuItems = async (restaurantId: string) => {
 
 export const addMenuItem = async (
   restaurantId: string,
+  currentEmployeeId: string,
   data: {
     name: string;
     description?: string;
@@ -43,17 +48,35 @@ export const addMenuItem = async (
       throw new AppError("Category not found", 404);
     }
   }
-  return prisma.menuItem.create({
+  const menuItem = await prisma.menuItem.create({
     data: {
       restaurantId,
       ...data,
       isAvailable: data.isAvailable ?? true,
     },
   });
+  await auditService.log({
+    restaurantId,
+    employeeId: currentEmployeeId,
+
+    action: AuditAction.MENU_CREATED,
+
+    entity: AuditEntity.Menu,
+    entityId: menuItem.id,
+
+    metadata: {
+      name: menuItem.name,
+      price: menuItem.price,
+      categoryId: menuItem.categoryId,
+    },
+  });
+
+  return menuItem;
 };
 
 export const editMenuItem = async (
   restaurantId: string,
+  currentEmployeeId: string,
   id: string,
   data: {
     name?: string;
@@ -87,27 +110,69 @@ export const editMenuItem = async (
     throw new AppError("Menu item not found", 404);
   }
 
-  return prisma.menuItem.findUnique({
+  const menuItem = await prisma.menuItem.findUnique({
     where: {
       id,
     },
   });
+  if (!menuItem) {
+    throw new AppError("Menu item not found", 404);
+  }
+
+  await auditService.log({
+    restaurantId,
+    employeeId: currentEmployeeId,
+
+    action: AuditAction.MENU_UPDATED,
+
+    entity: AuditEntity.Menu,
+    entityId: menuItem.id,
+
+    metadata: {
+      name: menuItem.name,
+      price: menuItem.price,
+      isAvailable: menuItem.isAvailable,
+    },
+  });
+
+  return menuItem;
 };
 
 export const removeMenuItem = async (
   restaurantId: string,
+  currentEmployeeId: string,
   id: string,
 ) => {
-  const deleted = await prisma.menuItem.deleteMany({
+  const menuItem = await prisma.menuItem.findFirst({
     where: {
       id,
       restaurantId,
     },
   });
 
-  if (deleted.count === 0) {
+  if (!menuItem) {
     throw new AppError("Menu item not found", 404);
   }
+
+  await prisma.menuItem.delete({
+      where: {
+        id,
+      },
+    });
+    await auditService.log({
+    restaurantId,
+    employeeId: currentEmployeeId,
+
+    action: AuditAction.MENU_DELETED,
+
+    entity: AuditEntity.Menu,
+    entityId: menuItem.id,
+
+    metadata: {
+      name: menuItem.name,
+      price: menuItem.price,
+    },
+  });
 };
 
 

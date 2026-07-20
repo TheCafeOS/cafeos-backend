@@ -4,6 +4,10 @@ import {
   uploadImage,
   deleteImage,
 } from "./cloudinary.service.js";
+import { AuditAction } from "@prisma/client";
+
+import { auditService } from "./audit.service.js";
+import { AuditEntity } from "../constants/audit.js";
 
 export const getSettings = async (restaurantId: string) => {
   const restaurant = await prisma.restaurant.findUnique({
@@ -56,7 +60,8 @@ export const getSettings = async (restaurantId: string) => {
 
 export const updateSettings = async (
   restaurantId: string,
-    data: {
+  currentEmployeeId: string,
+  data: {
     name: string;
     restaurantEmail: string;
 
@@ -88,11 +93,28 @@ export const updateSettings = async (
     throw new AppError("Restaurant not found", 404);
   }
 
-  await prisma.restaurant.update({
+  const updatedRestaurant = await prisma.restaurant.update({
     where: {
       id: restaurantId,
     },
     data,
+  });
+
+  await auditService.log({
+    restaurantId,
+    employeeId: currentEmployeeId,
+
+    action: AuditAction.SETTINGS_UPDATED,
+
+    entity: AuditEntity.Restaurant,
+    entityId: updatedRestaurant.id,
+
+    metadata: {
+      name: updatedRestaurant.name,
+      restaurantEmail: updatedRestaurant.restaurantEmail,
+      themeColor: updatedRestaurant.themeColor,
+      cuisineType: updatedRestaurant.cuisineType,
+    },
   });
 
   return getSettings(restaurantId);

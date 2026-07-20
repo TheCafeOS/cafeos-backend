@@ -16,8 +16,9 @@ export const createOrder = async (
 
   const order = await orderService.createRestaurantOrder(
     req.employee!.restaurantId,
+    req.employee!.id,
     tableId,
-    customerPhone ?? null,
+    customerPhone,
     items,
   );
 
@@ -94,11 +95,14 @@ export const updateOrderStatus = async (
 ) => {
   const orderId = getRouteParam(req.params.id);
 
+  const { status: orderStatus } = req.body;
+
   const order =
     await orderService.updateOrderStatus(
       req.employee!.restaurantId,
+      req.employee!.id,
       orderId,
-      req.body.status,
+      orderStatus as OrderStatus,
     );
 
   return res.json(

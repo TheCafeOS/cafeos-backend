@@ -26,6 +26,7 @@ export const createCategory = async (
 ) => {
   const category = await categoryService.addCategory(
     req.employee!.restaurantId,
+    req.employee!.id,
     req.body.name,
   );
 
@@ -45,7 +46,8 @@ export const updateCategory = async (
 
   const category = await categoryService.editCategory(
     req.employee!.restaurantId,
-    id,
+    req.params.id as string,
+    req.employee!.id,
     req.body.name,
   );
 
@@ -65,7 +67,8 @@ export const deleteCategory = async (
 
   await categoryService.removeCategory(
     req.employee!.restaurantId,
-    id,
+    req.params.id as string,
+    req.employee!.id,
   );
 
   return res.sendStatus(204);

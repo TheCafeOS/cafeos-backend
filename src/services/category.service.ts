@@ -1,9 +1,15 @@
+import { AuditAction } from "@prisma/client";
+
 import { prisma } from "../lib/prisma.js";
 import { AppError } from "../utils/AppError.js";
+import { auditService } from "./audit.service.js";
+import { AuditEntity } from "../constants/audit.js";
 
 export const getCategories = async (restaurantId: string) => {
   return prisma.category.findMany({
-    where: { restaurantId },
+    where: {
+      restaurantId,
+    },
     orderBy: {
       createdAt: "asc",
     },
@@ -12,19 +18,37 @@ export const getCategories = async (restaurantId: string) => {
 
 export const addCategory = async (
   restaurantId: string,
+  currentEmployeeId: string,
   name: string,
 ) => {
-  return prisma.category.create({
+  const category = await prisma.category.create({
     data: {
       restaurantId,
       name,
     },
   });
+
+  await auditService.log({
+    restaurantId,
+    employeeId: currentEmployeeId,
+
+    action: AuditAction.CATEGORY_CREATED,
+
+    entity: AuditEntity.Category,
+    entityId: category.id,
+
+    metadata: {
+      name: category.name,
+    },
+  });
+
+  return category;
 };
 
 export const editCategory = async (
   restaurantId: string,
   id: string,
+  currentEmployeeId: string,
   name: string,
 ) => {
   const category = await prisma.category.findFirst({
@@ -38,7 +62,7 @@ export const editCategory = async (
     throw new AppError("Category not found", 404);
   }
 
-  return prisma.category.update({
+  const updatedCategory = await prisma.category.update({
     where: {
       id,
     },
@@ -46,11 +70,29 @@ export const editCategory = async (
       name,
     },
   });
+
+  await auditService.log({
+    restaurantId,
+    employeeId: currentEmployeeId,
+
+    action: AuditAction.CATEGORY_UPDATED,
+
+    entity: AuditEntity.Category,
+    entityId: updatedCategory.id,
+
+    metadata: {
+      previousName: category.name,
+      newName: updatedCategory.name,
+    },
+  });
+
+  return updatedCategory;
 };
 
 export const removeCategory = async (
   restaurantId: string,
   id: string,
+  currentEmployeeId: string,
 ) => {
   const category = await prisma.category.findFirst({
     where: {
@@ -66,6 +108,20 @@ export const removeCategory = async (
   await prisma.category.delete({
     where: {
       id,
+    },
+  });
+
+  await auditService.log({
+    restaurantId,
+    employeeId: currentEmployeeId,
+
+    action: AuditAction.CATEGORY_DELETED,
+
+    entity: AuditEntity.Category,
+    entityId: category.id,
+
+    metadata: {
+      name: category.name,
     },
   });
 };

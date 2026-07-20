@@ -28,6 +28,7 @@ export const updateSettings = async (
   const settings =
     await settingsService.updateSettings(
       req.employee!.restaurantId,
+      req.employee!.id,
       req.body,
     );
 
