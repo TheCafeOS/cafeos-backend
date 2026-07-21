@@ -9,28 +9,34 @@ import { AuditAction } from "@prisma/client";
 import { auditService } from "./audit.service.js";
 import { AuditEntity } from "../constants/audit.js";
 
-export const getSettings = async (restaurantId: string) => {
+export const getSettings = async (
+  restaurantId: string,
+  currentEmployeeId: string,
+) => {
   const restaurant = await prisma.restaurant.findUnique({
     where: {
       id: restaurantId,
-    },
-    include: {
-      employees: {
-        where: {
-          role: "OWNER",
-        },
-        select: {
-          name: true,
-          email: true,
-          role: true,
-        },
-        take: 1,
-      },
     },
   });
 
   if (!restaurant) {
     throw new AppError("Restaurant not found", 404);
+  }
+
+  const employee = await prisma.employee.findFirst({
+    where: {
+      id: currentEmployeeId,
+      restaurantId,
+    },
+    select: {
+      name: true,
+      email: true,
+      role: true,
+    },
+  });
+
+  if (!employee) {
+    throw new AppError("Employee not found", 404);
   }
 
   return {
@@ -54,7 +60,7 @@ export const getSettings = async (restaurantId: string) => {
 
       themeColor: restaurant.themeColor,
     },
-    owner: restaurant.employees[0] ?? null,
+    account: employee,
   };
 };
 
@@ -117,11 +123,15 @@ export const updateSettings = async (
     },
   });
 
-  return getSettings(restaurantId);
+  return getSettings(
+    restaurantId,
+    currentEmployeeId,
+  );
 };
 
 export const uploadRestaurantLogo = async (
   restaurantId: string,
+  currentEmployeeId: string,
   file?: Express.Multer.File,
 ) => {
   if (!file) {
@@ -164,11 +174,15 @@ export const uploadRestaurantLogo = async (
     deleteImage(restaurant.logoPublicId).catch(() => {});
   }
 
-  return getSettings(restaurantId);
+  return getSettings(
+    restaurantId,
+    currentEmployeeId,
+  );
 };
 
 export const uploadRestaurantCover = async (
   restaurantId: string,
+  currentEmployeeId: string,
   file?: Express.Multer.File,
 ) => {
   if (!file) {
@@ -210,5 +224,8 @@ export const uploadRestaurantCover = async (
     deleteImage(restaurant.coverPublicId).catch(() => {});
   }
 
-  return getSettings(restaurantId);
+  return getSettings(
+    restaurantId,
+    currentEmployeeId,
+  );
 };

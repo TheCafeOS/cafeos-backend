@@ -11,6 +11,7 @@ export const getSettings = async (
 ) => {
   const settings = await settingsService.getSettings(
     req.employee!.restaurantId,
+    req.employee!.id,
   );
 
   return res.json(
@@ -47,6 +48,7 @@ export const uploadRestaurantLogo = async (
   const settings =
     await settingsService.uploadRestaurantLogo(
       req.employee!.restaurantId,
+      req.employee!.id,
       req.file,
     );
 
@@ -65,6 +67,7 @@ export const uploadRestaurantCover = async (
   const settings =
     await settingsService.uploadRestaurantCover(
       req.employee!.restaurantId,
+      req.employee!.id,
       req.file,
     );
 
