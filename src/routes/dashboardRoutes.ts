@@ -135,7 +135,7 @@ router.get(
 router.get(
   "/summary",
   requireAuth,
-  requireRole("OWNER"),
+  requireRole("OWNER", "MANAGER"),
   asyncHandler(getDashboardSummary),
 );
 
