@@ -155,24 +155,35 @@ export const removeMenuItem = async (
   }
 
   await prisma.menuItem.delete({
-      where: {
-        id,
-      },
-    });
-    await auditService.log({
-    restaurantId,
-    employeeId: currentEmployeeId,
-
-    action: AuditAction.MENU_DELETED,
-
-    entity: AuditEntity.Menu,
-    entityId: menuItem.id,
-
-    metadata: {
-      name: menuItem.name,
-      price: menuItem.price,
+    where: {
+      id,
     },
   });
+
+  try {
+    await auditService.log({
+      restaurantId,
+      employeeId: currentEmployeeId,
+
+      action: AuditAction.MENU_DELETED,
+
+      entity: AuditEntity.Menu,
+      entityId: menuItem.id,
+
+      metadata: {
+        name: menuItem.name,
+        price: menuItem.price,
+      },
+    });
+  } catch (error) {
+    logger.error(
+      {
+        err: error,
+        menuItemId: menuItem.id,
+      },
+      "Failed to write menu deletion audit log",
+    );
+  }
 };
 
 
