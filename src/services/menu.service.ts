@@ -6,7 +6,10 @@ import {
   uploadImage,
   deleteImage,
 } from "./cloudinary.service.js";
-import { AuditAction } from "@prisma/client";
+import {
+  AuditAction,
+  Prisma,
+} from "@prisma/client";
 
 import { auditService } from "./audit.service.js";
 import { AuditEntity } from "../constants/audit.js";
@@ -154,11 +157,25 @@ export const removeMenuItem = async (
     throw new AppError("Menu item not found", 404);
   }
 
-  await prisma.menuItem.delete({
-    where: {
-      id,
-    },
-  });
+  try {
+    await prisma.menuItem.delete({
+      where: {
+        id,
+      },
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2003"
+    ) {
+      throw new AppError(
+        "This menu item cannot be deleted because it has already been used in customer orders.",
+        409,
+      );
+    }
+
+    throw error;
+  }
 
   try {
     await auditService.log({
