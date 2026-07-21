@@ -174,6 +174,17 @@ export const removeMenuItem = async (
       );
     }
 
+    if (
+      error instanceof Prisma.PrismaClientUnknownRequestError &&
+      error.message.includes("violates RESTRICT setting") &&
+      error.message.includes("OrderItem_menuItemId_fkey")
+    ) {
+      throw new AppError(
+        "This menu item cannot be deleted because it has already been used in customer orders.",
+        409,
+      );
+    }
+
     throw error;
   }
 
