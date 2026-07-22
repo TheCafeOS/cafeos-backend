@@ -1,5 +1,7 @@
-import { AuditAction } from "@prisma/client";
-
+import {
+  AuditAction,
+  Prisma,
+} from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import { AppError } from "../utils/AppError.js";
 import { auditService } from "./audit.service.js";
@@ -13,11 +15,19 @@ export const getCategories = async (
   restaurantId: string,
   page?: string,
   limit?: string,
+  search?: string,
 ) => {
   const pagination = getPaginationParams(page, limit);
 
-  const where = {
+  const where: Prisma.CategoryWhereInput = {
     restaurantId,
+
+    ...(search?.trim() && {
+      name: {
+        contains: search.trim(),
+        mode: "insensitive",
+      },
+    }),
   };
 
   const [categories, totalItems] = await prisma.$transaction([
