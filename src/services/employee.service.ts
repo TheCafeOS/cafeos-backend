@@ -87,6 +87,8 @@ export const employeeService = {
     search?: string,
     role?: EmployeeRole,
     isActive?: boolean,
+    sort?: "name" | "createdAt" | "lastLoginAt",
+    order?: "asc" | "desc",
   ) {
     const pagination = getPaginationParams(page, limit);
     const normalizedSearch = search?.trim();
@@ -121,6 +123,10 @@ export const employeeService = {
       }),
     };
 
+    const orderBy: Prisma.EmployeeOrderByWithRelationInput = {
+      [sort ?? "createdAt"]: order ?? "desc",
+    };
+
     const [employees, totalItems] = await prisma.$transaction([
       prisma.employee.findMany({
         where,
@@ -136,9 +142,7 @@ export const employeeService = {
           createdAt: true,
           updatedAt: true,
         },
-        orderBy: {
-          createdAt: "desc",
-        },
+        orderBy,
       }),
 
       prisma.employee.count({

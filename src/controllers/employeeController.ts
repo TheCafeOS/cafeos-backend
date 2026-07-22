@@ -36,6 +36,12 @@ export const listEmployees = async (
     req.query.isActive !== undefined
       ? req.query.isActive === "true"
       : undefined,
+    req.query.sort as
+      | "name"
+      | "createdAt"
+      | "lastLoginAt"
+      | undefined,
+    req.query.order as "asc" | "desc" | undefined,
   );
 
   return res.json(
