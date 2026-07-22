@@ -25,6 +25,8 @@ export const getMenuItems = async (
   search?: string,
   categoryId?: string,
   isAvailable?: boolean,
+  sort?: "name" | "price" | "createdAt",
+  order?: "asc" | "desc",
 ) => {
   const pagination = getPaginationParams(page, limit);
   const normalizedSearch = search?.trim();
@@ -58,6 +60,10 @@ export const getMenuItems = async (
     }),
   };
 
+  const orderBy: Prisma.MenuItemOrderByWithRelationInput = {
+    [sort ?? "createdAt"]: order ?? "asc",
+  };
+
   const [menuItems, totalItems] = await prisma.$transaction([
     prisma.menuItem.findMany({
       where,
@@ -71,9 +77,7 @@ export const getMenuItems = async (
           },
         },
       },
-      orderBy: {
-        createdAt: "asc",
-      },
+      orderBy,
     }),
 
     prisma.menuItem.count({

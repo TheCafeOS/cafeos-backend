@@ -8,15 +8,29 @@ export const listMenuItems = async (
   req: AuthenticatedRequest,
   res: Response,
 ) => {
-  const result = await menuService.getMenuItems(
-    req.employee!.restaurantId,
-    req.query.page as string | undefined,
-    req.query.limit as string | undefined,
-    req.query.search as string | undefined,
-    req.query.categoryId as string | undefined,
+  const { page, limit, search, categoryId } = req.query;
+
+  const isAvailable =
     req.query.isAvailable !== undefined
       ? req.query.isAvailable === "true"
-      : undefined,
+      : undefined;
+
+  const result = await menuService.getMenuItems(
+    req.employee!.restaurantId,
+    page as string | undefined,
+    limit as string | undefined,
+    search as string | undefined,
+    categoryId as string | undefined,
+    isAvailable,
+    req.query.sort as
+      | "name"
+      | "price"
+      | "createdAt"
+      | undefined,
+    req.query.order as
+      | "asc"
+      | "desc"
+      | undefined,
   );
 
   return res.json(
