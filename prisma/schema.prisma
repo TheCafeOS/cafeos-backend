@@ -104,6 +104,10 @@ model Employee {
   updatedAt    DateTime   @updatedAt
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   auditLogs    AuditLog[]
+
+  @@index([restaurantId, createdAt])
+  @@index([restaurantId, role])
+  @@index([restaurantId, isActive])
 }
 
 model AuditLog {
@@ -124,10 +128,9 @@ model AuditLog {
   restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   employee   Employee?  @relation(fields: [employeeId], references: [id], onDelete: SetNull)
 
-  @@index([restaurantId])
-  @@index([employeeId])
-  @@index([action])
-  @@index([createdAt])
+  @@index([restaurantId, createdAt])
+  @@index([restaurantId, action])
+  @@index([restaurantId, employeeId])
 }
 
 model RestaurantTable {
@@ -141,7 +144,8 @@ model RestaurantTable {
   orders       Order[]
   restaurant   Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
-  @@index([restaurantId])
+  @@index([restaurantId, status])
+  @@index([restaurantId, createdAt])
 }
 
 model Category {
@@ -153,7 +157,7 @@ model Category {
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   menuItems    MenuItem[]
 
-  @@index([restaurantId])
+  @@index([restaurantId, createdAt])
 }
 
 model MenuItem {
@@ -174,6 +178,9 @@ model MenuItem {
 
   @@index([restaurantId])
   @@index([categoryId])
+  @@index([restaurantId, createdAt])
+  @@index([restaurantId, isAvailable])
+  @@index([restaurantId, categoryId])
 }
 
 model Order {
@@ -191,6 +198,9 @@ model Order {
 
   @@index([restaurantId])
   @@index([tableId])
+  @@index([restaurantId, createdAt])
+  @@index([restaurantId, status])
+  @@index([restaurantId, tableId])
 }
 
 model OrderItem {
@@ -203,4 +213,7 @@ model OrderItem {
   updatedAt  DateTime @updatedAt
   menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
   order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([menuItemId])
 }
