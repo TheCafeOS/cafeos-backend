@@ -30,6 +30,11 @@ export const auditService = {
     page: number,
     limit: number,
     search?: string,
+    action?: AuditAction,
+    entity?: string,
+    employeeId?: string,
+    from?: Date,
+    to?: Date,
   ) {
     const skip = (page - 1) * limit;
 
@@ -40,17 +45,6 @@ export const auditService = {
 
       ...(normalizedSearch && {
         OR: [
-          {
-            action: {
-              equals: normalizedSearch as AuditAction,
-            },
-          },
-          {
-            entity: {
-              contains: normalizedSearch,
-              mode: "insensitive",
-            },
-          },
           {
             employee: {
               is: {
@@ -72,6 +66,29 @@ export const auditService = {
             },
           },
         ],
+      }),
+
+      ...(action && {
+        action,
+      }),
+
+      ...(entity && {
+        entity,
+      }),
+
+      ...(employeeId && {
+        employeeId,
+      }),
+
+      ...((from || to) && {
+        createdAt: {
+          ...(from && {
+            gte: from,
+          }),
+          ...(to && {
+            lte: to,
+          }),
+        },
       }),
     };
 

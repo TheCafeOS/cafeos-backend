@@ -4,6 +4,7 @@ import { auditService } from "../services/audit.service.js";
 import { AuthenticatedRequest } from "../middleware/auth.js";
 import { successResponse } from "../utils/apiResponse.js";
 import { getPaginationParams } from "../utils/pagination.js";
+import { AuditAction } from "@prisma/client";
 
 export const listAuditLogs = async (
   req: AuthenticatedRequest,
@@ -20,6 +21,15 @@ export const listAuditLogs = async (
       page,
       limit,
       req.query.search as string | undefined,
+      req.query.action as AuditAction | undefined,
+      req.query.entity as string | undefined,
+      req.query.employeeId as string | undefined,
+      req.query.from
+        ? new Date(req.query.from as string)
+        : undefined,
+      req.query.to
+        ? new Date(req.query.to as string)
+        : undefined,
     );
 
   return res.json(
