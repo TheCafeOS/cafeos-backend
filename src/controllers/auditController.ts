@@ -30,6 +30,15 @@ export const listAuditLogs = async (
       req.query.to
         ? new Date(req.query.to as string)
         : undefined,
+      req.query.sort as
+        | "createdAt"
+        | "action"
+        | "entity"
+        | undefined,
+      req.query.order as
+        | "asc"
+        | "desc"
+        | undefined,
     );
 
   return res.json(

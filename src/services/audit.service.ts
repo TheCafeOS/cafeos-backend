@@ -35,6 +35,8 @@ export const auditService = {
     employeeId?: string,
     from?: Date,
     to?: Date,
+    sort?: "createdAt" | "action" | "entity",
+    order?: "asc" | "desc",
   ) {
     const skip = (page - 1) * limit;
 
@@ -92,6 +94,10 @@ export const auditService = {
       }),
     };
 
+    const orderBy: Prisma.AuditLogOrderByWithRelationInput = {
+      [sort ?? "createdAt"]: order ?? "desc",
+    };
+
     const [logs, totalItems] =
       await prisma.$transaction([
         prisma.auditLog.findMany({
@@ -106,9 +112,7 @@ export const auditService = {
               },
             },
           },
-          orderBy: {
-            createdAt: "desc",
-          },
+          orderBy,
           skip,
           take: limit,
         }),
