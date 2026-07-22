@@ -8,14 +8,17 @@ export const listMenuItems = async (
   req: AuthenticatedRequest,
   res: Response,
 ) => {
-  const menuItems = await menuService.getMenuItems(
+  const result = await menuService.getMenuItems(
     req.employee!.restaurantId,
+    req.query.page as string | undefined,
+    req.query.limit as string | undefined,
   );
 
   return res.json(
     successResponse(
       "Menu items fetched successfully",
-      menuItems,
+      result.data,
+      result.pagination,
     ),
   );
 };

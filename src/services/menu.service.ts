@@ -13,19 +13,53 @@ import {
 
 import { auditService } from "./audit.service.js";
 import { AuditEntity } from "../constants/audit.js";
+import {
+  getPaginationMeta,
+  getPaginationParams,
+} from "../utils/pagination.js";
 
-export const getMenuItems = async (restaurantId: string) => {
-  return prisma.menuItem.findMany({
-    where: {
-      restaurantId,
-    },
-    include: {
-      category: true,
-    },
-    orderBy: {
-      createdAt: "asc",
-    },
-  });
+export const getMenuItems = async (
+  restaurantId: string,
+  page?: string,
+  limit?: string,
+) => {
+  const pagination = getPaginationParams(page, limit);
+
+  const where = {
+    restaurantId,
+  };
+
+  const [menuItems, totalItems] = await prisma.$transaction([
+    prisma.menuItem.findMany({
+      where,
+      skip: pagination.skip,
+      take: pagination.limit,
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    }),
+
+    prisma.menuItem.count({
+      where,
+    }),
+  ]);
+
+  return {
+    data: menuItems,
+    pagination: getPaginationMeta(
+      pagination.page,
+      pagination.limit,
+      totalItems,
+    ),
+  };
 };
 
 export const addMenuItem = async (
