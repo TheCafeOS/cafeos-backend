@@ -4,6 +4,7 @@ import { AppError } from "../utils/AppError.js";
 import {
   AuditAction,
   EmployeeRole,
+  Prisma,
 } from "@prisma/client";
 import { auditService } from "./audit.service.js";
 import { AuditEntity } from "../constants/audit.js";
@@ -83,12 +84,30 @@ export const employeeService = {
     restaurantId: string,
     page?: string,
     limit?: string,
+    search?: string,
   ) {
     const pagination = getPaginationParams(page, limit);
 
-    const where = {
+    const where: Prisma.EmployeeWhereInput = {
       restaurantId,
       deletedAt: null,
+
+      ...(search?.trim() && {
+        OR: [
+          {
+            name: {
+              contains: search.trim(),
+              mode: "insensitive",
+            },
+          },
+          {
+            email: {
+              contains: search.trim(),
+              mode: "insensitive",
+            },
+          },
+        ],
+      }),
     };
 
     const [employees, totalItems] = await prisma.$transaction([
