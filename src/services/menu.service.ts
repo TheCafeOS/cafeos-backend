@@ -23,6 +23,8 @@ export const getMenuItems = async (
   page?: string,
   limit?: string,
   search?: string,
+  categoryId?: string,
+  isAvailable?: boolean,
 ) => {
   const pagination = getPaginationParams(page, limit);
   const normalizedSearch = search?.trim();
@@ -45,6 +47,14 @@ export const getMenuItems = async (
           },
         },
       ],
+    }),
+
+    ...(categoryId && {
+      categoryId,
+    }),
+
+    ...(isAvailable !== undefined && {
+      isAvailable,
     }),
   };
 

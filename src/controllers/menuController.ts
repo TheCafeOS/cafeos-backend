@@ -13,6 +13,10 @@ export const listMenuItems = async (
     req.query.page as string | undefined,
     req.query.limit as string | undefined,
     req.query.search as string | undefined,
+    req.query.categoryId as string | undefined,
+    req.query.isAvailable !== undefined
+      ? req.query.isAvailable === "true"
+      : undefined,
   );
 
   return res.json(
