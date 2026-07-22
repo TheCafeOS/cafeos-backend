@@ -48,8 +48,13 @@ export const listOrders = async (
         status: req.query.status as OrderStatus | undefined,
         tableId: req.query.tableId as string | undefined,
         search: req.query.search as string | undefined,
-        from: req.query.from as Date | undefined,
-        to: req.query.to as Date | undefined,
+        from: req.query.from
+          ? new Date(req.query.from as string)
+          : undefined,
+
+        to: req.query.to
+          ? new Date(req.query.to as string)
+          : undefined,
         sort: req.query.sort as
           | "createdAt"
           | "status"

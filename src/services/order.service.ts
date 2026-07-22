@@ -235,6 +235,17 @@ export const getRestaurantOrders = async (
     where.tableId = filters.tableId;
   }
 
+  if (filters.from || filters.to) {
+    where.createdAt = {
+      ...(filters.from && {
+        gte: filters.from,
+      }),
+      ...(filters.to && {
+        lte: filters.to,
+      }),
+    };
+  }
+
   const normalizedSearch = filters.search?.trim();
 
   if (normalizedSearch) {
