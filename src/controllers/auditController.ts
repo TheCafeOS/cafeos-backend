@@ -3,26 +3,29 @@ import { Response } from "express";
 import { auditService } from "../services/audit.service.js";
 import { AuthenticatedRequest } from "../middleware/auth.js";
 import { successResponse } from "../utils/apiResponse.js";
+import { getPaginationParams } from "../utils/pagination.js";
 
 export const listAuditLogs = async (
   req: AuthenticatedRequest,
   res: Response,
 ) => {
-  const { page, limit } = req.query as {
-    page: string;
-    limit: string;
-  };
-
-  const result = await auditService.listLogs(
-    req.employee!.restaurantId,
-    Number(page ?? 1),
-    Number(limit ?? 20),
+  const { page, limit } = getPaginationParams(
+    req.query.page as string | undefined,
+    req.query.limit as string | undefined,
   );
+
+  const result =
+    await auditService.listLogs(
+      req.employee!.restaurantId,
+      page,
+      limit,
+    );
 
   return res.json(
     successResponse(
       "Audit logs fetched successfully.",
-      result,
+      result.data,
+      result.pagination,
     ),
   );
 };

@@ -4,6 +4,7 @@ import {
 } from "@prisma/client";
 
 import { prisma } from "../lib/prisma.js";
+import { getPaginationMeta } from "../utils/pagination.js";
 
 export interface AuditLogInput {
   restaurantId: string;
@@ -31,44 +32,44 @@ export const auditService = {
   ) {
     const skip = (page - 1) * limit;
 
-    const [logs, total] = await prisma.$transaction([
-      prisma.auditLog.findMany({
-        where: {
-          restaurantId,
-        },
-        include: {
-          employee: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              role: true,
+    const where = {
+      restaurantId,
+    };
+
+    const [logs, totalItems] =
+      await prisma.$transaction([
+        prisma.auditLog.findMany({
+          where,
+          include: {
+            employee: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+              },
             },
           },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        skip,
-        take: limit,
-      }),
+          orderBy: {
+            createdAt: "desc",
+          },
+          skip,
+          take: limit,
+        }),
 
-      prisma.auditLog.count({
-        where: {
-          restaurantId,
-        },
-      }),
-    ]);
+        prisma.auditLog.count({
+          where,
+        }),
+      ]);
 
     return {
-      logs,
-      pagination: {
+      data: logs,
+      pagination: getPaginationMeta(
         page,
         limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
+        totalItems,
+      ),
     };
-  },
+  }
 };
 
