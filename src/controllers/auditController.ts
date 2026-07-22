@@ -19,6 +19,7 @@ export const listAuditLogs = async (
       req.employee!.restaurantId,
       page,
       limit,
+      req.query.search as string | undefined,
     );
 
   return res.json(

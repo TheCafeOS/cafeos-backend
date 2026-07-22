@@ -29,11 +29,50 @@ export const auditService = {
     restaurantId: string,
     page: number,
     limit: number,
+    search?: string,
   ) {
     const skip = (page - 1) * limit;
 
-    const where = {
+    const normalizedSearch = search?.trim();
+
+    const where: Prisma.AuditLogWhereInput = {
       restaurantId,
+
+      ...(normalizedSearch && {
+        OR: [
+          {
+            action: {
+              equals: normalizedSearch as AuditAction,
+            },
+          },
+          {
+            entity: {
+              contains: normalizedSearch,
+              mode: "insensitive",
+            },
+          },
+          {
+            employee: {
+              is: {
+                name: {
+                  contains: normalizedSearch,
+                  mode: "insensitive",
+                },
+              },
+            },
+          },
+          {
+            employee: {
+              is: {
+                email: {
+                  contains: normalizedSearch,
+                  mode: "insensitive",
+                },
+              },
+            },
+          },
+        ],
+      }),
     };
 
     const [logs, totalItems] =
