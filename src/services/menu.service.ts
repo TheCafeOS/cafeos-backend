@@ -22,11 +22,30 @@ export const getMenuItems = async (
   restaurantId: string,
   page?: string,
   limit?: string,
+  search?: string,
 ) => {
   const pagination = getPaginationParams(page, limit);
+  const normalizedSearch = search?.trim();
 
-  const where = {
+  const where: Prisma.MenuItemWhereInput = {
     restaurantId,
+
+    ...(normalizedSearch && {
+      OR: [
+        {
+          name: {
+            contains: normalizedSearch,
+            mode: "insensitive",
+          },
+        },
+        {
+          description: {
+            contains: normalizedSearch,
+            mode: "insensitive",
+          },
+        },
+      ],
+    }),
   };
 
   const [menuItems, totalItems] = await prisma.$transaction([

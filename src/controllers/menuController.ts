@@ -12,6 +12,7 @@ export const listMenuItems = async (
     req.employee!.restaurantId,
     req.query.page as string | undefined,
     req.query.limit as string | undefined,
+    req.query.search as string | undefined,
   );
 
   return res.json(
