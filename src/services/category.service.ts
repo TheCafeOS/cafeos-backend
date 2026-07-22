@@ -11,6 +11,24 @@ import {
   getPaginationParams,
 } from "../utils/pagination.js";
 
+async function getCategoryOrThrow(
+  restaurantId: string,
+  categoryId: string,
+) {
+  const category = await prisma.category.findFirst({
+    where: {
+      id: categoryId,
+      restaurantId,
+    },
+  });
+
+  if (!category) {
+    throw new AppError("Category not found.", 404);
+  }
+
+  return category;
+}
+
 export const getCategories = async (
   restaurantId: string,
   page?: string,
@@ -64,10 +82,26 @@ export const addCategory = async (
   currentEmployeeId: string,
   name: string,
 ) => {
+  const trimmedName = name.trim();
+
+  const existingCategory = await prisma.category.findFirst({
+    where: {
+      restaurantId,
+      name: {
+        equals: trimmedName,
+        mode: "insensitive",
+      },
+    },
+  });
+
+  if (existingCategory) {
+    throw new AppError("Category already exists.", 409);
+  }
+
   const category = await prisma.category.create({
     data: {
       restaurantId,
-      name,
+      name: trimmedName,
     },
   });
 
@@ -94,15 +128,28 @@ export const editCategory = async (
   currentEmployeeId: string,
   name: string,
 ) => {
-  const category = await prisma.category.findFirst({
+  const trimmedName = name.trim();
+
+  const category = await getCategoryOrThrow(
+    restaurantId,
+    id,
+  );
+
+  const existingCategory = await prisma.category.findFirst({
     where: {
-      id,
       restaurantId,
+      name: {
+        equals: trimmedName,
+        mode: "insensitive",
+      },
+      NOT: {
+        id,
+      },
     },
   });
 
-  if (!category) {
-    throw new AppError("Category not found", 404);
+  if (existingCategory) {
+    throw new AppError("Category already exists.", 409);
   }
 
   const updatedCategory = await prisma.category.update({
@@ -110,7 +157,7 @@ export const editCategory = async (
       id,
     },
     data: {
-      name,
+      name: trimmedName,
     },
   });
 
@@ -137,16 +184,10 @@ export const removeCategory = async (
   id: string,
   currentEmployeeId: string,
 ) => {
-  const category = await prisma.category.findFirst({
-    where: {
-      id,
-      restaurantId,
-    },
-  });
-
-  if (!category) {
-    throw new AppError("Category not found", 404);
-  }
+  const category = await getCategoryOrThrow(
+    restaurantId,
+    id,
+  );
 
   await prisma.category.delete({
     where: {

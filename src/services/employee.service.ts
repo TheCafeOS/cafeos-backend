@@ -15,6 +15,18 @@ import {
 
 const SALT_ROUNDS = 10;
 
+const employeeSelect =
+  Prisma.validator<Prisma.EmployeeSelect>()({
+    id: true,
+    name: true,
+    email: true,
+    role: true,
+    isActive: true,
+    lastLoginAt: true,
+    createdAt: true,
+    updatedAt: true,
+  });
+
 export const employeeService = {
   async createEmployee(
     restaurantId: string,
@@ -132,16 +144,7 @@ export const employeeService = {
         where,
         skip: pagination.skip,
         take: pagination.limit,
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-          isActive: true,
-          lastLoginAt: true,
-          createdAt: true,
-          updatedAt: true,
-        },
+        select: employeeSelect,
         orderBy,
       }),
 
@@ -170,16 +173,7 @@ export const employeeService = {
         restaurantId,
         deletedAt: null,
       },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        isActive: true,
-        lastLoginAt: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: employeeSelect,
     });
 
     if (!employee) {
@@ -226,16 +220,7 @@ export const employeeService = {
           role: data.role,
         }),
       },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        isActive: true,
-        lastLoginAt: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: employeeSelect,
     });
 
       await auditService.log({
@@ -289,16 +274,7 @@ export const employeeService = {
       data: {
         isActive,
       },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        isActive: true,
-        lastLoginAt: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: employeeSelect,
     });
 
       await auditService.log({

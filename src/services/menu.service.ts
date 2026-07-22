@@ -6,6 +6,7 @@ import {
   uploadImage,
   deleteImage,
 } from "./cloudinary.service.js";
+
 import {
   AuditAction,
   Prisma,
@@ -13,10 +14,47 @@ import {
 
 import { auditService } from "./audit.service.js";
 import { AuditEntity } from "../constants/audit.js";
+
 import {
   getPaginationMeta,
   getPaginationParams,
 } from "../utils/pagination.js";
+
+async function getMenuItemOrThrow(
+  restaurantId: string,
+  menuItemId: string,
+) {
+  const menuItem = await prisma.menuItem.findFirst({
+    where: {
+      id: menuItemId,
+      restaurantId,
+    },
+  });
+
+  if (!menuItem) {
+    throw new AppError("Menu item not found.", 404);
+  }
+
+  return menuItem;
+}
+
+async function validateCategory(
+  restaurantId: string,
+  categoryId?: string,
+) {
+  if (!categoryId) return;
+
+  const category = await prisma.category.findFirst({
+    where: {
+      id: categoryId,
+      restaurantId,
+    },
+  });
+
+  if (!category) {
+    throw new AppError("Category not found.", 404);
+  }
+}
 
 export const getMenuItems = async (
   restaurantId: string,
@@ -29,6 +67,7 @@ export const getMenuItems = async (
   order?: "asc" | "desc",
 ) => {
   const pagination = getPaginationParams(page, limit);
+
   const normalizedSearch = search?.trim();
 
   const where: Prisma.MenuItemWhereInput = {
@@ -69,6 +108,8 @@ export const getMenuItems = async (
       where,
       skip: pagination.skip,
       take: pagination.limit,
+      orderBy,
+
       include: {
         category: {
           select: {
@@ -77,7 +118,6 @@ export const getMenuItems = async (
           },
         },
       },
-      orderBy,
     }),
 
     prisma.menuItem.count({
@@ -102,29 +142,30 @@ export const addMenuItem = async (
     name: string;
     description?: string;
     price: number;
-    categoryId?: string;  
+    categoryId?: string;
     isAvailable?: boolean;
   },
 ) => {
-  if (data.categoryId) {
-    const category = await prisma.category.findFirst({
-      where: {
-        id: data.categoryId,
-        restaurantId,
-      },
-    });
+  await validateCategory(
+    restaurantId,
+    data.categoryId,
+  );
 
-    if (!category) {
-      throw new AppError("Category not found", 404);
-    }
-  }
   const menuItem = await prisma.menuItem.create({
     data: {
       restaurantId,
-      ...data,
-      isAvailable: data.isAvailable ?? true,
+
+      name: data.name.trim(),
+      description: data.description?.trim(),
+      price: data.price,
+
+      categoryId: data.categoryId,
+
+      isAvailable:
+        data.isAvailable ?? true,
     },
   });
+
   await auditService.log({
     restaurantId,
     employeeId: currentEmployeeId,
@@ -156,38 +197,43 @@ export const editMenuItem = async (
     isAvailable?: boolean;
   },
 ) => {
-  if (data.categoryId) {
-    const category = await prisma.category.findFirst({
-      where: {
-        id: data.categoryId,
-        restaurantId,
-      },
-    });
-
-    if (!category) {
-      throw new AppError("Category not found", 404);
-    }
-  }
-  const updated = await prisma.menuItem.updateMany({
-    where: {
-      id,
+  const existingMenuItem =
+    await getMenuItemOrThrow(
       restaurantId,
-    },
-    data,
-  });
+      id,
+    );
 
-  if (updated.count === 0) {
-    throw new AppError("Menu item not found", 404);
-  }
+  await validateCategory(
+    restaurantId,
+    data.categoryId,
+  );
 
-  const menuItem = await prisma.menuItem.findUnique({
+  const menuItem = await prisma.menuItem.update({
     where: {
       id,
     },
+    data: {
+      ...(data.name !== undefined && {
+        name: data.name.trim(),
+      }),
+
+      ...(data.description !== undefined && {
+        description: data.description?.trim(),
+      }),
+
+      ...(data.price !== undefined && {
+        price: data.price,
+      }),
+
+      ...(data.categoryId !== undefined && {
+        categoryId: data.categoryId,
+      }),
+
+      ...(data.isAvailable !== undefined && {
+        isAvailable: data.isAvailable,
+      }),
+    },
   });
-  if (!menuItem) {
-    throw new AppError("Menu item not found", 404);
-  }
 
   await auditService.log({
     restaurantId,
@@ -199,8 +245,12 @@ export const editMenuItem = async (
     entityId: menuItem.id,
 
     metadata: {
-      name: menuItem.name,
-      price: menuItem.price,
+      previousName: existingMenuItem.name,
+      newName: menuItem.name,
+
+      previousPrice: existingMenuItem.price,
+      newPrice: menuItem.price,
+
       isAvailable: menuItem.isAvailable,
     },
   });
@@ -213,16 +263,11 @@ export const removeMenuItem = async (
   currentEmployeeId: string,
   id: string,
 ) => {
-  const menuItem = await prisma.menuItem.findFirst({
-    where: {
-      id,
+  const menuItem =
+    await getMenuItemOrThrow(
       restaurantId,
-    },
-  });
-
-  if (!menuItem) {
-    throw new AppError("Menu item not found", 404);
-  }
+      id,
+    );
 
   try {
     await prisma.menuItem.delete({
@@ -291,28 +336,19 @@ export const uploadMenuImage = async (
     throw new AppError("Image is required.", 400);
   }
 
-  const menuItem = await prisma.menuItem.findFirst({
-    where: {
-      id: menuItemId,
-      restaurantId,
-    },
-  });
+  const menuItem = await getMenuItemOrThrow(
+    restaurantId,
+    menuItemId,
+  );
 
-  if (!menuItem) {
-    throw new AppError("Menu item not found.", 404);
-  }
-
-  // 1. Upload the new image first
+  // Upload new image first
   const uploaded = await uploadImage(
     file.buffer,
     `cafeos/restaurants/${restaurantId}/menu`,
   );
 
-  let updatedMenuItem;
-
   try {
-    // 2. Update the database
-    updatedMenuItem = await prisma.menuItem.update({
+    const updatedMenuItem = await prisma.menuItem.update({
       where: {
         id: menuItemId,
       },
@@ -321,16 +357,10 @@ export const uploadMenuImage = async (
         imagePublicId: uploaded.publicId,
       },
     });
-  } catch (error) {
-    // Roll back the newly uploaded image if DB update fails
-    await deleteImage(uploaded.publicId).catch(() => {});
 
-    throw error;
-  }
-
-  // 3. Delete the previous image (best effort)
-  if (menuItem.imagePublicId) {
-    deleteImage(menuItem.imagePublicId).catch((error) => {
+    // Delete previous image (best effort)
+    if (menuItem.imagePublicId) {
+      deleteImage(menuItem.imagePublicId).catch((error) => {
         logger.error(
           {
             err: error,
@@ -340,7 +370,21 @@ export const uploadMenuImage = async (
           "Failed to delete previous Cloudinary image",
         );
       });
-  }
+    }
 
-  return updatedMenuItem;
+    return updatedMenuItem;
+  } catch (error) {
+    // Rollback newly uploaded image if DB update fails
+    await deleteImage(uploaded.publicId).catch((rollbackError) => {
+      logger.error(
+        {
+          err: rollbackError,
+          publicId: uploaded.publicId,
+        },
+        "Failed to rollback uploaded Cloudinary image",
+      );
+    });
+
+    throw error;
+  }
 };

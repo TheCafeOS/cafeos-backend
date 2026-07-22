@@ -12,9 +12,7 @@ import {
 import { auditService } from "./audit.service.js";
 import { AuditEntity } from "../constants/audit.js";
 import { toOrderResponse } from "../utils/order.mapper.js";
-import {
-  getPaginationMeta,
-} from "../utils/pagination.js";
+import { getPaginationMeta } from "../utils/pagination.js";
 
 type OrderItemInput = {
   menuItemId: string;
@@ -50,6 +48,24 @@ const orderWithRelations = Prisma.validator<Prisma.OrderInclude>()({
     },
   },
 });
+
+async function getOrderOrThrow(
+  restaurantId: string,
+  orderId: string,
+) {
+  const order = await prisma.order.findFirst({
+    where: {
+      id: orderId,
+      restaurantId,
+    },
+  });
+
+  if (!order) {
+    throw new AppError("Order not found.", 404);
+  }
+
+  return order;
+}
 
 export const createRestaurantOrder = async (
   restaurantId: string,
@@ -148,14 +164,22 @@ async function createOrderForTable(
     );
   }
 
-  const total = items.reduce((sum, item) => {
-    const menuItem = menuItemMap.get(item.menuItemId)!;
+  const orderItems = items.map((item) => {
+    const menuItem =
+      menuItemMap.get(item.menuItemId)!;
 
-    return (
-      sum +
-      Number(menuItem.price) * item.quantity
-    );
-  }, 0);
+    return {
+      menuItemId: menuItem.id,
+      quantity: item.quantity,
+      price: Number(menuItem.price),
+    };
+  });
+
+  const total = orderItems.reduce(
+    (sum, item) =>
+      sum + item.price * item.quantity,
+    0,
+  );
 
   const order = await prisma.order.create({
     data: {
@@ -164,13 +188,7 @@ async function createOrderForTable(
       customerPhone,
       total,
       items: {
-        create: items.map((item) => ({
-          menuItemId: item.menuItemId,
-          quantity: item.quantity,
-          price: Number(
-            menuItemMap.get(item.menuItemId)!.price,
-          ),
-        })),
+        create: orderItems,
       },
     },
     include: orderWithRelations,
@@ -246,7 +264,8 @@ export const getRestaurantOrders = async (
     };
   }
 
-  const normalizedSearch = filters.search?.trim();
+  const normalizedSearch =
+    filters.search?.trim();
 
   if (normalizedSearch) {
     where.OR = [
@@ -290,6 +309,7 @@ export const getRestaurantOrders = async (
 
   return {
     data: orders.map(toOrderResponse),
+
     pagination: getPaginationMeta(
       page,
       limit,
@@ -311,7 +331,7 @@ export const getRestaurantOrder = async (
   });
 
   if (!order) {
-    throw new AppError("Order not found", 404);
+    throw new AppError("Order not found.", 404);
   }
 
   return toOrderResponse(order);
@@ -323,62 +343,64 @@ export const updateOrderStatus = async (
   orderId: string,
   status: OrderStatus,
 ) => {
-  const order = await prisma.order.findFirst({
-    where: {
-      id: orderId,
-      restaurantId,
-    },
-  });
+  const existingOrder = await getOrderOrThrow(
+    restaurantId,
+    orderId,
+  );
 
-  if (!order) {
-    throw new AppError("Order not found", 404);
-  }
+  const currentStatus =
+    existingOrder.status as OrderStatus;
 
-  const currentStatus = order.status as OrderStatus;
-
-  if (!canTransitionOrderStatus(currentStatus, status)) {
+  if (
+    !canTransitionOrderStatus(
+      currentStatus,
+      status,
+    )
+  ) {
     throw new AppError(
       "Invalid order status transition.",
       409,
     );
   }
 
-  const updated = await prisma.order.update({
-    where: {
-      id: orderId,
-    },
-    data: {
-      status,
-    },
-    include: orderWithRelations,
-  });
+  const updatedOrder =
+    await prisma.order.update({
+      where: {
+        id: orderId,
+      },
+      data: {
+        status,
+      },
+      include: orderWithRelations,
+    });
 
   await auditService.log({
     restaurantId,
     employeeId: currentEmployeeId,
 
-    action: AuditAction.ORDER_STATUS_CHANGED,
+    action:
+      AuditAction.ORDER_STATUS_CHANGED,
 
     entity: AuditEntity.Order,
-    entityId: updated.id,
+    entityId: updatedOrder.id,
 
     metadata: {
       previousStatus: currentStatus,
-      newStatus: updated.status,
-      tableId: updated.tableId,
+      newStatus: updatedOrder.status,
+      tableId: updatedOrder.tableId,
     },
   });
 
   broadcastOrderEvent(
-    updated.restaurantId,
-    updated.tableId,
+    updatedOrder.restaurantId,
+    updatedOrder.tableId,
     "ORDER_UPDATED",
     {
-      orderId: updated.id,
-      status: updated.status,
-      timestamp: updated.updatedAt,
+      orderId: updatedOrder.id,
+      status: updatedOrder.status,
+      timestamp: updatedOrder.updatedAt,
     },
   );
 
-  return toOrderResponse(updated);
+  return toOrderResponse(updatedOrder);
 };

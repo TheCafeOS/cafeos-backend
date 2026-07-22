@@ -158,6 +158,7 @@ model Category {
   menuItems    MenuItem[]
 
   @@index([restaurantId, createdAt])
+  @@unique([restaurantId, name])
 }
 
 model MenuItem {
