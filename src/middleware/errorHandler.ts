@@ -16,6 +16,8 @@ export const errorHandler = (
     requestId: req.requestId,
     method: req.method,
     path: req.originalUrl,
+    ip: req.ip,
+    userAgent: req.get("user-agent"),
   });
 
   if (err instanceof AppError) {

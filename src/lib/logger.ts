@@ -2,7 +2,14 @@ import pino from "pino";
 import { env } from "../config/env.js";
 
 export const logger = pino({
-  level: env.NODE_ENV === "production" ? "info" : "debug",
+  level:
+    env.NODE_ENV === "production"
+      ? "info"
+      : "debug",
+
+  base: undefined,
+
+  timestamp: pino.stdTimeFunctions.isoTime,
 
   transport:
     env.NODE_ENV === "production"
@@ -13,6 +20,7 @@ export const logger = pino({
             colorize: true,
             translateTime: "SYS:standard",
             ignore: "pid,hostname",
+            singleLine: true,
           },
         },
 });

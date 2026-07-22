@@ -94,6 +94,12 @@ app.use(
   pinoHttp({
     logger,
 
+    autoLogging: {
+      ignore: (req) =>
+        req.url === "/health" ||
+        req.url.startsWith("/api-docs"),
+    },
+
     customProps: (req) => ({
       requestId: req.requestId,
     }),
