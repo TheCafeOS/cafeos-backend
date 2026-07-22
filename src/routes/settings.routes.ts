@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
+import { requireRole } from "../middleware/authorize.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { validate } from "../middleware/validate.js";
 import { updateSettingsSchema } from "../validations/settings.validation.js";
@@ -58,10 +59,13 @@ router.get(
  *         description: Validation error.
  *       401:
  *         description: Unauthorized.
+ *       403:
+ *         description: Forbidden.
  */
 router.patch(
   "/",
   requireAuth,
+  requireRole("OWNER"),
   validate(updateSettingsSchema),
   asyncHandler(updateSettings),
 );
@@ -95,10 +99,13 @@ router.patch(
  *         description: Invalid request.
  *       401:
  *         description: Unauthorized.
+ *       403:
+ *         description: Forbidden.
  */
 router.patch(
   "/logo",
   requireAuth,
+  requireRole("OWNER"),
   uploadImage.single("image"),
   asyncHandler(uploadRestaurantLogo),
 );
@@ -132,10 +139,13 @@ router.patch(
  *         description: Invalid request.
  *       401:
  *         description: Unauthorized.
+ *       403:
+ *         description: Forbidden.
  */
 router.patch(
   "/cover",
   requireAuth,
+  requireRole("OWNER"),
   uploadImage.single("image"),
   asyncHandler(uploadRestaurantCover),
 );
