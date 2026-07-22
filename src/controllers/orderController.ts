@@ -39,7 +39,7 @@ export const listOrders = async (
     req.query.limit as string | undefined,
   );
 
-  const orders =
+  const result =
     await orderService.getRestaurantOrders(
       req.employee!.restaurantId,
       page,
@@ -59,13 +59,14 @@ export const listOrders = async (
           | "asc"
           | "desc"
           | undefined,
-      }
+      },
     );
 
   return res.json(
     successResponse(
       "Orders fetched successfully",
-      orders,
+      result.data,
+      result.pagination,
     ),
   );
 };

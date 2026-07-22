@@ -12,6 +12,9 @@ import {
 import { auditService } from "./audit.service.js";
 import { AuditEntity } from "../constants/audit.js";
 import { toOrderResponse } from "../utils/order.mapper.js";
+import {
+  getPaginationMeta,
+} from "../utils/pagination.js";
 
 type OrderItemInput = {
   menuItemId: string;
@@ -274,20 +277,13 @@ export const getRestaurantOrders = async (
       }),
     ]);
 
-  const totalPages = Math.ceil(
-    totalItems / limit,
-  );
-
   return {
-    orders: orders.map(toOrderResponse),
-    pagination: {
+    data: orders.map(toOrderResponse),
+    pagination: getPaginationMeta(
       page,
       limit,
       totalItems,
-      totalPages,
-      hasNextPage: page < totalPages,
-      hasPreviousPage: page > 1,
-    },
+    ),
   };
 };
 
