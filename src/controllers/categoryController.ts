@@ -13,6 +13,14 @@ export const listCategories = async (
     req.query.page as string | undefined,
     req.query.limit as string | undefined,
     req.query.search as string | undefined,
+    req.query.sort as
+      | "name"
+      | "createdAt"
+      | undefined,
+    req.query.order as
+      | "asc"
+      | "desc"
+      | undefined,
   );
 
   return res.json(

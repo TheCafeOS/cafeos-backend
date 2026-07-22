@@ -16,6 +16,8 @@ export const getCategories = async (
   page?: string,
   limit?: string,
   search?: string,
+  sort?: "name" | "createdAt",
+  order?: "asc" | "desc",
 ) => {
   const pagination = getPaginationParams(page, limit);
 
@@ -30,14 +32,16 @@ export const getCategories = async (
     }),
   };
 
+  const orderBy: Prisma.CategoryOrderByWithRelationInput = {
+    [sort ?? "createdAt"]: order ?? "asc",
+  };
+
   const [categories, totalItems] = await prisma.$transaction([
     prisma.category.findMany({
       where,
       skip: pagination.skip,
       take: pagination.limit,
-      orderBy: {
-        createdAt: "asc",
-      },
+      orderBy,
     }),
 
     prisma.category.count({
