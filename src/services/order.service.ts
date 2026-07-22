@@ -235,32 +235,32 @@ export const getRestaurantOrders = async (
     where.tableId = filters.tableId;
   }
 
-  if (filters.search?.trim()) {
-  const search = filters.search.trim();
+  const normalizedSearch = filters.search?.trim();
 
-  where.OR = [
-    {
-      id: {
-        contains: search,
-        mode: "insensitive",
-      },
-    },
-    {
-      customerPhone: {
-        contains: search,
-        mode: "insensitive",
-      },
-    },
-    {
-      table: {
-        name: {
-          contains: search,
+  if (normalizedSearch) {
+    where.OR = [
+      {
+        id: {
+          contains: normalizedSearch,
           mode: "insensitive",
         },
       },
-    },
-  ];
-}
+      {
+        customerPhone: {
+          contains: normalizedSearch,
+          mode: "insensitive",
+        },
+      },
+      {
+        table: {
+          name: {
+            contains: normalizedSearch,
+            mode: "insensitive",
+          },
+        },
+      },
+    ];
+  }
 
   const [orders, totalItems] =
     await prisma.$transaction([
