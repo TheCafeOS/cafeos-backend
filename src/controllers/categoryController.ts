@@ -8,14 +8,17 @@ export const listCategories = async (
   req: AuthenticatedRequest,
   res: Response,
 ) => {
-  const categories = await categoryService.getCategories(
+  const result = await categoryService.getCategories(
     req.employee!.restaurantId,
+    req.query.page as string | undefined,
+    req.query.limit as string | undefined,
   );
 
   return res.json(
     successResponse(
       "Categories fetched successfully",
-      categories,
+      result.data,
+      result.pagination,
     ),
   );
 };

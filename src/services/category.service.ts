@@ -4,16 +4,45 @@ import { prisma } from "../lib/prisma.js";
 import { AppError } from "../utils/AppError.js";
 import { auditService } from "./audit.service.js";
 import { AuditEntity } from "../constants/audit.js";
+import {
+  getPaginationMeta,
+  getPaginationParams,
+} from "../utils/pagination.js";
 
-export const getCategories = async (restaurantId: string) => {
-  return prisma.category.findMany({
-    where: {
-      restaurantId,
-    },
-    orderBy: {
-      createdAt: "asc",
-    },
-  });
+export const getCategories = async (
+  restaurantId: string,
+  page?: string,
+  limit?: string,
+) => {
+  const pagination = getPaginationParams(page, limit);
+
+  const where = {
+    restaurantId,
+  };
+
+  const [categories, totalItems] = await prisma.$transaction([
+    prisma.category.findMany({
+      where,
+      skip: pagination.skip,
+      take: pagination.limit,
+      orderBy: {
+        createdAt: "asc",
+      },
+    }),
+
+    prisma.category.count({
+      where,
+    }),
+  ]);
+
+  return {
+    data: categories,
+    pagination: getPaginationMeta(
+      pagination.page,
+      pagination.limit,
+      totalItems,
+    ),
+  };
 };
 
 export const addCategory = async (
