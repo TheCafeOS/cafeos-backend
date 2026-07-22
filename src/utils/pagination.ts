@@ -44,3 +44,29 @@ export function getPaginationParams(
     skip: (parsedPage - 1) * parsedLimit,
   };
 }
+
+export type PaginationMeta = {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+};
+
+export function getPaginationMeta(
+  page: number,
+  limit: number,
+  totalItems: number,
+): PaginationMeta {
+  const totalPages = Math.max(1, Math.ceil(totalItems / limit));
+
+  return {
+    page,
+    limit,
+    totalItems,
+    totalPages,
+    hasNextPage: page < totalPages,
+    hasPreviousPage: page > 1,
+  };
+}

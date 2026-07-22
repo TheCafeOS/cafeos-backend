@@ -7,6 +7,10 @@ import {
 } from "@prisma/client";
 import { auditService } from "./audit.service.js";
 import { AuditEntity } from "../constants/audit.js";
+import {
+  getPaginationMeta,
+  getPaginationParams,
+} from "../utils/pagination.js";
 
 const SALT_ROUNDS = 10;
 
@@ -75,26 +79,51 @@ export const employeeService = {
     return employee;
   },
 
-  async listEmployees(restaurantId: string) {
-    return prisma.employee.findMany({
-      where: {
-        restaurantId,
-        deletedAt: null,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        isActive: true,
-        lastLoginAt: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+  async listEmployees(
+    restaurantId: string,
+    page?: string,
+    limit?: string,
+  ) {
+    const pagination = getPaginationParams(page, limit);
+
+    const where = {
+      restaurantId,
+      deletedAt: null,
+    };
+
+    const [employees, totalItems] = await prisma.$transaction([
+      prisma.employee.findMany({
+        where,
+        skip: pagination.skip,
+        take: pagination.limit,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          isActive: true,
+          lastLoginAt: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
+
+      prisma.employee.count({
+        where,
+      }),
+    ]);
+
+    return {
+      data: employees,
+      pagination: getPaginationMeta(
+        pagination.page,
+        pagination.limit,
+        totalItems,
+      ),
+    };
   },
 
   async getEmployeeById(

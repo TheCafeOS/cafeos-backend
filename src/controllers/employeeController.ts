@@ -26,14 +26,17 @@ export const listEmployees = async (
   req: AuthenticatedRequest,
   res: Response,
 ) => {
-  const employees = await employeeService.listEmployees(
+  const result = await employeeService.listEmployees(
     req.employee!.restaurantId,
+    req.query.page as string | undefined,
+    req.query.limit as string | undefined,
   );
 
   return res.json(
     successResponse(
       "Employees fetched successfully.",
-      employees,
+      result.data,
+      result.pagination,
     ),
   );
 };
