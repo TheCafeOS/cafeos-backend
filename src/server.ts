@@ -3,7 +3,8 @@ import { createServer } from "http";
 import app from "./app.js";
 import { env } from "./config/env.js";
 import { logger } from "./lib/logger.js";
-import { initializeSocket } from "./lib/socket.js";
+import { initializeSocket, io } from "./lib/socket.js";
+import { prisma } from "./lib/prisma.js";
 
 const httpServer = createServer(app);
 
@@ -16,3 +17,35 @@ if (env.NODE_ENV !== "test") {
     );
   });
 }
+
+const gracefulShutdown = async (
+  signal: NodeJS.Signals,
+) => {
+  logger.info(
+    `${signal} received. Shutting down gracefully...`,
+  );
+
+  httpServer.close(async () => {
+    try {
+      io.close();
+
+      await prisma.$disconnect();
+
+      logger.info("Server shutdown completed.");
+
+      process.exit(0);
+    } catch (error) {
+      logger.error(error, "Error during shutdown");
+
+      process.exit(1);
+    }
+  });
+};
+
+process.on("SIGINT", () =>
+  gracefulShutdown("SIGINT"),
+);
+
+process.on("SIGTERM", () =>
+  gracefulShutdown("SIGTERM"),
+);

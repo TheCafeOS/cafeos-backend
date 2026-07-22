@@ -6,7 +6,7 @@ import { logger } from "./logger.js";
 import { getTableIdByQrToken } from "../services/public.service.js";
 import { verifyAccessToken } from "../utils/jwt.js";
 
-let io: Server;
+export let io: Server;
 
 export const initializeSocket = (httpServer: HTTPServer) => {
   io = new Server(httpServer, {
@@ -32,9 +32,17 @@ export const initializeSocket = (httpServer: HTTPServer) => {
       socket.data.role = payload.role;
 
       next();
-    } catch {
-      next(new Error("Unauthorized"));
-    }
+    } catch (error) {
+        logger.warn(
+          {
+            socketId: socket.id,
+            ip: socket.handshake.address,
+          },
+          "Socket authentication failed",
+        );
+
+        next(new Error("Unauthorized"));
+      }
   });
 
   io.on("connection", (socket: Socket) => {
@@ -45,8 +53,12 @@ export const initializeSocket = (httpServer: HTTPServer) => {
   }
 
   logger.info(
-    { socketId: socket.id },
-    "Client connected",
+    {
+      socketId: socket.id,
+      restaurantId: socket.data.restaurantId,
+      employeeId: socket.data.employeeId,
+    },
+    "Socket connected",
   );
 
   socket.on("join_table", (tableId: string) => {
@@ -68,8 +80,12 @@ export const initializeSocket = (httpServer: HTTPServer) => {
 
   socket.on("disconnect", () => {
     logger.info(
-      { socketId: socket.id },
-      "Client disconnected",
+      {
+        socketId: socket.id,
+        restaurantId: socket.data.restaurantId,
+        employeeId: socket.data.employeeId,
+      },
+      "Socket disconnected",
     );
   });
 });
@@ -91,6 +107,15 @@ export const broadcastOrderEvent = (
   data: Record<string, unknown>,
 ) => {
   const socket = getIO();
+
+  logger.debug(
+    {
+      event,
+      restaurantId,
+      tableId,
+    },
+    "Broadcasting order event",
+  );
 
   socket.to(`restaurant_${restaurantId}`).emit(event, {
     tableId,
