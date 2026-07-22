@@ -27,6 +27,7 @@ import { requestId } from "./middleware/requestId.js";
 import settingsRoutes from "./routes/settings.routes.js";
 import employeeRoutes from "./routes/employeeRoutes.js";
 import auditRoutes from "./routes/auditRoutes.js";
+import { prisma } from "./lib/prisma.js";
 
 const app = express();
 
@@ -121,14 +122,34 @@ app.use(
 /**
  * Health
  */
-app.get("/health", (_req, res) => {
-  return res.json(
-    successResponse("CafeOS API is healthy", {
-      status: "ok",
-      uptime: process.uptime(),
-      timestamp: new Date().toISOString(),
-    }),
-  );
+app.get("/health", async (_req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+
+    return res.json(
+      successResponse("CafeOS API is healthy", {
+        status: "ok",
+        database: "connected",
+        environment: env.NODE_ENV,
+        uptime: Math.floor(process.uptime()),
+        version: process.env.npm_package_version ?? "unknown",
+        timestamp: new Date().toISOString(),
+      }),
+    );
+  } catch {
+    return res.status(503).json({
+      status: "error",
+      message: "Database unavailable",
+      data: {
+        status: "degraded",
+        database: "disconnected",
+        environment: env.NODE_ENV,
+        uptime: Math.floor(process.uptime()),
+        version: process.env.npm_package_version ?? "unknown",
+        timestamp: new Date().toISOString(),
+      },
+    });
+  }
 });
 
 /**
