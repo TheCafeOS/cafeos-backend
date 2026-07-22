@@ -85,28 +85,39 @@ export const employeeService = {
     page?: string,
     limit?: string,
     search?: string,
+    role?: EmployeeRole,
+    isActive?: boolean,
   ) {
     const pagination = getPaginationParams(page, limit);
+    const normalizedSearch = search?.trim();
 
     const where: Prisma.EmployeeWhereInput = {
       restaurantId,
       deletedAt: null,
 
-      ...(search?.trim() && {
+      ...(normalizedSearch && {
         OR: [
           {
             name: {
-              contains: search.trim(),
+              contains: normalizedSearch,
               mode: "insensitive",
             },
           },
           {
             email: {
-              contains: search.trim(),
+              contains: normalizedSearch,
               mode: "insensitive",
             },
           },
         ],
+      }),
+
+      ...(role && {
+        role,
+      }),
+
+      ...(isActive !== undefined && {
+        isActive,
       }),
     };
 

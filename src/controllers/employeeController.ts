@@ -3,6 +3,7 @@ import { Response } from "express";
 import { employeeService } from "../services/employee.service.js";
 import { successResponse } from "../utils/apiResponse.js";
 import { AuthenticatedRequest } from "../middleware/auth.js";
+import { EmployeeRole } from "@prisma/client";
 
 export const createEmployee = async (
   req: AuthenticatedRequest,
@@ -31,6 +32,10 @@ export const listEmployees = async (
     req.query.page as string | undefined,
     req.query.limit as string | undefined,
     req.query.search as string | undefined,
+    req.query.role as EmployeeRole | undefined,
+    req.query.isActive !== undefined
+      ? req.query.isActive === "true"
+      : undefined,
   );
 
   return res.json(
