@@ -9,6 +9,10 @@ export const createMenuItemSchema = z.object({
     categoryId: z.string().optional(),
     isAvailable: z.boolean().optional(),
     foodType: z.nativeEnum(FoodType).optional(),
+
+    imageScale: z.number().min(0.5).max(5).optional(),
+    imagePositionX: z.number().min(-1000).max(1000).optional(),
+    imagePositionY: z.number().min(-1000).max(1000).optional(),
   }),
 });
 
@@ -20,5 +24,9 @@ export const updateMenuItemSchema = z.object({
     categoryId: z.string().optional(),
     isAvailable: z.boolean().optional(),
     foodType: z.nativeEnum(FoodType).optional(),
+
+    imageScale: z.number().min(0.5).max(5).optional(),
+    imagePositionX: z.number().min(-1000).max(1000).optional(),
+    imagePositionY: z.number().min(-1000).max(1000).optional(),
   }),
 });

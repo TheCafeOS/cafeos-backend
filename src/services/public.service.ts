@@ -90,6 +90,9 @@ export const getMenu = async (qrToken: string) => {
       foodType: item.foodType,
 
       imageUrl: item.imageUrl,
+      imageScale: item.imageScale,
+      imagePositionX: item.imagePositionX,
+      imagePositionY: item.imagePositionY,
       isAvailable: item.isAvailable,
       categoryId: item.categoryId,
 
@@ -159,6 +162,11 @@ export const getOrder = async (
         name: item.menuItem.name,
         price: item.menuItem.price,
         foodType: item.menuItem.foodType,
+
+        imageUrl: item.menuItem.imageUrl,
+        imageScale: item.menuItem.imageScale,
+        imagePositionX: item.menuItem.imagePositionX,
+        imagePositionY: item.menuItem.imagePositionY,
       },
     })),
   };

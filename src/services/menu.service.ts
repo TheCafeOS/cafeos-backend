@@ -146,6 +146,10 @@ export const addMenuItem = async (
     categoryId?: string;
     isAvailable?: boolean;
     foodType?: FoodType;
+
+    imageScale?: number;
+    imagePositionX?: number;
+    imagePositionY?: number;
   },
 ) => {
   await validateCategory(
@@ -167,6 +171,10 @@ export const addMenuItem = async (
         data.isAvailable ?? true,
 
       foodType: data.foodType,
+
+      imageScale: data.imageScale,
+      imagePositionX: data.imagePositionX,
+      imagePositionY: data.imagePositionY,
     },
   });
 
@@ -184,6 +192,10 @@ export const addMenuItem = async (
       price: menuItem.price,
       categoryId: menuItem.categoryId,
       foodType: menuItem.foodType,
+
+      imageScale: menuItem.imageScale,
+      imagePositionX: menuItem.imagePositionX,
+      imagePositionY: menuItem.imagePositionY,
     },
   });
 
@@ -201,6 +213,10 @@ export const editMenuItem = async (
     categoryId?: string;
     isAvailable?: boolean;
     foodType?: FoodType;
+
+    imageScale?: number;
+    imagePositionX?: number;
+    imagePositionY?: number;
   },
 ) => {
   const existingMenuItem =
@@ -241,6 +257,17 @@ export const editMenuItem = async (
       ...(data.foodType !== undefined && {
         foodType: data.foodType,
       }),
+      ...(data.imageScale !== undefined && {
+        imageScale: data.imageScale,
+      }),
+
+      ...(data.imagePositionX !== undefined && {
+        imagePositionX: data.imagePositionX,
+      }),
+
+      ...(data.imagePositionY !== undefined && {
+        imagePositionY: data.imagePositionY,
+      }),
     },
   });
 
@@ -264,6 +291,15 @@ export const editMenuItem = async (
 
       previousFoodType: existingMenuItem.foodType,
       newFoodType: menuItem.foodType,
+
+      previousImageScale: existingMenuItem.imageScale,
+      newImageScale: menuItem.imageScale,
+
+      previousImagePositionX: existingMenuItem.imagePositionX,
+      newImagePositionX: menuItem.imagePositionX,
+
+      previousImagePositionY: existingMenuItem.imagePositionY,
+      newImagePositionY: menuItem.imagePositionY,
     },
   });
 

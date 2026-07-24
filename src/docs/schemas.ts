@@ -434,6 +434,23 @@ CreateMenuItemRequest: {
       type: "boolean",
       example: true,
     },
+    imageScale: {
+      type: "number",
+      default: 1,
+      example: 1,
+    },
+
+    imagePositionX: {
+      type: "number",
+      default: 0,
+      example: 0,
+    },
+
+    imagePositionY: {
+      type: "number",
+      default: 0,
+      example: 0,
+    },
     foodType: {
       type: "string",
       enum: [
@@ -465,6 +482,20 @@ UpdateMenuItemRequest: {
     },
     isAvailable: {
       type: "boolean",
+    },
+    imageScale: {
+      type: "number",
+      example: 1.2,
+    },
+
+    imagePositionX: {
+      type: "number",
+      example: -18,
+    },
+
+    imagePositionY: {
+      type: "number",
+      example: 12,
     },
     foodType: {
       type: "string",
@@ -594,6 +625,25 @@ PublicOrder: {
                   "EGG",
                 ],
                 example: "VEG",
+              },
+              imageUrl: {
+                type: "string",
+                nullable: true,
+              },
+
+              imageScale: {
+                type: "number",
+                example: 1,
+              },
+
+              imagePositionX: {
+                type: "number",
+                example: 0,
+              },
+
+              imagePositionY: {
+                type: "number",
+                example: 0,
               },
             },
           },
@@ -754,11 +804,22 @@ MenuItem: {
         "NON_VEG",
         "EGG",
       ],
-      example: "VEG",
     },
     imageUrl: {
       type: "string",
       nullable: true,
+    },
+    imageScale: {
+      type: "number",
+      default: 1,
+    },
+    imagePositionX: {
+      type: "number",
+      default: 0,
+    },
+    imagePositionY: {
+      type: "number",
+      default: 0,
     },
     isAvailable: {
       type: "boolean",
