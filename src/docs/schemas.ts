@@ -434,6 +434,16 @@ CreateMenuItemRequest: {
       type: "boolean",
       example: true,
     },
+    foodType: {
+      type: "string",
+      enum: [
+        "VEG",
+        "NON_VEG",
+        "EGG",
+      ],
+      default: "VEG",
+      example: "VEG",
+    },
   },
 },
 
@@ -455,6 +465,14 @@ UpdateMenuItemRequest: {
     },
     isAvailable: {
       type: "boolean",
+    },
+    foodType: {
+      type: "string",
+      enum: [
+        "VEG",
+        "NON_VEG",
+        "EGG",
+      ],
     },
   },
 },
@@ -567,6 +585,15 @@ PublicOrder: {
               },
               price: {
                 type: "number",
+              },
+              foodType: {
+                type: "string",
+                enum: [
+                  "VEG",
+                  "NON_VEG",
+                  "EGG",
+                ],
+                example: "VEG",
               },
             },
           },
@@ -696,6 +723,45 @@ SettingsResponse: {
           $ref: "#/components/schemas/Employee",
         },
       },
+    },
+  },
+},
+
+MenuItem: {
+  type: "object",
+  properties: {
+    id: {
+      type: "string",
+    },
+    categoryId: {
+      type: "string",
+      nullable: true,
+    },
+    name: {
+      type: "string",
+    },
+    description: {
+      type: "string",
+      nullable: true,
+    },
+    price: {
+      type: "number",
+    },
+    foodType: {
+      type: "string",
+      enum: [
+        "VEG",
+        "NON_VEG",
+        "EGG",
+      ],
+      example: "VEG",
+    },
+    imageUrl: {
+      type: "string",
+      nullable: true,
+    },
+    isAvailable: {
+      type: "boolean",
     },
   },
 },

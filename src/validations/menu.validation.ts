@@ -1,3 +1,4 @@
+import { FoodType } from "@prisma/client";
 import { z } from "zod";
 
 export const createMenuItemSchema = z.object({
@@ -7,6 +8,7 @@ export const createMenuItemSchema = z.object({
     price: z.number().positive("Price must be greater than 0"),
     categoryId: z.string().optional(),
     isAvailable: z.boolean().optional(),
+    foodType: z.nativeEnum(FoodType).optional(),
   }),
 });
 
@@ -17,5 +19,6 @@ export const updateMenuItemSchema = z.object({
     price: z.number().positive().optional(),
     categoryId: z.string().optional(),
     isAvailable: z.boolean().optional(),
+    foodType: z.nativeEnum(FoodType).optional(),
   }),
 });

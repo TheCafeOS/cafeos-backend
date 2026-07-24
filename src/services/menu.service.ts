@@ -9,6 +9,7 @@ import {
 
 import {
   AuditAction,
+  FoodType,
   Prisma,
 } from "@prisma/client";
 
@@ -144,6 +145,7 @@ export const addMenuItem = async (
     price: number;
     categoryId?: string;
     isAvailable?: boolean;
+    foodType?: FoodType;
   },
 ) => {
   await validateCategory(
@@ -163,6 +165,8 @@ export const addMenuItem = async (
 
       isAvailable:
         data.isAvailable ?? true,
+
+      foodType: data.foodType,
     },
   });
 
@@ -179,6 +183,7 @@ export const addMenuItem = async (
       name: menuItem.name,
       price: menuItem.price,
       categoryId: menuItem.categoryId,
+      foodType: menuItem.foodType,
     },
   });
 
@@ -195,6 +200,7 @@ export const editMenuItem = async (
     price?: number;
     categoryId?: string;
     isAvailable?: boolean;
+    foodType?: FoodType;
   },
 ) => {
   const existingMenuItem =
@@ -232,6 +238,9 @@ export const editMenuItem = async (
       ...(data.isAvailable !== undefined && {
         isAvailable: data.isAvailable,
       }),
+      ...(data.foodType !== undefined && {
+        foodType: data.foodType,
+      }),
     },
   });
 
@@ -252,6 +261,9 @@ export const editMenuItem = async (
       newPrice: menuItem.price,
 
       isAvailable: menuItem.isAvailable,
+
+      previousFoodType: existingMenuItem.foodType,
+      newFoodType: menuItem.foodType,
     },
   });
 

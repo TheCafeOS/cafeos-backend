@@ -50,6 +50,12 @@ enum AuditAction {
   SETTINGS_UPDATED
 }
 
+enum FoodType {
+  VEG
+  NON_VEG
+  EGG
+}
+
 model Restaurant {
   id              String   @id @default(cuid())
   name            String
@@ -168,6 +174,7 @@ model MenuItem {
   name         String
   description  String?
   price        Decimal     @db.Decimal(10, 2)
+  foodType     FoodType    @default(VEG)
   isAvailable  Boolean     @default(true)
   imageUrl     String?
   imagePublicId String?
