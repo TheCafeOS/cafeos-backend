@@ -21,8 +21,12 @@ export const createEmployeeRequest = z.object({
 
     password: z
       .string()
-      .min(8)
-      .max(100),
+      .min(12)
+      .max(128)
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/,
+        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.",
+      ),
 
     role: employeeRoleEnum,
   }),
