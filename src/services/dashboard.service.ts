@@ -12,26 +12,46 @@ export const getTodayStats = async (restaurantId: string) => {
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const orders = await prisma.order.findMany({
-    where: {
-      restaurantId,
-      createdAt: {
-        gte: today,
-        lt: tomorrow,
-      },
-    },
-  });
+  const [totalOrders, completedOrders, revenue] =
+    await Promise.all([
+      prisma.order.count({
+        where: {
+          restaurantId,
+          createdAt: {
+            gte: today,
+            lt: tomorrow,
+          },
+        },
+      }),
 
-  const totalRevenue = orders.reduce(
-    (sum, order) => sum + Number(order.total),
-    0,
+      prisma.order.count({
+        where: {
+          restaurantId,
+          status: "COMPLETED",
+          createdAt: {
+            gte: today,
+            lt: tomorrow,
+          },
+        },
+      }),
+
+      prisma.order.aggregate({
+        where: {
+          restaurantId,
+          createdAt: {
+            gte: today,
+            lt: tomorrow,
+          },
+        },
+        _sum: {
+          total: true,
+        },
+      }),
+    ]);
+
+  const totalRevenue = Number(
+    revenue._sum.total ?? 0,
   );
-
-  const totalOrders = orders.length;
-
-  const completedOrders = orders.filter(
-    (order) => order.status === "COMPLETED",
-  ).length;
 
   return {
     date: today.toISOString().split("T")[0],
@@ -56,18 +76,30 @@ export const getRecentOrders = async (
     where: {
       restaurantId,
     },
-    include: {
-      table: true,
+    select: {
+      id: true,
+      status: true,
+      total: true,
+      customerPhone: true,
+      createdAt: true,
+
+      table: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+
       items: {
-        include: {
-          menuItem: true,
+        select: {
+          id: true,
         },
       },
     },
     orderBy: {
       createdAt: "desc",
     },
-    take: Math.min(limit, 50),
+    take,
   });
 
   return orders.map((order) => ({
@@ -118,13 +150,17 @@ export const getDashboardSummary = async (
 
   const [todayOrders, statusBreakdown, recentOrders] =
     await Promise.all([
-      prisma.order.findMany({
+      prisma.order.aggregate({
         where: {
           restaurantId,
           createdAt: {
             gte: today,
             lt: tomorrow,
           },
+        },
+        _count: true,
+        _sum: {
+          total: true,
         },
       }),
 
@@ -140,8 +176,17 @@ export const getDashboardSummary = async (
         where: {
           restaurantId,
         },
-        include: {
-          table: true,
+        select: {
+          id: true,
+          status: true,
+          total: true,
+          createdAt: true,
+
+          table: {
+            select: {
+              name: true,
+            },
+          },
         },
         orderBy: {
           createdAt: "desc",
@@ -150,14 +195,13 @@ export const getDashboardSummary = async (
       }),
     ]);
 
-  const todayRevenue = todayOrders.reduce(
-    (sum, order) => sum + Number(order.total),
-    0,
+  const todayRevenue = Number(
+    todayOrders._sum.total ?? 0,
   );
 
   return {
     today: {
-      totalOrders: todayOrders.length,
+      totalOrders: todayOrders._count,
       totalRevenue: todayRevenue,
       date: today.toISOString().split("T")[0],
     },
