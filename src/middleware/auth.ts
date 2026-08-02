@@ -24,7 +24,7 @@ export const requireAuth = async (
     return next(new AppError("Missing or invalid token", 401));
   }
 
-  const token = authHeader.split(' ')[1];
+  const token = authHeader.substring(7);
 
   try {
     const decoded = verifyAccessToken(token);

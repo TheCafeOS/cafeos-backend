@@ -7,8 +7,10 @@ import {
   verifyRefreshToken,
 } from "../utils/jwt.js";
 import { env } from "../config/env.js";
-import { EmployeeRole } from "@prisma/client";
-import { AuditAction } from "@prisma/client";
+import { 
+  EmployeeRole, 
+  AuditAction 
+} from "@prisma/client";
 
 import { auditService } from "./audit.service.js";
 import { AuditEntity } from "../constants/audit.js";
@@ -34,6 +36,9 @@ const buildUniqueSlug = async (restaurantName: string): Promise<string> => {
 };
 
 const SALT_ROUNDS = 10;
+
+const hashPassword = (password: string) =>
+  bcrypt.hash(password, SALT_ROUNDS);
 
 export const authService = {
   async register(data: {
@@ -90,28 +95,35 @@ export const authService = {
           create: {
             name: ownerName,
             email: normalizedOwnerEmail,
-            passwordHash: await bcrypt.hash(password, SALT_ROUNDS),
+            passwordHash: await hashPassword(password),
             role: EmployeeRole.OWNER,
+          },
+        },
+      },
+
+      include: {
+        employees: {
+          where: {
+            email: normalizedOwnerEmail,
+          },
+
+          select: {
+            id: true,
+            restaurantId: true,
+            email: true,
+            role: true,
           },
         },
       },
     });
 
-    const employee = await prisma.employee.findFirst({
-      where: {
-        restaurantId: restaurant.id,
-        email: normalizedOwnerEmail,
-      },
-      select: {
-        id: true,
-        restaurantId: true,
-        email: true,
-        role: true,
-      },
-    });
+    const employee = restaurant.employees[0];
 
     if (!employee) {
-      throw new AppError("Registration failed", 500);
+      throw new AppError(
+        "Registration failed",
+        500,
+      );
     }
 
     return {
@@ -293,7 +305,7 @@ async changePassword(
       id: employeeId,
     },
     data: {
-      passwordHash: await bcrypt.hash(newPassword, SALT_ROUNDS),
+      passwordHash: await hashPassword(newPassword),
     },
   });
   
