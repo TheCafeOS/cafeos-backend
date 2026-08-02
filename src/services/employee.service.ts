@@ -15,6 +15,9 @@ import {
 
 const SALT_ROUNDS = 10;
 
+const hashPassword = (password: string) =>
+  bcrypt.hash(password, SALT_ROUNDS);
+
 const employeeSelect =
   Prisma.validator<Prisma.EmployeeSelect>()({
     id: true,
@@ -26,6 +29,25 @@ const employeeSelect =
     createdAt: true,
     updatedAt: true,
   });
+
+async function getEmployeeOrThrow(
+  restaurantId: string,
+  employeeId: string,
+) {
+  const employee = await prisma.employee.findFirst({
+    where: {
+      id: employeeId,
+      restaurantId,
+      deletedAt: null,
+    },
+  });
+
+  if (!employee) {
+    throw new AppError("Employee not found.", 404);
+  }
+
+  return employee;
+}
 
 export const employeeService = {
   async createEmployee(
@@ -58,10 +80,7 @@ export const employeeService = {
         restaurantId,
         name: data.name.trim(),
         email,
-        passwordHash: await bcrypt.hash(
-          data.password,
-          SALT_ROUNDS,
-        ),
+        passwordHash: await hashPassword(data.password),
         role: data.role,
       },
       select: {
@@ -192,13 +211,11 @@ export const employeeService = {
       role?: EmployeeRole;
     },
   ) {
-    const employee = await prisma.employee.findFirst({
-      where: {
-        id: employeeId,
+    const employee =
+      await getEmployeeOrThrow(
         restaurantId,
-        deletedAt: null,
-      },
-    });
+        employeeId,
+      );
 
     if (!employee) {
       throw new AppError("Employee not found.", 404);
@@ -233,8 +250,11 @@ export const employeeService = {
       entityId: updatedEmployee.id,
 
       metadata: {
-        name: updatedEmployee.name,
-        role: updatedEmployee.role,
+        previousName: employee.name,
+        newName: updatedEmployee.name,
+
+        previousRole: employee.role,
+        newRole: updatedEmployee.role,
       },
     });
 
@@ -247,13 +267,11 @@ export const employeeService = {
     currentEmployeeId: string,
     isActive: boolean,
   ) {
-    const employee = await prisma.employee.findFirst({
-      where: {
-        id: employeeId,
+    const employee =
+      await getEmployeeOrThrow(
         restaurantId,
-        deletedAt: null,
-      },
-    });
+        employeeId,
+      );
 
     if (!employee) {
       throw new AppError("Employee not found.", 404);
@@ -287,7 +305,8 @@ export const employeeService = {
       entityId: updatedEmployee.id,
 
       metadata: {
-        isActive: updatedEmployee.isActive,
+        previousStatus: employee.isActive,
+        newStatus: updatedEmployee.isActive,
       },
     });
 
@@ -299,13 +318,11 @@ export const employeeService = {
     employeeId: string,
     currentEmployeeId: string,
   ) {
-    const employee = await prisma.employee.findFirst({
-      where: {
-        id: employeeId,
+    const employee =
+      await getEmployeeOrThrow(
         restaurantId,
-        deletedAt: null,
-      },
-    });
+        employeeId,
+      );
 
     if (!employee) {
       throw new AppError("Employee not found.", 404);
