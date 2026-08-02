@@ -16,6 +16,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import {
   createCategorySchema,
   updateCategorySchema,
+  deleteCategorySchema,
 } from "../validations/category.validation.js";
 
 const router = Router();
@@ -150,6 +151,7 @@ router.delete(
   "/:id",
   requireAuth,
   requireRole("OWNER"),
+  validate(deleteCategorySchema),
   asyncHandler(deleteCategory),
 );
 
