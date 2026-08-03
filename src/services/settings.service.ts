@@ -8,11 +8,11 @@ import { AuditAction } from "@prisma/client";
 
 import { auditService } from "./audit.service.js";
 import { AuditEntity } from "../constants/audit.js";
+import { logger } from "../lib/logger.js";
 
-export const getSettings = async (
+async function getRestaurantOrThrow(
   restaurantId: string,
-  currentEmployeeId: string,
-) => {
+) {
   const restaurant = await prisma.restaurant.findUnique({
     where: {
       id: restaurantId,
@@ -20,8 +20,23 @@ export const getSettings = async (
   });
 
   if (!restaurant) {
-    throw new AppError("Restaurant not found", 404);
+    throw new AppError(
+      "Restaurant not found",
+      404,
+    );
   }
+
+  return restaurant;
+}
+
+export const getSettings = async (
+  restaurantId: string,
+  currentEmployeeId: string,
+) => {
+  const restaurant = await getRestaurantOrThrow(
+    restaurantId,
+  );
+
 
   const employee = await prisma.employee.findFirst({
     where: {
@@ -74,9 +89,6 @@ export const updateSettings = async (
     phone?: string | null;
     address?: string | null;
 
-    logoUrl?: string | null;
-    coverImageUrl?: string | null;
-
     tagline?: string | null;
     description?: string | null;
     cuisineType?: string | null;
@@ -89,15 +101,15 @@ export const updateSettings = async (
     themeColor?: string | null;
   }
 ) => {
-  const restaurant = await prisma.restaurant.findUnique({
-    where: {
-      id: restaurantId,
-    },
-  });
+  await getRestaurantOrThrow(
+    restaurantId,
+  );
+  data.name = data.name.trim();
 
-  if (!restaurant) {
-    throw new AppError("Restaurant not found", 404);
-  }
+  data.restaurantEmail =
+    data.restaurantEmail
+      .trim()
+      .toLowerCase();
 
   const updatedRestaurant = await prisma.restaurant.update({
     where: {
@@ -138,11 +150,9 @@ export const uploadRestaurantLogo = async (
     throw new AppError("Logo image is required.", 400);
   }
 
-  const restaurant = await prisma.restaurant.findUnique({
-    where: {
-      id: restaurantId,
-    },
-  });
+  const restaurant = await getRestaurantOrThrow(
+    restaurantId,
+  );
 
   if (!restaurant) {
     throw new AppError("Restaurant not found", 404);
@@ -165,13 +175,31 @@ export const uploadRestaurantLogo = async (
       },
     });
   } catch (error) {
-    await deleteImage(uploaded.publicId).catch(() => {});
+    await deleteImage(uploaded.publicId).catch((error) => {
+      logger.error(
+        {
+          err: error,
+          publicId: uploaded.publicId,
+        },
+        "Failed to rollback uploaded logo",
+      );
+    });
 
     throw error;
   }
 
   if (restaurant.logoPublicId) {
-    deleteImage(restaurant.logoPublicId).catch(() => {});
+    deleteImage(
+      restaurant.logoPublicId,
+    ).catch((error) => {
+      logger.error(
+        {
+          err: error,
+          publicId: restaurant.logoPublicId,
+        },
+        "Failed to delete previous logo",
+      );
+    });
   }
 
   return getSettings(
@@ -189,11 +217,9 @@ export const uploadRestaurantCover = async (
     throw new AppError("Cover image is required.", 400);
   }
 
-  const restaurant = await prisma.restaurant.findUnique({
-    where: {
-      id: restaurantId,
-    },
-  });
+  const restaurant = await getRestaurantOrThrow(
+    restaurantId,
+  );
 
   if (!restaurant) {
     throw new AppError("Restaurant not found", 404);
@@ -215,13 +241,31 @@ export const uploadRestaurantCover = async (
       },
     });
   } catch (error) {
-    await deleteImage(uploaded.publicId).catch(() => {});
+    await deleteImage(uploaded.publicId).catch((error) => {
+      logger.error(
+        {
+          err: error,
+          publicId: uploaded.publicId,
+        },
+        "Failed to rollback uploaded cover",
+      );
+    });
 
     throw error;
   }
 
   if (restaurant.coverPublicId) {
-    deleteImage(restaurant.coverPublicId).catch(() => {});
+    deleteImage(
+      restaurant.coverPublicId,
+    ).catch((error) => {
+      logger.error(
+        {
+          err: error,
+          publicId: restaurant.coverPublicId,
+        },
+        "Failed to delete previous cover",
+      );
+    });
   }
 
   return getSettings(

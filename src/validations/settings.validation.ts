@@ -6,17 +6,22 @@ export const updateSettingsSchema = z.object({
   body: z.object({
     name: z.string().trim().min(1).max(100),
 
-    restaurantEmail: z.string().email(),
+    restaurantEmail: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .email(),
 
     phone: nullableTrimmed,
 
     address: nullableTrimmed,
 
-    logoUrl: z.string().url().optional().nullable(),
-
-    coverImageUrl: z.string().url().optional().nullable(),
-
-    tagline: z.string().trim().max(120).optional().nullable(),
+    tagline: z
+      .string()
+      .trim()
+      .max(120)
+      .optional()
+      .nullable(),
 
     description: z
       .string()
