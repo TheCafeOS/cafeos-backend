@@ -8,7 +8,14 @@ export const listMenuItems = async (
   req: AuthenticatedRequest,
   res: Response,
 ) => {
-  const { page, limit, search, categoryId } = req.query;
+  const {
+    page,
+    limit,
+    search,
+    categoryId,
+    sort,
+    order,
+  } = req.query;
 
   const isAvailable =
     req.query.isAvailable !== undefined
@@ -22,12 +29,12 @@ export const listMenuItems = async (
     search as string | undefined,
     categoryId as string | undefined,
     isAvailable,
-    req.query.sort as
+    sort as
       | "name"
       | "price"
       | "createdAt"
       | undefined,
-    req.query.order as
+    order as
       | "asc"
       | "desc"
       | undefined,

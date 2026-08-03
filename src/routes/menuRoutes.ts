@@ -18,6 +18,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import {
   createMenuItemSchema,
   updateMenuItemSchema,
+  uploadMenuImageSchema,
+  deleteMenuItemSchema,
 } from "../validations/menu.validation.js";
 
 const router = Router();
@@ -153,6 +155,7 @@ router.post(
   "/:id/image",
   requireAuth,
   requireRole("OWNER", "MANAGER"),
+  validate(uploadMenuImageSchema),
   uploadImage.single("image"),
   asyncHandler(uploadMenuItemImage),
 );
@@ -182,6 +185,7 @@ router.delete(
   "/:id",
   requireAuth,
   requireRole("OWNER"),
+  validate(deleteMenuItemSchema),
   asyncHandler(deleteMenuItem),
 );
 

@@ -17,6 +17,10 @@ export const createMenuItemSchema = z.object({
 });
 
 export const updateMenuItemSchema = z.object({
+  params: z.object({
+    id: z.string().cuid(),
+  }),
+
   body: z.object({
     name: z.string().trim().min(1).max(100).optional(),
     description: z.string().max(500).optional(),
@@ -28,5 +32,17 @@ export const updateMenuItemSchema = z.object({
     imageScale: z.number().min(0.5).max(5).optional(),
     imagePositionX: z.number().min(-1000).max(1000).optional(),
     imagePositionY: z.number().min(-1000).max(1000).optional(),
+  }),
+});
+
+export const uploadMenuImageSchema = z.object({
+  params: z.object({
+    id: z.string().cuid(),
+  }),
+});
+
+export const deleteMenuItemSchema = z.object({
+  params: z.object({
+    id: z.string().cuid(),
   }),
 });
