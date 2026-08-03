@@ -777,6 +777,102 @@ SettingsResponse: {
   },
 },
 
+LoyaltyProgram: {
+  type: "object",
+  properties: {
+    id: {
+      type: "string",
+    },
+    restaurantId: {
+      type: "string",
+    },
+    rewardName: {
+      type: "string",
+      example: "Free Coffee",
+    },
+    purchaseThreshold: {
+      type: "integer",
+      example: 2,
+    },
+    rewardQuantity: {
+      type: "integer",
+      example: 1,
+    },
+    minimumOrderValue: {
+      type: "number",
+      example: 100,
+    },
+    isActive: {
+      type: "boolean",
+      example: true,
+    },
+  },
+},
+
+LoyaltyCustomerProfile: {
+  type: "object",
+  properties: {
+    customer: {
+      type: "object",
+      properties: {
+        id: { type: "string" },
+        restaurantId: { type: "string" },
+        phone: { type: "string" },
+        name: { type: "string", nullable: true },
+        visitCount: { type: "integer" },
+        totalSpend: { type: "number" },
+        progressCount: { type: "integer" },
+        lastOrderAt: { type: "string", format: "date-time", nullable: true },
+      },
+    },
+    rewards: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          status: { type: "string" },
+          createdAt: { type: "string", format: "date-time" },
+        },
+      },
+    },
+    progress: {
+      type: "object",
+      properties: {
+        purchaseThreshold: { type: "integer" },
+        progressCount: { type: "integer" },
+      },
+    },
+  },
+},
+
+LoyaltyProgramRequest: {
+  type: "object",
+  required: ["rewardName", "purchaseThreshold", "rewardQuantity", "minimumOrderValue", "isActive"],
+  properties: {
+    rewardName: {
+      type: "string",
+      example: "Free Coffee",
+    },
+    purchaseThreshold: {
+      type: "integer",
+      example: 2,
+    },
+    rewardQuantity: {
+      type: "integer",
+      example: 1,
+    },
+    minimumOrderValue: {
+      type: "number",
+      example: 100,
+    },
+    isActive: {
+      type: "boolean",
+      example: true,
+    },
+  },
+},
+
 MenuItem: {
   type: "object",
   properties: {

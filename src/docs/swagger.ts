@@ -62,6 +62,10 @@ export const swaggerSpec = swaggerJsdoc({
         name: "Settings",
         description: "Restaurant settings management",
       },
+      {
+        name: "Loyalty",
+        description: "Loyalty programs, customer profiles, and reward redemption",
+      },
     ],
 
     components: {

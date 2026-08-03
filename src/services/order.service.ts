@@ -13,6 +13,7 @@ import { auditService } from "./audit.service.js";
 import { AuditEntity } from "../constants/audit.js";
 import { toOrderResponse } from "../utils/order.mapper.js";
 import { getPaginationMeta } from "../utils/pagination.js";
+import { loyaltyService } from "./loyalty.service.js";
 
 type OrderItemInput = {
   menuItemId: string;
@@ -181,11 +182,16 @@ async function createOrderForTable(
     0,
   );
 
+  const customer = customerPhone
+    ? await loyaltyService.getOrCreateCustomer(restaurantId, customerPhone)
+    : null;
+
   const order = await prisma.order.create({
     data: {
       restaurantId,
       tableId,
       customerPhone,
+      customerId: customer?.id ?? null,
       total,
       items: {
         create: orderItems,
@@ -373,6 +379,10 @@ export const updateOrderStatus = async (
       },
       include: orderWithRelations,
     });
+
+  if (status === "COMPLETED") {
+    await loyaltyService.applyOrderCompletion(restaurantId, updatedOrder.id);
+  }
 
   await auditService.log({
     restaurantId,

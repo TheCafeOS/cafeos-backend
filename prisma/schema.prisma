@@ -56,6 +56,11 @@ enum FoodType {
   EGG
 }
 
+enum LoyaltyRewardStatus {
+  AVAILABLE
+  REDEEMED
+}
+
 model Restaurant {
   id              String   @id @default(cuid())
   name            String
@@ -94,6 +99,9 @@ model Restaurant {
   menuItems       MenuItem[]
   orders          Order[]
   tables          RestaurantTable[]
+  loyaltyProgram  LoyaltyProgram?
+  loyaltyCustomers LoyaltyCustomer[]
+  loyaltyRewards  LoyaltyReward[]
 }
 
 model Employee {
@@ -196,18 +204,78 @@ model MenuItem {
   @@index([restaurantId, categoryId])
 }
 
+model LoyaltyProgram {
+  id               String   @id @default(cuid())
+  restaurantId     String   @unique
+  rewardName       String
+  purchaseThreshold Int
+  rewardQuantity   Int      @default(1)
+  minimumOrderValue Decimal @db.Decimal(10, 2) @default(0)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  restaurant       Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  customers        LoyaltyCustomer[]
+  rewards          LoyaltyReward[]
+
+  @@index([restaurantId, isActive])
+}
+
+model LoyaltyCustomer {
+  id           String   @id @default(cuid())
+  restaurantId String
+  phone        String
+  name         String?
+  visitCount   Int      @default(0)
+  totalSpend   Decimal  @db.Decimal(10, 2) @default(0)
+  progressCount Int     @default(0)
+  lastOrderAt  DateTime?
+  programId    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  program      LoyaltyProgram? @relation(fields: [programId], references: [id], onDelete: SetNull)
+  orders       Order[]
+  rewards      LoyaltyReward[]
+
+  @@unique([restaurantId, phone])
+  @@index([restaurantId, phone])
+  @@index([restaurantId, progressCount])
+}
+
+model LoyaltyReward {
+  id           String             @id @default(cuid())
+  restaurantId String
+  customerId   String
+  programId    String
+  status       LoyaltyRewardStatus @default(AVAILABLE)
+  orderId      String?
+  createdAt    DateTime           @default(now())
+  redeemedAt   DateTime?
+  restaurant   Restaurant        @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  customer     LoyaltyCustomer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  program      LoyaltyProgram    @relation(fields: [programId], references: [id], onDelete: Cascade)
+  order        Order?            @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([restaurantId, customerId, status])
+  @@index([programId, status])
+}
+
 model Order {
   id            String          @id @default(cuid())
   restaurantId  String
   tableId       String
   customerPhone String?
+  customerId    String?
   status        String          @default("PENDING")
   total         Decimal         @db.Decimal(10, 2)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   restaurant    Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   table         RestaurantTable @relation(fields: [tableId], references: [id])
+  customer      LoyaltyCustomer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
   items         OrderItem[]
+  rewards       LoyaltyReward[]
 
   @@index([restaurantId])
   @@index([tableId])

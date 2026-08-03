@@ -2,6 +2,8 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import app from "../src/app.js";
 
+const API_PREFIX = "/api/v1";
+
 describe('auth registration', () => {
   it(
     'registers a restaurant with the documented contract',
@@ -9,7 +11,7 @@ describe('auth registration', () => {
       const suffix = Date.now();
 
       const response = await request(app)
-        .post('/auth/register')
+        .post(`${API_PREFIX}/auth/register`)
         .send({
           restaurantName: `Cafe Aroma ${suffix}`,
           restaurantEmail: `owner${suffix}@example.com`,
@@ -17,7 +19,7 @@ describe('auth registration', () => {
           address: '123 Test Street',
           ownerName: 'Ada Lovelace',
           ownerEmail: `owner${suffix}@example.com`,
-          password: 'securepassword123',
+          password: 'SecurePassword123!',
         });
 
       expect(response.status).toBe(201);

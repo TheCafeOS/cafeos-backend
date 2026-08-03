@@ -126,12 +126,15 @@ export const authService = {
       );
     }
 
+    const accessToken = generateAccessToken(
+      employee.id,
+      employee.restaurantId,
+      employee.role,
+    );
+
     return {
-      accessToken: generateAccessToken(
-        employee.id,
-        employee.restaurantId,
-        employee.role,
-      ),
+      token: accessToken,
+      accessToken,
       refreshToken: generateRefreshToken(
         employee.id,
         employee.restaurantId,
@@ -196,12 +199,15 @@ export const authService = {
       },
     });
 
+    const accessToken = generateAccessToken(
+      employee.id,
+      employee.restaurantId,
+      employee.role,
+    );
+
     return {
-      accessToken: generateAccessToken(
-        employee.id,
-        employee.restaurantId,
-        employee.role,
-      ),
+      token: accessToken,
+      accessToken,
       refreshToken: generateRefreshToken(
         employee.id,
         employee.restaurantId,
@@ -250,12 +256,15 @@ export const authService = {
       throw new AppError("Account has been deactivated", 403);
     }
 
+    const accessToken = generateAccessToken(
+      employee.id,
+      employee.restaurantId,
+      employee.role,
+    );
+
     return {
-      accessToken: generateAccessToken(
-        employee.id,
-        employee.restaurantId,
-        employee.role,
-      ),
+      token: accessToken,
+      accessToken,
     };
   },
 

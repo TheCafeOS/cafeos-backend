@@ -106,21 +106,33 @@ export const broadcastOrderEvent = (
   event: string,
   data: Record<string, unknown>,
 ) => {
-  const socket = getIO();
+  try {
+    const socket = getIO();
 
-  logger.debug(
-    {
-      event,
-      restaurantId,
+    logger.debug(
+      {
+        event,
+        restaurantId,
+        tableId,
+      },
+      "Broadcasting order event",
+    );
+
+    socket.to(`restaurant_${restaurantId}`).emit(event, {
       tableId,
-    },
-    "Broadcasting order event",
-  );
+      ...data,
+    });
 
-  socket.to(`restaurant_${restaurantId}`).emit(event, {
-    tableId,
-    ...data,
-  });
-
-  socket.to(`table_${tableId}`).emit(event, data);
+    socket.to(`table_${tableId}`).emit(event, data);
+  } catch (error) {
+    logger.warn(
+      {
+        event,
+        restaurantId,
+        tableId,
+        error: error instanceof Error ? error.message : error,
+      },
+      "Socket.IO not available for order event broadcast",
+    );
+  }
 };

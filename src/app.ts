@@ -15,6 +15,7 @@ import menuRoutes from "./routes/menuRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import publicRoutes from "./routes/publicRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
+import loyaltyRoutes from "./routes/loyaltyRoutes.js";
 
 import { apiLimiter } from "./middleware/rateLimiter.js";
 import { errorHandler } from "./middleware/errorHandler.js";
@@ -176,6 +177,7 @@ app.use(`${API_PREFIX}/dashboard`, dashboardRoutes);
 app.use(`${API_PREFIX}/settings`, settingsRoutes);
 app.use(`${API_PREFIX}/employees`, employeeRoutes);
 app.use(`${API_PREFIX}/audit-logs`, auditRoutes);
+app.use(`${API_PREFIX}/loyalty`, loyaltyRoutes);
 
 /**
  * 404
