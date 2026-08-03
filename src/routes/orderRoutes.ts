@@ -15,6 +15,7 @@ import { validate } from "../middleware/validate.js";
 
 import {
   createOrderSchema,
+  getOrderSchema,
   listOrdersSchema,
   updateOrderStatusSchema,
 } from "../validations/order.validation.js";
@@ -154,6 +155,7 @@ router.get(
   "/:id",
   requireAuth,
   requireRole("OWNER", "MANAGER", "STAFF"),
+  validate(getOrderSchema),
   asyncHandler(getOrder),
 );
 

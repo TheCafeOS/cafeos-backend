@@ -101,14 +101,14 @@ export const updateOrderStatus = async (
 ) => {
   const orderId = getRouteParam(req.params.id);
 
-  const { status: orderStatus } = req.body;
+  const { status } = req.body;
 
   const order =
     await orderService.updateOrderStatus(
       req.employee!.restaurantId,
       req.employee!.id,
       orderId,
-      orderStatus as OrderStatus,
+      status,
     );
 
   return res.json(

@@ -30,6 +30,10 @@ export const createOrderSchema = z.object({
 });
 
 export const updateOrderStatusSchema = z.object({
+  params: z.object({
+    id: z.string().cuid(),
+  }),
+
   body: z.object({
     status: z.enum([
       ORDER_STATUS.PENDING,
@@ -39,6 +43,12 @@ export const updateOrderStatusSchema = z.object({
       ORDER_STATUS.COMPLETED,
       ORDER_STATUS.CANCELLED,
     ]),
+  }),
+});
+
+export const getOrderSchema = z.object({
+  params: z.object({
+    id: z.string().cuid(),
   }),
 });
 
