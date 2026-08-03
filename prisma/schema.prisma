@@ -152,6 +152,7 @@ model RestaurantTable {
 
   @@index([restaurantId, status])
   @@index([restaurantId, createdAt])
+  @@unique([restaurantId, name])
 }
 
 model Category {

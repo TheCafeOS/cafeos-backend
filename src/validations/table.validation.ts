@@ -9,8 +9,11 @@ export const createTableSchema = z.object({
       .max(50, "Table name is too long"),
   }),
 });
-
 export const updateTableSchema = z.object({
+  params: z.object({
+    id: z.string().cuid(),
+  }),
+
   body: z.object({
     name: z.string().trim().min(1).max(50).optional(),
     status: z
@@ -21,5 +24,17 @@ export const updateTableSchema = z.object({
     "INACTIVE",
   ])
   .optional(),
+  }),
+});
+
+export const deleteTableSchema = z.object({
+  params: z.object({
+    id: z.string().cuid(),
+  }),
+});
+
+export const downloadQrSchema = z.object({
+  params: z.object({
+    id: z.string().cuid(),
   }),
 });

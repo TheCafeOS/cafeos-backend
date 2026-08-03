@@ -17,6 +17,8 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import {
   createTableSchema,
   updateTableSchema,
+  deleteTableSchema,
+  downloadQrSchema,
 } from "../validations/table.validation.js";
 
 const router = Router();
@@ -147,6 +149,7 @@ router.delete(
   "/:id",
   requireAuth,
   requireRole("OWNER"),
+  validate(deleteTableSchema),
   asyncHandler(deleteTable),
 );
 
@@ -182,6 +185,7 @@ router.delete(
 router.get(
   "/:id/qr",
   requireAuth,
+  validate(downloadQrSchema),
   asyncHandler(downloadQr),
 );
 

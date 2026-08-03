@@ -24,7 +24,6 @@ export const createTable = async (
   req: AuthenticatedRequest,
   res: Response,
 ) => {
-  const { name } = req.body;
 
   const table = 
   await tableService.addTable(
@@ -47,11 +46,10 @@ export const updateTable = async (
 ) => {
   const id = getRouteParam(req.params.id);
 
-  const table = 
-  await tableService.editTable(
+  const table = await tableService.editTable(
     req.employee!.restaurantId,
     req.employee!.id,
-    getRouteParam(req.params.id),
+    id,
     req.body,
   );
 
@@ -72,7 +70,7 @@ export const deleteTable = async (
   await tableService.removeTable(
     req.employee!.restaurantId,
     req.employee!.id,
-    getRouteParam(req.params.id),
+    id,
   );
 
 return res.sendStatus(204);
