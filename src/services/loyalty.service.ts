@@ -4,6 +4,8 @@ import { AppError } from "../utils/AppError.js";
 import { auditService } from "./audit.service.js";
 import { AuditAction } from "@prisma/client";
 import { AuditEntity } from "../constants/audit.js";
+import * as notificationService from "./notification.service.js";
+import { getPaginationMeta } from "../utils/pagination.js";
 
 const normalizePhone = (phone: string | null | undefined) => phone?.trim().replace(/\s+/g, "") ?? null;
 
@@ -236,6 +238,17 @@ export const loyaltyService = {
         createdRewards.push(reward);
       }
 
+      if (createdRewards.length > 0) {
+        await notificationService.notifyRewardEarned({
+          restaurantId,
+          customerId: customer.id,
+          customerPhone: customer.phone,
+          rewardCount: createdRewards.length,
+          rewardName: program.rewardName,
+          orderId: order.id,
+        });
+      }
+
       await auditService.log({
         restaurantId,
 
@@ -279,6 +292,26 @@ export const loyaltyService = {
         status: "REDEEMED",
         redeemedAt: new Date(),
       },
+    });
+
+    const customer = await prisma.loyaltyCustomer.findUniqueOrThrow({
+      where: {
+        id: customerId,
+      },
+    });
+
+    const program = await prisma.loyaltyProgram.findUnique({
+      where: {
+        restaurantId,
+      },
+    });
+
+    await notificationService.notifyRewardRedeemed({
+      restaurantId,
+      customerId: customer.id,
+      customerPhone: customer.phone,
+      rewardId: updatedReward.id,
+      rewardName: program?.rewardName ?? "Reward",
     });
 
     await auditService.log({
@@ -385,15 +418,11 @@ export const loyaltyService = {
           ).length,
       })),
 
-      pagination: {
-        page: pageNumber,
-        limit: limitNumber,
-        totalItems: total,
-        totalPages: Math.ceil(total / limitNumber),
-        hasNextPage:
-          pageNumber < Math.ceil(total / limitNumber),
-        hasPreviousPage: pageNumber > 1,
-      },
+      pagination: getPaginationMeta(
+        pageNumber,
+        limitNumber,
+        total,
+      ),
     };
   },
 };

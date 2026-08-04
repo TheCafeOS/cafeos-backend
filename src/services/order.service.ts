@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 import { broadcastOrderEvent } from "../lib/socket.js";
+import { SocketEvents } from "../constants/socketEvents.js";
 import { AppError } from "../utils/AppError.js";
 import {
   OrderStatus,
@@ -14,6 +15,7 @@ import { AuditEntity } from "../constants/audit.js";
 import { toOrderResponse } from "../utils/order.mapper.js";
 import { getPaginationMeta } from "../utils/pagination.js";
 import { loyaltyService } from "./loyalty.service.js";
+import * as notificationService from "./notification.service.js";
 
 type OrderItemInput = {
   menuItemId: string;
@@ -220,7 +222,7 @@ async function createOrderForTable(
   broadcastOrderEvent(
     restaurantId,
     tableId,
-    "ORDER_CREATED",
+    SocketEvents.ORDER_CREATED,
     {
       orderId: order.id,
       status: order.status,
@@ -230,6 +232,15 @@ async function createOrderForTable(
       timestamp: order.createdAt,
     },
   );
+
+  await notificationService.notifyNewOrder({
+    restaurantId,
+    orderId: order.id,
+    tableId: order.table.id,
+    tableName: order.table.name,
+    total: Number(order.total),
+    itemCount: order.items.length,
+  });
 
   return toOrderResponse(order);
 }
@@ -401,16 +412,24 @@ export const updateOrderStatus = async (
     },
   });
 
-  broadcastOrderEvent(
-    updatedOrder.restaurantId,
-    updatedOrder.tableId,
-    "ORDER_UPDATED",
-    {
-      orderId: updatedOrder.id,
-      status: updatedOrder.status,
-      timestamp: updatedOrder.updatedAt,
-    },
-  );
+broadcastOrderEvent(
+  updatedOrder.restaurantId,
+  updatedOrder.tableId,
+  SocketEvents.ORDER_UPDATED,
+  {
+    orderId: updatedOrder.id,
+    status: updatedOrder.status,
+    timestamp: updatedOrder.updatedAt,
+  },
+);
+
+  await notificationService.notifyOrderStatusChanged({
+    restaurantId,
+    orderId: updatedOrder.id,
+    tableId: updatedOrder.table.id,
+    tableName: updatedOrder.table.name,
+    status: updatedOrder.status,
+  });
 
   return toOrderResponse(updatedOrder);
 };

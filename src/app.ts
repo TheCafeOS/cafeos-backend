@@ -29,6 +29,7 @@ import settingsRoutes from "./routes/settings.routes.js";
 import employeeRoutes from "./routes/employeeRoutes.js";
 import auditRoutes from "./routes/auditRoutes.js";
 import { prisma } from "./lib/prisma.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 
 const app = express();
 
@@ -162,6 +163,11 @@ app.use(
   swaggerUi.setup(swaggerSpec),
 );
 
+app.use(
+  "/api/v1/notifications",
+  notificationRoutes,
+);
+
 /**
  * Routes
  */
@@ -178,6 +184,10 @@ app.use(`${API_PREFIX}/settings`, settingsRoutes);
 app.use(`${API_PREFIX}/employees`, employeeRoutes);
 app.use(`${API_PREFIX}/audit-logs`, auditRoutes);
 app.use(`${API_PREFIX}/loyalty`, loyaltyRoutes);
+app.use(`${API_PREFIX}/orders`, orderRoutes);
+app.use(`${API_PREFIX}notifications`, notificationRoutes);
+app.use(`${API_PREFIX}settings`, settingsRoutes);
+
 
 /**
  * 404

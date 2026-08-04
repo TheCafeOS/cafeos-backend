@@ -1026,4 +1026,49 @@ MenuItem: {
     },
   },
 },
+
+Notification: {
+  type: "object",
+  properties: {
+    id: {
+      type: "string",
+      example: "cmf8yq5w60000abc123xyz",
+    },
+    type: {
+      type: "string",
+      enum: [
+        "NEW_ORDER",
+        "ORDER_STATUS",
+        "LOYALTY_REWARD",
+        "EMPLOYEE_ACTIVITY",
+      ],
+    },
+    title: {
+      type: "string",
+      example: "New Order",
+    },
+    message: {
+      type: "string",
+      example:
+        "New order received for Table T1.",
+    },
+    isRead: {
+      type: "boolean",
+      example: false,
+    },
+    readAt: {
+      type: "string",
+      format: "date-time",
+      nullable: true,
+    },
+    data: {
+      type: "object",
+      nullable: true,
+    },
+    createdAt: {
+      type: "string",
+      format: "date-time",
+    },
+  },
+},
 };
