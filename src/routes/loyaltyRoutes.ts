@@ -6,6 +6,7 @@ import { requireRole } from "../middleware/authorize.js";
 import {
   getCustomer,
   getProgram,
+  listCustomers,
   redeemReward,
   upsertProgram,
 } from "../controllers/loyaltyController.js";
@@ -13,6 +14,7 @@ import {
   loyaltyProgramSchema,
   loyaltyRedeemSchema,
   loyaltyCustomerSchema,
+  listLoyaltyCustomersSchema,
 } from "../validations/loyalty.validation.js";
 
 const router = Router();
@@ -70,6 +72,56 @@ router.put("/program", requireAuth, requireRole("OWNER", "MANAGER"), validate(lo
  *         $ref: '#/components/responses/Forbidden'
  */
 router.get("/program", requireAuth, requireRole("OWNER", "MANAGER", "STAFF"), asyncHandler(getProgram));
+
+/**
+ * @swagger
+ * /loyalty/customers:
+ *   get:
+ *     tags:
+ *       - Loyalty
+ *     summary: List loyalty customers
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum:
+ *             - lastOrderAt
+ *             - visitCount
+ *             - totalSpend
+ *             - createdAt
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum:
+ *             - asc
+ *             - desc
+ *     responses:
+ *       200:
+ *         description: Loyalty customers fetched successfully.
+ */
+router.get(
+  "/customers",
+  requireAuth,
+  requireRole("OWNER", "MANAGER", "STAFF"),
+  validate(listLoyaltyCustomersSchema),
+  asyncHandler(listCustomers),
+);
 
 /**
  * @swagger

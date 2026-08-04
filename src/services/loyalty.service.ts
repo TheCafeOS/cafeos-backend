@@ -292,4 +292,108 @@ export const loyaltyService = {
 
     return updatedReward;
   },
+
+  async listCustomers(
+    restaurantId: string,
+    page = "1",
+    limit = "20",
+    search?: string,
+    sort:
+      | "lastOrderAt"
+      | "visitCount"
+      | "totalSpend"
+      | "createdAt" = "lastOrderAt",
+    order: "asc" | "desc" = "desc",
+  ) {
+    const pageNumber = Math.max(Number(page) || 1, 1);
+    const limitNumber = Math.min(
+      Math.max(Number(limit) || 20, 1),
+      100,
+    );
+
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const where: Prisma.LoyaltyCustomerWhereInput = {
+      restaurantId,
+
+      ...(search
+        ? {
+            OR: [
+              {
+                phone: {
+                  contains: search,
+                  mode: "insensitive",
+                },
+              },
+              {
+                name: {
+                  contains: search,
+                  mode: "insensitive",
+                },
+              },
+            ],
+          }
+        : {}),
+    };
+
+    const [customers, total] =
+      await prisma.$transaction([
+        prisma.loyaltyCustomer.findMany({
+          where,
+          skip,
+          take: limitNumber,
+
+          orderBy: {
+            [sort]: order,
+          },
+
+          include: {
+            rewards: {
+              select: {
+                status: true,
+              },
+            },
+          },
+        }),
+
+        prisma.loyaltyCustomer.count({
+          where,
+        }),
+      ]);
+
+    return {
+      data: customers.map((customer) => ({
+        id: customer.id,
+        phone: customer.phone,
+        name: customer.name,
+
+        visitCount: customer.visitCount,
+        progressCount: customer.progressCount,
+        totalSpend: customer.totalSpend,
+
+        lastOrderAt: customer.lastOrderAt,
+        createdAt: customer.createdAt,
+
+        availableRewards:
+          customer.rewards.filter(
+            (r) => r.status === "AVAILABLE",
+          ).length,
+
+        redeemedRewards:
+          customer.rewards.filter(
+            (r) => r.status === "REDEEMED",
+          ).length,
+      })),
+
+      pagination: {
+        page: pageNumber,
+        limit: limitNumber,
+        totalItems: total,
+        totalPages: Math.ceil(total / limitNumber),
+        hasNextPage:
+          pageNumber < Math.ceil(total / limitNumber),
+        hasPreviousPage: pageNumber > 1,
+      },
+    };
+  },
 };

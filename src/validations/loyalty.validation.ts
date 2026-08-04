@@ -22,3 +22,31 @@ export const loyaltyRedeemSchema = z.object({
     rewardId: z.string().cuid(),
   }),
 });
+
+export const listLoyaltyCustomersSchema = z.object({
+  query: z.object({
+    page: z.coerce.number().int().min(1).optional(),
+
+    limit: z.coerce.number().int().min(1).max(100).optional(),
+
+    search: z
+      .string()
+      .trim()
+      .min(1)
+      .max(100)
+      .optional(),
+
+    sort: z
+      .enum([
+        "lastOrderAt",
+        "visitCount",
+        "totalSpend",
+        "createdAt",
+      ])
+      .optional(),
+
+    order: z
+      .enum(["asc", "desc"])
+      .optional(),
+  }),
+});

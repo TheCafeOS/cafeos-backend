@@ -26,3 +26,39 @@ export const redeemReward = async (req: AuthenticatedRequest, res: Response) => 
   const reward = await loyaltyService.redeemReward(req.employee!.restaurantId, customerId, rewardId);
   return res.json(successResponse("Reward redeemed successfully", reward));
 };
+
+export const listCustomers = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const result =
+    await loyaltyService.listCustomers(
+      req.employee!.restaurantId,
+
+      req.query.page as string | undefined,
+
+      req.query.limit as string | undefined,
+
+      req.query.search as string | undefined,
+
+      req.query.sort as
+        | "lastOrderAt"
+        | "visitCount"
+        | "totalSpend"
+        | "createdAt"
+        | undefined,
+
+      req.query.order as
+        | "asc"
+        | "desc"
+        | undefined,
+    );
+
+  return res.json(
+    successResponse(
+      "Loyalty customers fetched successfully",
+      result.data,
+      result.pagination,
+    ),
+  );
+};
