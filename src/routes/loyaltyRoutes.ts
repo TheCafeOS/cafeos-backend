@@ -35,6 +35,16 @@ const router = Router();
  *     responses:
  *       200:
  *         description: Loyalty program updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LoyaltyProgramUpdatedResponse'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
  */
 router.put("/program", requireAuth, requireRole("OWNER", "MANAGER"), validate(loyaltyProgramSchema), asyncHandler(upsertProgram));
 
@@ -50,6 +60,14 @@ router.put("/program", requireAuth, requireRole("OWNER", "MANAGER"), validate(lo
  *     responses:
  *       200:
  *         description: Loyalty program fetched successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LoyaltyProgramFetchedResponse'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
  */
 router.get("/program", requireAuth, requireRole("OWNER", "MANAGER", "STAFF"), asyncHandler(getProgram));
 
@@ -71,6 +89,18 @@ router.get("/program", requireAuth, requireRole("OWNER", "MANAGER", "STAFF"), as
  *     responses:
  *       200:
  *         description: Customer loyalty profile fetched successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LoyaltyCustomerProfileResponse'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
  */
 router.get("/customers/:phone", requireAuth, requireRole("OWNER", "MANAGER", "STAFF"), validate(loyaltyCustomerSchema), asyncHandler(getCustomer));
 
@@ -97,6 +127,18 @@ router.get("/customers/:phone", requireAuth, requireRole("OWNER", "MANAGER", "ST
  *     responses:
  *       200:
  *         description: Reward redeemed successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LoyaltyRewardRedeemedResponse'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
  */
 router.post("/customers/:customerId/rewards/:rewardId/redeem", requireAuth, requireRole("OWNER", "MANAGER", "STAFF"), validate(loyaltyRedeemSchema), asyncHandler(redeemReward));
 

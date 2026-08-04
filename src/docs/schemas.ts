@@ -806,34 +806,62 @@ LoyaltyProgram: {
       type: "boolean",
       example: true,
     },
+    createdAt: {
+      type: "string",
+      format: "date-time",
+    },
+    updatedAt: {
+      type: "string",
+      format: "date-time",
+    },
   },
 },
 
-LoyaltyCustomerProfile: {
+LoyaltyCustomer: {
+  type: "object",
+  properties: {
+    id: { type: "string" },
+    restaurantId: { type: "string" },
+    phone: { type: "string" },
+    name: { type: "string", nullable: true },
+    visitCount: { type: "integer" },
+    totalSpend: { type: "number" },
+    progressCount: { type: "integer" },
+    lastOrderAt: { type: "string", format: "date-time", nullable: true },
+    programId: { type: "string", nullable: true },
+    createdAt: { type: "string", format: "date-time" },
+    updatedAt: { type: "string", format: "date-time" },
+  },
+},
+
+LoyaltyReward: {
+  type: "object",
+  properties: {
+    id: { type: "string" },
+    restaurantId: { type: "string" },
+    customerId: { type: "string" },
+    programId: { type: "string" },
+    status: {
+      type: "string",
+      enum: ["AVAILABLE", "REDEEMED"],
+      example: "AVAILABLE",
+    },
+    orderId: { type: "string", nullable: true },
+    createdAt: { type: "string", format: "date-time" },
+    redeemedAt: { type: "string", format: "date-time", nullable: true },
+  },
+},
+
+LoyaltyCustomerProfileData: {
   type: "object",
   properties: {
     customer: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        restaurantId: { type: "string" },
-        phone: { type: "string" },
-        name: { type: "string", nullable: true },
-        visitCount: { type: "integer" },
-        totalSpend: { type: "number" },
-        progressCount: { type: "integer" },
-        lastOrderAt: { type: "string", format: "date-time", nullable: true },
-      },
+      $ref: "#/components/schemas/LoyaltyCustomer",
     },
     rewards: {
       type: "array",
       items: {
-        type: "object",
-        properties: {
-          id: { type: "string" },
-          status: { type: "string" },
-          createdAt: { type: "string", format: "date-time" },
-        },
+        $ref: "#/components/schemas/LoyaltyReward",
       },
     },
     progress: {
@@ -842,6 +870,82 @@ LoyaltyCustomerProfile: {
         purchaseThreshold: { type: "integer" },
         progressCount: { type: "integer" },
       },
+    },
+  },
+},
+
+LoyaltyCustomerProfile: {
+  $ref: "#/components/schemas/LoyaltyCustomerProfileData",
+},
+
+LoyaltyProgramUpdatedResponse: {
+  type: "object",
+  required: ["success", "message", "data"],
+  properties: {
+    success: {
+      type: "boolean",
+      example: true,
+    },
+    message: {
+      type: "string",
+      example: "Loyalty program updated successfully",
+    },
+    data: {
+      $ref: "#/components/schemas/LoyaltyProgram",
+    },
+  },
+},
+
+LoyaltyProgramFetchedResponse: {
+  type: "object",
+  required: ["success", "message", "data"],
+  properties: {
+    success: {
+      type: "boolean",
+      example: true,
+    },
+    message: {
+      type: "string",
+      example: "Loyalty program fetched successfully",
+    },
+    data: {
+      $ref: "#/components/schemas/LoyaltyProgram",
+    },
+  },
+},
+
+LoyaltyCustomerProfileResponse: {
+  type: "object",
+  required: ["success", "message", "data"],
+  properties: {
+    success: {
+      type: "boolean",
+      example: true,
+    },
+    message: {
+      type: "string",
+      example: "Customer loyalty profile fetched successfully",
+    },
+    data: {
+      $ref: "#/components/schemas/LoyaltyCustomerProfileData",
+    },
+  },
+},
+
+LoyaltyRewardRedeemedResponse: {
+  type: "object",
+  required: ["success", "message", "data"],
+  properties: {
+    success: {
+      type: "boolean",
+      example: true,
+    },
+    message: {
+      type: "string",
+      example: "Reward redeemed successfully",
+    },
+    data: {
+      $ref: "#/components/schemas/LoyaltyReward",
     },
   },
 },
