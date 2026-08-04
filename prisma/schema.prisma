@@ -276,6 +276,7 @@ model Order {
   tableId       String
   customerPhone String?
   customerId    String?
+  loyaltyProcessed Boolean      @default(false)
   status        OrderStatus     @default(PENDING)
   total         Decimal         @db.Decimal(10, 2)
   createdAt     DateTime        @default(now())

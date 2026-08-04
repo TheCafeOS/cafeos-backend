@@ -122,94 +122,146 @@ export const loyaltyService = {
     return program?.purchaseThreshold ?? 0;
   },
 
-  async applyOrderCompletion(restaurantId: string, orderId: string) {
+  async applyOrderCompletion(
+    restaurantId: string,
+    orderId: string,
+  ) {
     const order = await prisma.order.findFirst({
-      where: { id: orderId, restaurantId, status: "COMPLETED" },
-      include: { items: true },
+      where: {
+        id: orderId,
+        restaurantId,
+        status: "COMPLETED",
+      },
     });
 
     if (!order) {
       return null;
     }
 
-    const program = await prisma.loyaltyProgram.findUnique({ where: { restaurantId } });
+    const program = await prisma.loyaltyProgram.findUnique({
+      where: {
+        restaurantId,
+      },
+    });
+
     if (!program || !program.isActive) {
       return null;
     }
 
-    const customerPhone = normalizePhone(order.customerPhone ?? null);
+    const customerPhone = normalizePhone(order.customerPhone);
+
     if (!customerPhone) {
       return null;
     }
 
-    const customer = await this.getOrCreateCustomer(restaurantId, customerPhone);
+    const customer = await this.getOrCreateCustomer(
+      restaurantId,
+      customerPhone,
+    );
+
     if (!customer) {
       return null;
     }
 
     const orderValue = Number(order.total);
-    const minimumOrderValue = Number(program.minimumOrderValue);
-    if (orderValue < minimumOrderValue) {
+
+    if (orderValue < Number(program.minimumOrderValue)) {
       return null;
     }
 
-    const existingRewards = await prisma.loyaltyReward.findMany({
-      where: { restaurantId, customerId: customer.id, programId: program.id, status: "AVAILABLE" },
-    });
-
-    const nextProgress = customer.progressCount + 1;
-    const rewardEligible = nextProgress >= program.purchaseThreshold;
-
-    const updatedCustomer = await prisma.loyaltyCustomer.update({
-      where: { id: customer.id },
-      data: {
-        visitCount: { increment: 1 },
-        totalSpend: { increment: Number(order.total) },
-        progressCount: nextProgress,
-        lastOrderAt: new Date(),
-      },
-    });
-
-    if (rewardEligible && existingRewards.length < program.rewardQuantity) {
-      const reward = await prisma.loyaltyReward.create({
+    return prisma.$transaction(async (tx) => {
+      const processed = await tx.order.updateMany({
+        where: {
+          id: order.id,
+          loyaltyProcessed: false,
+        },
         data: {
-          restaurantId,
-          customerId: customer.id,
-          programId: program.id,
-          status: "AVAILABLE",
-          orderId: order.id,
+          loyaltyProcessed: true,
         },
       });
+
+      if (processed.count === 0) {
+        return null;
+      }
+      const currentCustomer =
+        await tx.loyaltyCustomer.findUniqueOrThrow({
+          where: {
+            id: customer.id,
+          },
+        });
+
+      const progress =
+        currentCustomer.progressCount + 1;
+
+      const rewardsEarned = Math.floor(
+        progress / program.purchaseThreshold,
+      );
+
+      const remainingProgress =
+        progress % program.purchaseThreshold;
+
+      const updatedCustomer =
+        await tx.loyaltyCustomer.update({
+          where: {
+            id: currentCustomer.id,
+          },
+          data: {
+            visitCount: {
+              increment: 1,
+            },
+
+            totalSpend: {
+              increment: orderValue,
+            },
+
+            progressCount: remainingProgress,
+
+            lastOrderAt: new Date(),
+          },
+        });
+
+      const createdRewards = [];
+
+      for (let i = 0; i < rewardsEarned; i++) {
+        const reward = await tx.loyaltyReward.create({
+          data: {
+            restaurantId,
+            customerId: currentCustomer.id,
+            programId: program.id,
+            orderId: order.id,
+            status: "AVAILABLE",
+          },
+        });
+
+        createdRewards.push(reward);
+      }
 
       await auditService.log({
         restaurantId,
+
         action: AuditAction.ORDER_STATUS_CHANGED,
+
         entity: AuditEntity.Order,
+
         entityId: order.id,
+
         metadata: {
           customerPhone,
-          rewardId: reward.id,
+
+          rewardsEarned,
+
+          remainingProgress,
+
           rewardName: program.rewardName,
-          progressCount: nextProgress,
         },
       });
 
-      return { customer: updatedCustomer, reward, rewardCount: 1 };
-    }
-
-    await auditService.log({
-      restaurantId,
-      action: AuditAction.ORDER_STATUS_CHANGED,
-      entity: AuditEntity.Order,
-      entityId: order.id,
-      metadata: {
-        customerPhone,
-        progressCount: nextProgress,
-        rewardEligible: false,
-      },
+      return {
+        customer: updatedCustomer,
+        rewards: createdRewards,
+        rewardCount: createdRewards.length,
+      };
     });
-
-    return { customer: updatedCustomer, rewardCount: 0 };
   },
 
   async redeemReward(restaurantId: string, customerId: string, rewardId: string) {
