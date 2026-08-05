@@ -67,3 +67,51 @@ export const getPublicOrder = async (
     ),
   );
 };
+
+export const getPublicLoyaltyProgram = async (
+  req: Request,
+  res: Response,
+) => {
+  const qrToken = getRouteParam(
+    req.params.qrToken,
+  );
+
+  const program =
+    await publicService.getPublicLoyaltyProgram(
+      qrToken,
+    );
+
+  return res.json(
+    successResponse(
+      "Loyalty program fetched successfully",
+      program,
+    ),
+  );
+};
+
+export const getPublicCustomerLoyalty =
+  async (
+    req: Request,
+    res: Response,
+  ) => {
+    const qrToken = getRouteParam(
+      req.params.qrToken,
+    );
+
+    const phone = getRouteParam(
+      req.params.phone,
+    );
+
+    const customer =
+      await publicService.getPublicCustomerLoyalty(
+        qrToken,
+        phone,
+      );
+
+    return res.json(
+      successResponse(
+        "Customer loyalty profile fetched successfully",
+        customer,
+      ),
+    );
+  };

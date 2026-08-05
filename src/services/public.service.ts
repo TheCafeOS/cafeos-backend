@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 import { AppError } from "../utils/AppError.js";
+import { loyaltyService } from "./loyalty.service.js";
 
 export const getMenu = async (qrToken: string) => {
   if (!qrToken) {
@@ -104,6 +105,50 @@ export const getMenu = async (qrToken: string) => {
         : null,
     })),
   };
+};
+
+export const getPublicLoyaltyProgram = async (
+  qrToken: string,
+) => {
+  const table = await prisma.restaurantTable.findFirst({
+    where: {
+      qrCode: qrToken,
+    },
+    select: {
+      restaurantId: true,
+    },
+  });
+
+  if (!table) {
+    throw new AppError("Invalid QR code.", 404);
+  }
+
+  return loyaltyService.getPublicProgram(
+    table.restaurantId,
+  );
+};
+
+export const getPublicCustomerLoyalty = async (
+  qrToken: string,
+  phone: string,
+) => {
+  const table = await prisma.restaurantTable.findFirst({
+    where: {
+      qrCode: qrToken,
+    },
+    select: {
+      restaurantId: true,
+    },
+  });
+
+  if (!table) {
+    throw new AppError("Invalid QR code.", 404);
+  }
+
+  return loyaltyService.getPublicCustomer(
+    table.restaurantId,
+    phone,
+  );
 };
 
 export const getOrder = async (

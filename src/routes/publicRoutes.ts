@@ -4,9 +4,19 @@ import {
   getPublicMenu,
   createPublicOrder,
   getPublicOrder,
+  getPublicLoyaltyProgram,
+  getPublicCustomerLoyalty,
 } from "../controllers/publicController.js";
 
+import {
+  publicMenuSchema,
+  publicLoyaltyProgramSchema,
+  publicCustomerLoyaltySchema,
+  publicOrderDetailsSchema,
+} from "../validations/public.validation.js";
+
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { validate } from "../middleware/validate.js";
 
 const router = Router();
 
@@ -34,7 +44,65 @@ const router = Router();
  */
 router.get(
   "/menu/:qrToken",
+  validate(publicMenuSchema),
   asyncHandler(getPublicMenu),
+);
+
+/**
+ * @swagger
+ * /public/loyalty/program/{qrToken}:
+ *   get:
+ *     tags:
+ *       - Public
+ *     summary: Get public loyalty program
+ *     description: Returns the active loyalty program for the restaurant identified by the QR code.
+ *     parameters:
+ *       - in: path
+ *         name: qrToken
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Loyalty program fetched successfully.
+ *       404:
+ *         description: Invalid QR code or loyalty program not available.
+ */
+router.get(
+  "/loyalty/program/:qrToken",
+  validate(publicLoyaltyProgramSchema),
+  asyncHandler(getPublicLoyaltyProgram),
+);
+
+/**
+ * @swagger
+ * /public/loyalty/customer/{qrToken}/{phone}:
+ *   get:
+ *     tags:
+ *       - Public
+ *     summary: Get customer loyalty profile
+ *     description: Returns the loyalty progress for a customer identified by phone number for the restaurant associated with the QR code.
+ *     parameters:
+ *       - in: path
+ *         name: qrToken
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: phone
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Customer loyalty profile fetched successfully.
+ *       404:
+ *         description: Invalid QR code or customer not found.
+ */
+router.get(
+  "/loyalty/customer/:qrToken/:phone",
+  validate(publicCustomerLoyaltySchema),
+  asyncHandler(getPublicCustomerLoyalty),
 );
 
 /**
@@ -73,6 +141,7 @@ router.get(
  */
 router.post(
   "/orders/:qrToken",
+  validate(publicMenuSchema),
   asyncHandler(createPublicOrder),
 );
 
@@ -107,6 +176,7 @@ router.post(
  */
 router.get(
   "/orders/:qrToken/:orderId",
+  validate(publicOrderDetailsSchema),
   asyncHandler(getPublicOrder),
 );
 

@@ -425,4 +425,53 @@ export const loyaltyService = {
       ),
     };
   },
+
+  async getPublicProgram(restaurantId: string) {
+    const program = await prisma.loyaltyProgram.findUnique({
+      where: {
+        restaurantId,
+      },
+    });
+
+    if (!program || !program.isActive) {
+      throw new AppError(
+        "Loyalty program is not available.",
+        404,
+      );
+    }
+
+    return {
+      rewardName: program.rewardName,
+      purchaseThreshold: program.purchaseThreshold,
+      rewardQuantity: program.rewardQuantity,
+      minimumOrderValue: program.minimumOrderValue,
+      isActive: program.isActive,
+    };
+  },
+
+  async getPublicCustomer(
+    restaurantId: string,
+    phone: string,
+  ) {
+    const result = await this.getCustomer(
+      restaurantId,
+      phone,
+    );
+
+    return {
+      customer: {
+        phone: result.customer.phone,
+        visitCount: result.customer.visitCount,
+        progressCount: result.customer.progressCount,
+      },
+
+      progress: result.progress,
+
+      rewards: result.rewards.map((reward) => ({
+        id: reward.id,
+        status: reward.status,
+        createdAt: reward.createdAt,
+      })),
+    };
+  },
 };
