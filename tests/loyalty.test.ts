@@ -95,13 +95,6 @@ describe("loyalty flow", () => {
 
     expect(prepareResponse.status).toBe(200);
 
-    const readyResponse = await request(app)
-      .patch(`${API_PREFIX}/orders/${orderId}/status`)
-      .set("Authorization", `Bearer ${token}`)
-      .send({ status: "READY" });
-
-    expect(readyResponse.status).toBe(200);
-
     const completeResponse = await request(app)
       .patch(`${API_PREFIX}/orders/${orderId}/status`)
       .set("Authorization", `Bearer ${token}`)

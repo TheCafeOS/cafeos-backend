@@ -39,7 +39,6 @@ export const updateOrderStatusSchema = z.object({
       ORDER_STATUS.PENDING,
       ORDER_STATUS.CONFIRMED,
       ORDER_STATUS.PREPARING,
-      ORDER_STATUS.READY,
       ORDER_STATUS.COMPLETED,
       ORDER_STATUS.CANCELLED,
     ]),
@@ -64,7 +63,6 @@ export const listOrdersSchema = z.object({
           ORDER_STATUS.PENDING,
           ORDER_STATUS.CONFIRMED,
           ORDER_STATUS.PREPARING,
-          ORDER_STATUS.READY,
           ORDER_STATUS.COMPLETED,
           ORDER_STATUS.CANCELLED,
         ])

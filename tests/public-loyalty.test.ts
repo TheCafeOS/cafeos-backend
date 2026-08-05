@@ -95,7 +95,6 @@ describe("public loyalty", () => {
     for (const status of [
       "CONFIRMED",
       "PREPARING",
-      "READY",
       "COMPLETED",
     ]) {
       await request(app)

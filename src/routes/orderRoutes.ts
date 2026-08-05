@@ -81,7 +81,7 @@ router.post(
  *         name: status
  *         schema:
  *           type: string
- *           enum: [PENDING, CONFIRMED, PREPARING, READY, COMPLETED, CANCELLED]
+ *           enum: [PENDING, CONFIRMED, PREPARING, COMPLETED, CANCELLED]
  *       - in: query
  *         name: search
  *         schema:
