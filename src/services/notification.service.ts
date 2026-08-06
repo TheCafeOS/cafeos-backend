@@ -41,6 +41,8 @@ interface OrderStatusNotificationInput {
   tableId: string;
   tableName: string;
   status: string;
+  total: number;
+  itemCount: number;
 }
 
 interface RewardEarnedNotificationInput {
@@ -161,6 +163,8 @@ export async function notifyOrderStatusChanged(
       tableId: input.tableId,
       tableName: input.tableName,
       status: input.status,
+      total: input.total,
+      itemCount: input.itemCount,
     },
   });
 }
