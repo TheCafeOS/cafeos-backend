@@ -423,15 +423,5 @@ broadcastOrderEvent(
   },
 );
 
-  await notificationService.notifyOrderStatusChanged({
-    restaurantId,
-    orderId: updatedOrder.id,
-    tableId: updatedOrder.table.id,
-    tableName: updatedOrder.table.name,
-    status: updatedOrder.status,
-    total: Number(updatedOrder.total),
-    itemCount: updatedOrder.items.length,
-  });
-
   return toOrderResponse(updatedOrder);
 };
