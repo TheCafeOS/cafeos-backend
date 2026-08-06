@@ -8,7 +8,7 @@ export const publicMenuSchema = z.object({
 
 export const publicOrderSchema = z.object({
   params: z.object({
-    orderId: z.string().uuid(),
+    orderId: z.string().cuid(),
   }),
 });
 
@@ -33,6 +33,6 @@ export const publicCustomerLoyaltySchema = z.object({
 export const publicOrderDetailsSchema = z.object({
   params: z.object({
     qrToken: z.string().trim().min(1),
-    orderId: z.string().uuid(),
+    orderId: z.string().cuid(),
   }),
 });
