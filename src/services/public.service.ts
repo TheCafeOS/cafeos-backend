@@ -22,6 +22,13 @@ export const getMenu = async (qrToken: string) => {
           tagline: true,
           cuisineType: true,
           themeColor: true,
+
+          phone: true,
+          restaurantEmail: true,
+          address: true,
+
+          instagram: true,
+          customLink: true,
         },
       },
     },
@@ -77,6 +84,13 @@ export const getMenu = async (qrToken: string) => {
       cuisineType: table.restaurant.cuisineType,
 
       themeColor: table.restaurant.themeColor,
+
+      phone: table.restaurant.phone,
+      email: table.restaurant.restaurantEmail,
+      address: table.restaurant.address,
+
+      instagramUrl: table.restaurant.instagram,
+      mapsUrl: table.restaurant.customLink,
     },
     categories: categories.map((category) => ({
       id: category.id,
