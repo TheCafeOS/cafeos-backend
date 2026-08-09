@@ -10,6 +10,7 @@ import {
 
 import {
   publicMenuSchema,
+  publicOrderCreateSchema,
   publicLoyaltyProgramSchema,
   publicCustomerLoyaltySchema,
   publicOrderDetailsSchema,
@@ -17,6 +18,7 @@ import {
 
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { validate } from "../middleware/validate.js";
+import { publicOrderLimiter } from "../middleware/rateLimiter.js";
 
 const router = Router();
 
@@ -141,7 +143,8 @@ router.get(
  */
 router.post(
   "/orders/:qrToken",
-  validate(publicMenuSchema),
+  publicOrderLimiter,
+  validate(publicOrderCreateSchema),
   asyncHandler(createPublicOrder),
 );
 

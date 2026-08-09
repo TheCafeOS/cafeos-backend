@@ -5,6 +5,9 @@ import { env } from "./config/env.js";
 import { logger } from "./lib/logger.js";
 import { initializeSocket, io } from "./lib/socket.js";
 import { prisma } from "./lib/prisma.js";
+import dns from "node:dns";
+
+dns.setDefaultResultOrder("ipv4first");
 
 const httpServer = createServer(app);
 

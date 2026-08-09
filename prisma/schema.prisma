@@ -8,6 +8,246 @@ datasource db {
   directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
+model Restaurant {
+  id               String            @id @default(cuid())
+  name             String
+  slug             String            @unique
+  phone            String?
+  address          String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  restaurantEmail  String            @default("")
+  coverImageUrl    String?
+  cuisineType      String?
+  customLink       String?
+  description      String?
+  facebook         String?
+  instagram        String?
+  logoUrl          String?
+  tagline          String?
+  themeColor       String?
+  website          String?
+  coverPublicId    String?
+  logoPublicId     String?
+  openingHours     Json?
+  auditLogs        AuditLog[]
+  categories       Category[]
+  employees        Employee[]
+  loyaltyCustomers LoyaltyCustomer[]
+  loyaltyProgram   LoyaltyProgram?
+  loyaltyRewards   LoyaltyReward[]
+  menuItems        MenuItem[]
+  orders           Order[]
+  tables           RestaurantTable[]
+}
+
+model Employee {
+  id            String         @id @default(cuid())
+  restaurantId  String
+  name          String
+  email         String         @unique
+  passwordHash  String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  deletedAt     DateTime?
+  isActive      Boolean        @default(true)
+  lastLoginAt   DateTime?
+  role          EmployeeRole   @default(OWNER)
+  auditLogs     AuditLog[]
+  restaurant    Restaurant     @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+
+  @@index([restaurantId, createdAt])
+  @@index([restaurantId, role])
+  @@index([restaurantId, isActive])
+}
+
+model Notification {
+  id         String           @id @default(cuid())
+  employeeId String
+  type       NotificationType
+  title      String
+  message    String
+  isRead     Boolean          @default(false)
+  readAt     DateTime?
+  data       Json?
+  createdAt  DateTime         @default(now())
+  employee   Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId, createdAt(sort: Desc)])
+  @@index([employeeId, isRead])
+  @@index([type])
+}
+
+model AuditLog {
+  id           String      @id @default(cuid())
+  restaurantId String
+  employeeId   String?
+  action       AuditAction
+  entity       String
+  entityId     String?
+  metadata     Json?
+  createdAt    DateTime    @default(now())
+  employee     Employee?   @relation(fields: [employeeId], references: [id])
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, createdAt])
+  @@index([restaurantId, action])
+  @@index([restaurantId, employeeId])
+}
+
+model RestaurantTable {
+  id           String      @id @default(cuid())
+  restaurantId String
+  name         String
+  qrCode       String      @unique @default(uuid())
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  status       TableStatus @default(AVAILABLE)
+  orders       Order[]
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, name])
+  @@index([restaurantId, status])
+  @@index([restaurantId, createdAt])
+}
+
+model Category {
+  id           String     @id @default(cuid())
+  restaurantId String
+  name         String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  menuItems    MenuItem[]
+
+  @@unique([restaurantId, name])
+  @@index([restaurantId, createdAt])
+}
+
+model MenuItem {
+  id             String      @id @default(cuid())
+  restaurantId   String
+  categoryId     String?
+  name           String
+  description    String?
+  price          Decimal     @db.Decimal(10, 2)
+  isAvailable    Boolean     @default(true)
+  imageUrl       String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  imagePublicId  String?
+  foodType       FoodType    @default(VEG)
+  imagePositionX Float       @default(0)
+  imagePositionY Float       @default(0)
+  imageScale     Float       @default(1)
+  category       Category?   @relation(fields: [categoryId], references: [id])
+  restaurant     Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  orderItems     OrderItem[]
+
+  @@index([restaurantId])
+  @@index([categoryId])
+  @@index([restaurantId, createdAt])
+  @@index([restaurantId, isAvailable])
+  @@index([restaurantId, categoryId])
+}
+
+model LoyaltyProgram {
+  id                String            @id @default(cuid())
+  restaurantId      String            @unique
+  rewardName        String
+  purchaseThreshold Int
+  rewardQuantity    Int               @default(1)
+  minimumOrderValue Decimal           @default(0) @db.Decimal(10, 2)
+  isActive          Boolean           @default(true)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  customers         LoyaltyCustomer[]
+  restaurant        Restaurant        @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  rewards           LoyaltyReward[]
+
+  @@index([restaurantId, isActive])
+}
+
+model LoyaltyCustomer {
+  id            String          @id @default(cuid())
+  restaurantId  String
+  phone         String
+  name          String?
+  visitCount    Int             @default(0)
+  totalSpend    Decimal         @default(0) @db.Decimal(10, 2)
+  progressCount Int             @default(0)
+  lastOrderAt   DateTime?
+  programId     String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  program       LoyaltyProgram? @relation(fields: [programId], references: [id])
+  restaurant    Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  rewards       LoyaltyReward[]
+  orders        Order[]
+
+  @@unique([restaurantId, phone])
+  @@index([restaurantId, phone])
+  @@index([restaurantId, progressCount])
+}
+
+model LoyaltyReward {
+  id           String              @id @default(cuid())
+  restaurantId String
+  customerId   String
+  programId    String
+  status       LoyaltyRewardStatus @default(AVAILABLE)
+  orderId      String?
+  createdAt    DateTime            @default(now())
+  redeemedAt   DateTime?
+  customer     LoyaltyCustomer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  order        Order?              @relation(fields: [orderId], references: [id])
+  program      LoyaltyProgram      @relation(fields: [programId], references: [id], onDelete: Cascade)
+  restaurant   Restaurant          @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, customerId, status])
+  @@index([programId, status])
+}
+
+model Order {
+  id               String           @id @default(cuid())
+  restaurantId     String
+  tableId          String
+  customerPhone    String?
+  total            Decimal          @db.Decimal(10, 2)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  customerId       String?
+  status           OrderStatus      @default(PENDING)
+  loyaltyProcessed Boolean          @default(false)
+  rewards          LoyaltyReward[]
+  customer         LoyaltyCustomer? @relation(fields: [customerId], references: [id])
+  restaurant       Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  table            RestaurantTable  @relation(fields: [tableId], references: [id])
+  items            OrderItem[]
+
+  @@index([restaurantId])
+  @@index([tableId])
+  @@index([restaurantId, createdAt])
+  @@index([restaurantId, status])
+  @@index([restaurantId, tableId])
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  menuItemId String
+  quantity   Int
+  price      Decimal  @db.Decimal(10, 2)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([menuItemId])
+}
+
 enum EmployeeRole {
   OWNER
   MANAGER
@@ -32,28 +272,22 @@ enum AuditAction {
   LOGIN
   LOGOUT
   PASSWORD_CHANGED
-
   EMPLOYEE_CREATED
   EMPLOYEE_UPDATED
   EMPLOYEE_STATUS_CHANGED
   EMPLOYEE_DELETED
-
   CATEGORY_CREATED
   CATEGORY_UPDATED
   CATEGORY_DELETED
-
   MENU_CREATED
   MENU_UPDATED
   MENU_DELETED
-
   TABLE_CREATED
   TABLE_UPDATED
   TABLE_DELETED
-
   ORDER_CREATED
   ORDER_STATUS_CHANGED
   ORDER_CANCELLED
-
   SETTINGS_UPDATED
 }
 
@@ -74,270 +308,4 @@ enum OrderStatus {
 enum LoyaltyRewardStatus {
   AVAILABLE
   REDEEMED
-}
-
-model Restaurant {
-  id              String   @id @default(cuid())
-  name            String
-  slug            String   @unique
-  phone           String?
-  address         String?
-  restaurantEmail String   @default("")
-
-  // Branding
-  logoUrl         String?
-  logoPublicId    String?
-
-  coverImageUrl   String?
-  coverPublicId   String?
-
-  // Profile
-  tagline         String?
-  description     String?
-  cuisineType     String?
-
-  // Social Links
-  website         String?
-  instagram       String?
-  facebook        String?
-  customLink      String?
-
-  // Theme
-  themeColor      String?
-
-  // Opening Hours
-  openingHours    Json?
-
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  categories      Category[]
-  employees       Employee[]
-  auditLogs       AuditLog[]
-  menuItems       MenuItem[]
-  orders          Order[]
-  tables          RestaurantTable[]
-  loyaltyProgram  LoyaltyProgram?
-  loyaltyCustomers LoyaltyCustomer[]
-  loyaltyRewards  LoyaltyReward[]
-}
-
-model Employee {
-  id           String     @id @default(cuid())
-  restaurantId String
-  name         String
-  email        String     @unique
-  passwordHash String
-  role         EmployeeRole @default(OWNER)
-  isActive     Boolean      @default(true)
-  lastLoginAt  DateTime?
-  deletedAt    DateTime?
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  notifications Notification[]
-  auditLogs    AuditLog[]
-
-  @@index([restaurantId, createdAt])
-  @@index([restaurantId, role])
-  @@index([restaurantId, isActive])
-}
-
-model Notification {
-  id         String            @id @default(cuid())
-
-  employeeId String
-  employee   Employee          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-
-  type       NotificationType
-
-  title      String
-  message    String
-
-  isRead     Boolean           @default(false)
-  readAt     DateTime?
-
-  data        Json?
-
-  createdAt   DateTime          @default(now())
-
-  @@index([employeeId, createdAt(sort: Desc)])
-  @@index([employeeId, isRead])
-  @@index([type])
-}
-
-model AuditLog {
-  id           String @id @default(cuid())
-
-  restaurantId String
-  employeeId   String?
-
-  action AuditAction
-
-  entity   String
-  entityId String?
-
-  metadata Json?
-
-  createdAt DateTime @default(now())
-
-  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  employee   Employee?  @relation(fields: [employeeId], references: [id], onDelete: SetNull)
-
-  @@index([restaurantId, createdAt])
-  @@index([restaurantId, action])
-  @@index([restaurantId, employeeId])
-}
-
-model RestaurantTable {
-  id           String       @id @default(cuid())
-  restaurantId String
-  name         String
-  qrCode       String       @unique @default(uuid())
-  status       TableStatus  @default(AVAILABLE)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  orders       Order[]
-  restaurant   Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-
-  @@index([restaurantId, status])
-  @@index([restaurantId, createdAt])
-  @@unique([restaurantId, name])
-}
-
-model Category {
-  id           String     @id @default(cuid())
-  restaurantId String
-  name         String
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  menuItems    MenuItem[]
-
-  @@index([restaurantId, createdAt])
-  @@unique([restaurantId, name])
-}
-
-model MenuItem {
-  id           String      @id @default(cuid())
-  restaurantId String
-  categoryId   String?
-  name         String
-  description  String?
-  price        Decimal     @db.Decimal(10, 2)
-  foodType     FoodType    @default(VEG)
-  isAvailable  Boolean     @default(true)
-  imageUrl       String?
-  imagePublicId  String?
-
-  imageScale      Float @default(1)
-  imagePositionX  Float @default(0)
-  imagePositionY  Float @default(0)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  category     Category?   @relation(fields: [categoryId], references: [id])
-  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  orderItems   OrderItem[]
-
-  @@index([restaurantId])
-  @@index([categoryId])
-  @@index([restaurantId, createdAt])
-  @@index([restaurantId, isAvailable])
-  @@index([restaurantId, categoryId])
-}
-
-model LoyaltyProgram {
-  id               String   @id @default(cuid())
-  restaurantId     String   @unique
-  rewardName       String
-  purchaseThreshold Int
-  rewardQuantity   Int      @default(1)
-  minimumOrderValue Decimal @db.Decimal(10, 2) @default(0)
-  isActive         Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  restaurant       Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  customers        LoyaltyCustomer[]
-  rewards          LoyaltyReward[]
-
-  @@index([restaurantId, isActive])
-}
-
-model LoyaltyCustomer {
-  id           String   @id @default(cuid())
-  restaurantId String
-  phone        String
-  name         String?
-  visitCount   Int      @default(0)
-  totalSpend   Decimal  @db.Decimal(10, 2) @default(0)
-  progressCount Int     @default(0)
-  lastOrderAt  DateTime?
-  programId    String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  program      LoyaltyProgram? @relation(fields: [programId], references: [id], onDelete: SetNull)
-  orders       Order[]
-  rewards      LoyaltyReward[]
-
-  @@unique([restaurantId, phone])
-  @@index([restaurantId, phone])
-  @@index([restaurantId, progressCount])
-}
-
-model LoyaltyReward {
-  id           String             @id @default(cuid())
-  restaurantId String
-  customerId   String
-  programId    String
-  status       LoyaltyRewardStatus @default(AVAILABLE)
-  orderId      String?
-  createdAt    DateTime           @default(now())
-  redeemedAt   DateTime?
-  restaurant   Restaurant        @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  customer     LoyaltyCustomer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  program      LoyaltyProgram    @relation(fields: [programId], references: [id], onDelete: Cascade)
-  order        Order?            @relation(fields: [orderId], references: [id], onDelete: SetNull)
-
-  @@index([restaurantId, customerId, status])
-  @@index([programId, status])
-}
-
-model Order {
-  id            String          @id @default(cuid())
-  restaurantId  String
-  tableId       String
-  customerPhone String?
-  customerId    String?
-  loyaltyProcessed Boolean      @default(false)
-  status        OrderStatus     @default(PENDING)
-  total         Decimal         @db.Decimal(10, 2)
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  restaurant    Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  table         RestaurantTable @relation(fields: [tableId], references: [id])
-  customer      LoyaltyCustomer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  items         OrderItem[]
-  rewards       LoyaltyReward[]
-
-  @@index([restaurantId])
-  @@index([tableId])
-  @@index([restaurantId, createdAt])
-  @@index([restaurantId, status])
-  @@index([restaurantId, tableId])
-}
-
-model OrderItem {
-  id         String   @id @default(cuid())
-  orderId    String
-  menuItemId String
-  quantity   Int
-  price      Decimal  @db.Decimal(10, 2)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
-  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-
-  @@index([orderId])
-  @@index([menuItemId])
 }
