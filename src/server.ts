@@ -3,7 +3,11 @@ import { createServer } from "http";
 import app from "./app.js";
 import { env } from "./config/env.js";
 import { logger } from "./lib/logger.js";
-import { initializeSocket, io } from "./lib/socket.js";
+import {
+  initializeSocket,
+  io,
+} from "./lib/socket.js";
+import { cancelExpiredPendingOrders } from "./services/order.service.js";
 import { prisma } from "./lib/prisma.js";
 import dns from "node:dns";
 
@@ -12,6 +16,14 @@ dns.setDefaultResultOrder("ipv4first");
 const httpServer = createServer(app);
 
 initializeSocket(httpServer);
+
+if (env.NODE_ENV !== "test") {
+  void cancelExpiredPendingOrders();
+
+  setInterval(() => {
+    void cancelExpiredPendingOrders();
+  }, 60 * 1000);
+}
 
 if (env.NODE_ENV !== "test") {
   httpServer.listen(env.PORT, () => {

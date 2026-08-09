@@ -425,3 +425,75 @@ broadcastOrderEvent(
 
   return toOrderResponse(updatedOrder);
 };
+
+export const cancelExpiredPendingOrders = async () => {
+  const expirationTime = new Date(
+    Date.now() - 2 * 60 * 60 * 1000,
+  );
+
+  const expiredOrders = await prisma.order.findMany({
+    where: {
+      status: "PENDING",
+      createdAt: {
+        lte: expirationTime,
+      },
+    },
+    select: {
+      id: true,
+      restaurantId: true,
+      tableId: true,
+    },
+  });
+
+  for (const order of expiredOrders) {
+    const result = await prisma.order.updateMany({
+      where: {
+        id: order.id,
+        status: "PENDING",
+      },
+      data: {
+        status: "CANCELLED",
+      },
+    });
+
+    // Another process/request may have already accepted/cancelled it.
+    if (result.count === 0) {
+      continue;
+    }
+
+    const updatedOrder = await prisma.order.findUnique({
+      where: {
+        id: order.id,
+      },
+    });
+
+    if (!updatedOrder) {
+      continue;
+    }
+
+    await auditService.log({
+      restaurantId: updatedOrder.restaurantId,
+      employeeId: null,
+      action: AuditAction.ORDER_STATUS_CHANGED,
+      entity: AuditEntity.Order,
+      entityId: updatedOrder.id,
+      metadata: {
+        previousStatus: "PENDING",
+        newStatus: "CANCELLED",
+        tableId: updatedOrder.tableId,
+        reason: "Automatically cancelled after 2 hours in PENDING status",
+      },
+    });
+
+    broadcastOrderEvent(
+      updatedOrder.restaurantId,
+      updatedOrder.tableId,
+      SocketEvents.ORDER_UPDATED,
+      {
+        orderId: updatedOrder.id,
+        status: updatedOrder.status,
+        timestamp: updatedOrder.updatedAt,
+      },
+    );
+  }
+};
