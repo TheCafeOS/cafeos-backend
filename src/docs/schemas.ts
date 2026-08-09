@@ -233,6 +233,34 @@ Restaurant: {
       nullable: true,
       example: "#F97316",
     },
+
+    openingHours: {
+      type: "object",
+      nullable: true,
+      properties: {
+        monday: {
+          $ref: "#/components/schemas/OpeningHourDay",
+        },
+        tuesday: {
+          $ref: "#/components/schemas/OpeningHourDay",
+        },
+        wednesday: {
+          $ref: "#/components/schemas/OpeningHourDay",
+        },
+        thursday: {
+          $ref: "#/components/schemas/OpeningHourDay",
+        },
+        friday: {
+          $ref: "#/components/schemas/OpeningHourDay",
+        },
+        saturday: {
+          $ref: "#/components/schemas/OpeningHourDay",
+        },
+        sunday: {
+          $ref: "#/components/schemas/OpeningHourDay",
+        },
+      },
+    },
   },
 },
 
@@ -686,6 +714,29 @@ ChangePasswordRequest: {
   },
 },
 
+OpeningHourDay: {
+  type: "object",
+  required: ["isOpen", "open", "close"],
+  properties: {
+    isOpen: {
+      type: "boolean",
+      example: true,
+    },
+    open: {
+      type: "string",
+      nullable: true,
+      pattern: "^([01]\\d|2[0-3]):[0-5]\\d$",
+      example: "09:00",
+    },
+    close: {
+      type: "string",
+      nullable: true,
+      pattern: "^([01]\\d|2[0-3]):[0-5]\\d$",
+      example: "23:00",
+    },
+  },
+},
+
 SettingsUpdateRequest: {
   type: "object",
   properties: {
@@ -746,8 +797,36 @@ SettingsUpdateRequest: {
       type: "string",
       example: "#F97316",
     },
+
+     openingHours: {
+        type: "object",
+        nullable: true,
+        properties: {
+          monday: {
+            $ref: "#/components/schemas/OpeningHourDay",
+          },
+          tuesday: {
+            $ref: "#/components/schemas/OpeningHourDay",
+          },
+          wednesday: {
+            $ref: "#/components/schemas/OpeningHourDay",
+          },
+          thursday: {
+            $ref: "#/components/schemas/OpeningHourDay",
+          },
+          friday: {
+            $ref: "#/components/schemas/OpeningHourDay",
+          },
+          saturday: {
+            $ref: "#/components/schemas/OpeningHourDay",
+          },
+          sunday: {
+            $ref: "#/components/schemas/OpeningHourDay",
+          },
+        },
+      },
+    },
   },
-},
 
 SettingsResponse: {
   type: "object",

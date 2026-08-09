@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import { AppError } from "../utils/AppError.js";
 import {
@@ -9,6 +10,7 @@ import { AuditAction } from "@prisma/client";
 import { auditService } from "./audit.service.js";
 import { AuditEntity } from "../constants/audit.js";
 import { logger } from "../lib/logger.js";
+import type { OpeningHours } from "../types/openingHours.js";
 
 async function getRestaurantOrThrow(
   restaurantId: string,
@@ -74,10 +76,13 @@ export const getSettings = async (
       customLink: restaurant.customLink,
 
       themeColor: restaurant.themeColor,
+
+      openingHours: restaurant.openingHours,
     },
     account: employee,
   };
 };
+
 
 export const updateSettings = async (
   restaurantId: string,
@@ -99,7 +104,8 @@ export const updateSettings = async (
     customLink?: string | null;
 
     themeColor?: string | null;
-  }
+    openingHours?: OpeningHours | null;
+  },
 ) => {
   await getRestaurantOrThrow(
     restaurantId,
@@ -111,11 +117,21 @@ export const updateSettings = async (
       .trim()
       .toLowerCase();
 
+const { openingHours, ...restaurantData } = data;
+
   const updatedRestaurant = await prisma.restaurant.update({
     where: {
       id: restaurantId,
     },
-    data,
+    data: {
+      ...restaurantData,
+      ...(openingHours !== undefined && {
+        openingHours:
+          openingHours === null
+            ? Prisma.JsonNull
+            : openingHours,
+      }),
+    },
   });
 
   await auditService.log({

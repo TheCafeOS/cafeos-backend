@@ -105,6 +105,9 @@ model Restaurant {
   // Theme
   themeColor      String?
 
+  // Opening Hours
+  openingHours    Json?
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

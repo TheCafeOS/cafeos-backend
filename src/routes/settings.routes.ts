@@ -43,7 +43,7 @@ router.get(
  *     tags:
  *       - Settings
  *     summary: Update restaurant settings
- *     description: Updates restaurant branding information such as name, contact details, theme color and social links.
+ *     description: Updates restaurant information, branding, contact details, theme color, social links, and weekly opening hours.
  *     security:
  *       - bearerAuth: []
  *     requestBody:

@@ -29,6 +29,7 @@ export const getMenu = async (qrToken: string) => {
 
           instagram: true,
           customLink: true,
+          openingHours: true,
         },
       },
     },
@@ -91,6 +92,7 @@ export const getMenu = async (qrToken: string) => {
 
       instagramUrl: table.restaurant.instagram,
       mapsUrl: table.restaurant.customLink,
+      openingHours: table.restaurant.openingHours,
     },
     categories: categories.map((category) => ({
       id: category.id,
