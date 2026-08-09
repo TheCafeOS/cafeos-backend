@@ -118,6 +118,12 @@ export const getMenuItems = async (
             name: true,
           },
         },
+
+        _count: {
+          select: {
+            orderItems: true,
+          },
+        },
       },
     }),
 
@@ -127,7 +133,11 @@ export const getMenuItems = async (
   ]);
 
   return {
-    data: menuItems,
+    data: menuItems.map(({ _count, ...menuItem }) => ({
+      ...menuItem,
+      hasOrders: _count.orderItems > 0,
+    })),
+
     pagination: getPaginationMeta(
       pagination.page,
       pagination.limit,
