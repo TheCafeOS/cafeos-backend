@@ -1,38 +1,14 @@
-<p align="center">
-  <img src="assets/banner.png" alt="CafeOS Banner" width="100%" />
-</p>
+# ☕ CafeOS
 
-<h1 align="center">☕ CafeOS</h1>
+> The Operating System for Modern Restaurants
 
-<p align="center">
-  <b>The Operating System for Modern Restaurants</b>
-</p>
+CafeOS is a production-oriented Restaurant Management SaaS platform designed to digitize and simplify restaurant operations through QR-based ordering, real-time order management, employee access control, loyalty programs, notifications, dashboards, and restaurant configuration.
 
-<p align="center">
-  A modern SaaS platform that digitizes restaurant operations with QR ordering,
-  live order tracking, restaurant management, and real-time communication.
-</p>
+Customers can scan a table QR code, browse the restaurant's menu, place an order, provide their phone number for loyalty tracking, and follow their order status without installing an application.
 
-<p align="center">
+Restaurant staff can manage tables, menus, orders, employees, restaurant branding, notifications, and loyalty programs from a centralized dashboard.
 
-![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)
-![Node.js](https://img.shields.io/badge/Node.js-20-green)
-![Express](https://img.shields.io/badge/Express-5-black)
-![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-blue)
-![License](https://img.shields.io/badge/License-MIT-yellow)
-
-</p>
-
----
-
-# 🌟 Overview
-
-CafeOS is a production-oriented Restaurant Management SaaS platform built to simplify restaurant operations through QR-based ordering, live dashboards, employee management, and real-time communication.
-
-Unlike traditional restaurant management software, CafeOS focuses on a seamless digital dining experience where customers can scan a QR code, browse the menu, place orders, and receive live updates—without installing any app.
-
-The project is designed with scalability, maintainability, and clean architecture in mind, making it suitable for real-world deployments and future multi-tenant SaaS expansion.
+The backend is designed with scalability, maintainability, security, and multi-tenant SaaS architecture in mind.
 
 ---
 
@@ -54,76 +30,283 @@ https://cafeos-backend-cjc2.onrender.com/api-docs
 
 # ✨ Features
 
-## 👨‍💼 Restaurant Management
+## 👨‍💼 Restaurant & Employee Management
 
-- Restaurant Authentication
-- Employee Authentication
-- Restaurant Branding
-- Logo Upload
-- Cover Image Upload
-- Theme Customization
-- Social Links
-- Restaurant Profile
+- Restaurant registration and authentication
+- Employee authentication
+- Employee management
+- Role-Based Access Control (RBAC)
+- `OWNER`, `MANAGER`, and `STAFF` roles
+- Owner-only employee management operations
+- Employee activation/deactivation
+- Secure password hashing
+- Change password functionality
+
+---
+
+## 🎨 Restaurant Branding & Settings
+
+Restaurants can customize their digital presence through:
+
+- Restaurant logo
+- Cover image
+- Tagline
+- Description
+- Cuisine type
+- Website
+- Instagram
+- Facebook
+- Custom links
+- Theme color
+
+Image assets are managed through Cloudinary.
 
 ---
 
 ## 🍽 Menu Management
 
-- Categories
-- Menu CRUD
-- Cloudinary Image Upload
-- Image Replacement
-- Availability Toggle
-- Public QR Menu
+- Category CRUD
+- Menu item CRUD
+- Menu item availability toggle
+- Menu item image upload
+- Image replacement
+- Automatic old image deletion
+- Cloudinary integration
+- Public QR-based menu
+- Restaurant-specific menu isolation
 
 ---
 
-## 🪑 Table Management
+## 🪑 Table & QR Management
 
-- QR Code Generation
-- Dynamic QR Tokens
-- Table Status Management
-- Public Menu Access
+- Table CRUD
+- Table status management
+- Dynamic QR tokens
+- QR code generation
+- QR PNG generation
+- QR-based public menu access
+- QR-based public ordering
+- Inactive table protection
+
+Customers interact with a restaurant through the QR code assigned to their table.
 
 ---
 
 ## 🛒 Order Management
 
-- QR Ordering
-- Customer Order Tracking
-- Live Restaurant Dashboard
-- Real-time Status Updates
-- Order Lifecycle
+CafeOS supports the complete restaurant order lifecycle.
+
+### Customer Ordering
+
+- QR-based ordering
+- Public order creation without authentication
+- Customer phone number support
+- Menu item availability validation
+- Quantity validation
+- Automatic order total calculation
+- Order tracking
+
+### Restaurant Order Management
+
+- Restaurant order creation
+- Public order creation
+- Order listing
+- Order details
+- Pagination
+- Status filtering
+- Table filtering
+- Customer phone/search filtering
+- Date range filtering
+- Sorting by creation date, status, or total
+
+### Order Lifecycle
+
+~~~text
+PENDING
+   │
+   ▼
+CONFIRMED
+   │
+   ▼
+PREPARING
+   │
+   ▼
+COMPLETED
+
+   └──────► CANCELLED
+~~~
+
+Order status transitions are validated by the backend to prevent invalid state changes.
+
+---
+
+## ⚡ Real-Time Order Updates
+
+CafeOS uses Socket.IO for real-time communication.
+
+### Restaurant
+
+Restaurants receive real-time events when:
+
+- A new order is created
+- An order status changes
+
+### Customers
+
+Customers can receive real-time updates for their table/order.
+
+The socket architecture uses restaurant-specific and table-specific rooms to isolate real-time events between restaurants.
+
+---
+
+## 🔔 Notifications
+
+CafeOS includes a backend notification system for important restaurant events.
+
+Currently, the notification panel focuses specifically on:
+
+### `NEW_ORDER`
+
+When a new customer order is created:
+
+1. Order is stored.
+2. A `NEW_ORDER` notification is created.
+3. The notification is broadcast in real time.
+4. Restaurant staff can see it in the notification panel.
+
+Order status events such as `PREPARING`, `COMPLETED`, and `CANCELLED` are not added to the notification feed because these changes are already visible on the Orders page.
+
+Notification features include:
+
+- Create notification
+- List notifications
+- Read notification
+- Delete notification
+- Real-time notification broadcasting
+
+---
+
+## ⭐ Loyalty Program
+
+CafeOS includes a restaurant-level customer loyalty system.
+
+### Loyalty Features
+
+- Loyalty program creation
+- Loyalty program configuration
+- Customer creation/lookup by phone number
+- Customer loyalty progress
+- Automatic progress on completed orders
+- Reward tracking
+- Public loyalty program API
+- Public customer loyalty profile API
+
+### Customer Flow
+
+~~~text
+Customer provides phone number
+             │
+             ▼
+Customer is created / found
+             │
+             ▼
+Order is placed
+             │
+             ▼
+Order becomes COMPLETED
+             │
+             ▼
+Loyalty progress is updated
+             │
+             ▼
+Reward is awarded when threshold is reached
+~~~
 
 ---
 
 ## 📊 Dashboard
 
-- Today's Orders
-- Revenue Summary
-- Pending Orders
-- Completed Orders
-- Recent Orders
+The backend provides dashboard APIs for restaurant operations.
+
+- Today's statistics
+- Revenue summary
+- Recent orders
+- Orders by status
+- Dashboard summary
+- Order counts
+- Operational metrics
 
 ---
 
-## 🔐 Security
+## 📝 Audit Logs
 
-- JWT Authentication
-- Refresh Tokens
-- Role-Based Authorization
-- Helmet
-- Rate Limiting
-- Zod Validation
-- Secure Password Hashing
+CafeOS records important restaurant operations through audit logging.
+
+Examples include:
+
+- Order creation
+- Order status changes
+- Employee-related operations
+
+Audit records contain relevant information such as:
+
+- Restaurant
+- Employee
+- Action
+- Entity
+- Entity ID
+- Metadata
+
+This provides an operational history for restaurant activity and accountability.
 
 ---
 
-## 📄 Documentation
+## 🔐 Security & Protection
 
-- Swagger / OpenAPI
-- RESTful API Design
-- Typed Request Validation
+CafeOS implements multiple backend security mechanisms:
+
+- JWT authentication
+- Access tokens
+- Refresh tokens
+- Role-Based Access Control
+- Secure password hashing
+- Helmet security headers
+- CORS configuration
+- Zod request validation
+- API rate limiting
+- Authentication rate limiting
+- Public order rate limiting
+- Request IDs
+- Centralized error handling
+- Restaurant-level data isolation
+
+### Rate Limiting
+
+General API requests are protected using rate limiting.
+
+Authentication endpoints use stricter rate limits to reduce brute-force attempts.
+
+Public ordering endpoints are also protected against excessive request traffic.
+
+---
+
+## 📄 API Documentation
+
+CafeOS provides interactive API documentation using Swagger/OpenAPI.
+
+The API is organized into modules including:
+
+- Authentication
+- Public
+- Employees
+- Tables
+- Categories
+- Menu
+- Orders
+- Dashboard
+- Settings
+- Loyalty
+- Notifications
 
 ---
 
@@ -135,12 +318,15 @@ https://cafeos-backend-cjc2.onrender.com/api-docs
 - Express.js
 - TypeScript
 - Prisma ORM
-- PostgreSQL (Neon)
+- PostgreSQL
+- Neon
 - Socket.IO
+- JWT
 - Cloudinary
-- Swagger
 - Zod
+- Swagger / OpenAPI
 - Pino Logger
+- Express Rate Limit
 
 ---
 
@@ -150,95 +336,129 @@ https://cafeos-backend-cjc2.onrender.com/api-docs
 - React
 - TypeScript
 - TailwindCSS
+- shadcn/ui
 - React Query
 - Zustand
 - Axios
+- Socket.IO Client
 
 ---
 
 # 🏛 System Architecture
 
-```text
-                        ┌─────────────────────────────┐
-                        │      Client / Frontend      │
-                        │                             │
-                        │  Next.js + React + TS       │
-                        └──────────────┬──────────────┘
-                                       │
-                        HTTPS / REST + WebSocket
-                                       │
-                                       ▼
-                    ┌─────────────────────────────────┐
-                    │         Express Backend          │
-                    │                                 │
-                    │  Controllers                    │
-                    │  Services                       │
-                    │  Middleware                     │
-                    │  Validation                     │
-                    └───────┬───────────────┬─────────┘
-                            │               │
-                            │               │
-                            ▼               ▼
-               PostgreSQL (Neon)      Cloudinary
-                  Prisma ORM        Image Storage
-                            │
-                            ▼
-                       Socket.IO
-                  Real-time Updates
-```
+~~~text
+                         ┌──────────────────────────┐
+                         │        Customers         │
+                         │                          │
+                         │      QR Menu / Order     │
+                         └────────────┬─────────────┘
+                                      │
+                                      │ HTTPS
+                                      ▼
+┌───────────────────────────────────────────────────────────────┐
+│                       CafeOS Backend                          │
+│                                                               │
+│  Express.js + TypeScript                                      │
+│                                                               │
+│  ┌────────────┐   ┌────────────┐   ┌────────────────────┐     │
+│  │Controllers │──►│  Services  │──►│ Prisma / PostgreSQL│     │
+│  └────────────┘   └────────────┘   └────────────────────┘     │
+│         │                 │                                   │
+│         ▼                 ▼                                   │
+│  ┌────────────┐   ┌────────────────┐                          │
+│  │ Validation │   │ Business Logic │                          │
+│  │   (Zod)    │   │                │                          │
+│  └────────────┘   └────────────────┘                          │
+│                                                               │
+│  Authentication │ RBAC │ Audit │ Notifications │ Rate Limit   │
+│                                                               │
+└───────────────┬───────────────────────┬───────────────────────┘
+                │                       │
+                ▼                       ▼
+        ┌───────────────┐       ┌───────────────┐
+        │   Socket.IO   │       │   Cloudinary  │
+        │ Real-time     │       │ Image Storage │
+        └───────────────┘       └───────────────┘
+                │
+                ▼
+        ┌─────────────────┐
+        │ Restaurant      │
+        │ Dashboard       │
+        │ Next.js         │
+        └─────────────────┘
+~~~
 
 ---
 
 # 🔄 Customer Order Flow
 
-```text
+~~~text
 Customer
-     │
-     ▼
-Scan QR Code
-     │
-     ▼
-Browse Menu
-     │
-     ▼
-Add Items
-     │
-     ▼
+   │
+   ▼
+Scan Table QR
+   │
+   ▼
+Validate QR Token
+   │
+   ▼
+Browse Public Menu
+   │
+   ▼
+Select Items
+   │
+   ▼
+Enter Phone Number (Optional)
+   │
+   ▼
 Place Order
-     │
-     ▼
-Restaurant Dashboard
-     │
-     ▼
-Kitchen Preparation
-     │
-     ▼
-Order Ready
-     │
-     ▼
-Customer Receives Live Updates
-```
+   │
+   ▼
+Order Created as PENDING
+   │
+   ├──────────────► NEW_ORDER Notification
+   │
+   ▼
+Restaurant Staff
+   │
+   ▼
+Accept / Confirm Order
+   │
+   ▼
+PREPARING
+   │
+   ▼
+COMPLETED
+   │
+   └──────────────► Loyalty Progress Updated
+~~~
 
 ---
 
 # 📦 API Modules
 
-- Authentication
-- Public
-- Tables
-- Categories
-- Menu
-- Orders
-- Dashboard
-- Settings
+~~~text
+Authentication
+Employees
+Public
+Tables
+Categories
+Menu
+Orders
+Dashboard
+Settings
+Loyalty
+Notifications
+~~~
 
 ---
 
 # 📂 Project Structure
 
-```text
+~~~text
 src
 ├── config
+├── constants
 ├── controllers
 ├── docs
 ├── lib
@@ -249,22 +469,53 @@ src
 ├── validations
 ├── app.ts
 └── server.ts
-```
+~~~
+
+### Architectural Responsibilities
+
+~~~text
+Routes
+   │
+   ▼
+Validation Middleware
+   │
+   ▼
+Controllers
+   │
+   ▼
+Services
+   │
+   ▼
+Prisma
+   │
+   ▼
+PostgreSQL
+~~~
+
+Controllers remain thin while business logic is handled inside services.
 
 ---
 
-# 📸 Screenshots
+# 🧪 Testing
 
-> Replace these placeholders with screenshots as the project evolves.
+CafeOS includes automated API/integration tests using Vitest.
 
-- Login Page
-- Dashboard
-- Table Management
-- Menu Management
-- Restaurant Settings
-- Public QR Menu
-- Live Order Tracking
-- Swagger Documentation
+Current verified test suite:
+
+~~~text
+Test Files: 7 passed
+Tests:      8 passed
+~~~
+
+The test suite covers important flows including:
+
+- Authentication
+- Categories
+- Public APIs
+- Health endpoint
+- Loyalty
+- Notifications
+- Public loyalty
 
 ---
 
@@ -272,27 +523,27 @@ src
 
 ## Clone Repository
 
-```bash
+~~~bash
 git clone https://github.com/Mayank1343/cafeos-backend.git
 
 cd cafeos-backend
-```
+~~~
 
 ---
 
 ## Install Dependencies
 
-```bash
+~~~bash
 npm install
-```
+~~~
 
 ---
 
 ## Environment Variables
 
-Create a `.env` file.
+Create a `.env` file:
 
-```env
+~~~env
 DATABASE_URL=
 
 JWT_SECRET=
@@ -303,41 +554,65 @@ CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 
 PORT=4000
-```
+
+CORS_ORIGINS=
+~~~
+
+Set `CORS_ORIGINS` according to your frontend/deployment environments.
 
 ---
 
 ## Generate Prisma Client
 
-```bash
+~~~bash
 npx prisma generate
-```
+~~~
 
 ---
 
 ## Run Database Migrations
 
-```bash
+~~~bash
 npx prisma migrate dev
-```
+~~~
 
 ---
 
 ## Start Development Server
 
-```bash
+~~~bash
 npm run dev
-```
+~~~
+
+---
+
+## Run Tests
+
+~~~bash
+npm test
+~~~
+
+---
+
+## Build
+
+~~~bash
+npm run build
+~~~
 
 ---
 
 # 📖 API Documentation
 
-Swagger is available at
+Once the backend is running locally:
 
-```
+~~~text
 http://localhost:4000/api-docs
-```
+~~~
+
+Production Swagger documentation:
+
+https://cafeos-backend-cjc2.onrender.com/api-docs
 
 ---
 
@@ -345,24 +620,66 @@ http://localhost:4000/api-docs
 
 ## ✅ Completed
 
+### Core Platform
+
 - Authentication
+- JWT Access Tokens
 - Refresh Tokens
-- QR Ordering
+- Role-Based Access Control
+- Employee Management
+- Restaurant Settings
+- Restaurant Branding
+
+### Restaurant Operations
+
 - Table Management
+- QR Code Generation
+- QR PNG Generation
 - Categories
 - Menu Management
-- Image Uploads
+- Menu Image Uploads
 - Cloudinary Integration
+- Order Management
+- Order Status Workflow
 - Dashboard APIs
-- Restaurant Branding
-- Swagger Documentation
-- Public Menu
+- Pagination
+- Search
+- Filtering
+- Sorting
 
----
+### Customer Experience
 
-## 🚧 In Progress
+- Public QR Menu
+- Public QR Ordering
+- Customer Phone Association
+- Order Tracking
+- Real-Time Order Updates
+- Loyalty Programs
+- Loyalty Progress
+- Rewards
 
-- Employee Management (RBAC)
+### Real-Time & Notifications
+
+- Socket.IO
+- Restaurant Rooms
+- Table Rooms
+- Real-Time New Order Events
+- New Order Notifications
+- Notification Management
+
+### Security & Production Hardening
+
+- Request IDs
+- Structured Logging
+- Rate Limiting
+- Authentication Rate Limiting
+- Public Order Rate Limiting
+- Zod Validation
+- Helmet
+- CORS
+- Centralized Error Handling
+- Audit Logs
+- Swagger/OpenAPI
 
 ---
 
@@ -372,27 +689,30 @@ http://localhost:4000/api-docs
 - Inventory Management
 - Discounts & Coupons
 - Billing & Invoicing
-- Analytics & Reports
-- Notifications
-- Multi-Restaurant SaaS
-- Subscription & Billing
+- Advanced Analytics & Reports
 - Payment Gateway Integration
-- Audit Logs
+- Subscription & SaaS Billing
+- Multi-Restaurant SaaS Expansion
 
 ---
 
 # 🎯 Design Principles
 
-CafeOS follows a layered architecture to keep the codebase scalable and maintainable.
+CafeOS follows a layered architecture focused on maintainability, security, and scalability.
 
 - Thin Controllers
 - Business Logic in Services
-- Prisma Access only inside Services
+- Prisma Access Only Inside Services
 - Zod Request Validation
 - RESTful APIs
-- Modular Folder Structure
+- Modular Architecture
 - Stateless JWT Authentication
-- Production-ready Logging
+- Structured Logging
+- Centralized Error Handling
+- Restaurant-Level Data Isolation
+- Explicit Order State Transitions
+- Production-Oriented Security
+- Backend Independent of Frontend Implementation
 
 ---
 
@@ -404,8 +724,11 @@ If you would like to contribute:
 
 1. Fork the repository.
 2. Create a feature branch.
-3. Commit your changes.
-4. Open a Pull Request.
+3. Make your changes.
+4. Run the test suite.
+5. Run the production build.
+6. Commit your changes.
+7. Open a Pull Request.
 
 For major changes, please open an issue first to discuss your proposal.
 
@@ -413,7 +736,9 @@ For major changes, please open an issue first to discuss your proposal.
 
 # 📜 License
 
-This project is proprietary software. The source code is publicly available for portfolio and evaluation purposes only. All rights are reserved by the author.
+This project is proprietary software.
+
+The source code is publicly available for portfolio and evaluation purposes only. All rights are reserved by the author.
 
 ---
 
@@ -421,12 +746,12 @@ This project is proprietary software. The source code is publicly available for 
 
 **Mayank Sharma**
 
-- GitHub: https://github.com/Mayank1343
+GitHub: https://github.com/Mayank1343
 
 ---
 
 # ⭐ Support
 
-If you found this project useful, consider giving it a **Star ⭐**.
+If you found CafeOS useful or interesting, consider giving the repository a **Star ⭐**.
 
-It helps others discover the project and motivates future development.
+It helps others discover the project and supports continued development.
