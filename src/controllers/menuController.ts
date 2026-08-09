@@ -94,11 +94,20 @@ export const deleteMenuItem = async (
 ) => {
   const id = getRouteParam(req.params.id);
 
-  await menuService.removeMenuItem(
+  const result = await menuService.removeMenuItem(
     req.employee!.restaurantId,
     req.employee!.id,
     id,
   );
+
+  if (result.disabled) {
+    return res.json(
+      successResponse(
+        "Menu item has been disabled because it has already been used in customer orders.",
+        result.menuItem,
+      ),
+    );
+  }
 
   return res.json(
     successResponse(

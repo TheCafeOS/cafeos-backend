@@ -311,12 +311,62 @@ export const removeMenuItem = async (
   currentEmployeeId: string,
   id: string,
 ) => {
-  const menuItem =
-    await getMenuItemOrThrow(
-      restaurantId,
-      id,
-    );
+  const menuItem = await getMenuItemOrThrow(
+    restaurantId,
+    id,
+  );
 
+  // Check whether this menu item has ever been used in an order.
+  const orderItem = await prisma.orderItem.findFirst({
+    where: {
+      menuItemId: id,
+      order: {
+        restaurantId,
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  // Used items cannot be physically deleted.
+  // Instead, disable them so historical orders remain intact.
+  if (orderItem) {
+    const updatedMenuItem = await prisma.menuItem.update({
+      where: {
+        id,
+      },
+      data: {
+        isAvailable: false,
+      },
+    });
+
+    await auditService.log({
+      restaurantId,
+      employeeId: currentEmployeeId,
+
+      action: AuditAction.MENU_UPDATED,
+
+      entity: AuditEntity.Menu,
+      entityId: menuItem.id,
+
+      metadata: {
+        action: "DISABLED",
+        reason: "Menu item has been used in customer orders",
+        name: menuItem.name,
+        previousIsAvailable: menuItem.isAvailable,
+        newIsAvailable: false,
+      },
+    });
+
+    return {
+      deleted: false,
+      disabled: true,
+      menuItem: updatedMenuItem,
+    };
+  }
+
+  // Never-used items can be permanently deleted.
   try {
     await prisma.menuItem.delete({
       where: {
@@ -327,17 +377,6 @@ export const removeMenuItem = async (
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2003"
-    ) {
-      throw new AppError(
-        "This menu item cannot be deleted because it has already been used in customer orders.",
-        409,
-      );
-    }
-
-    if (
-      error instanceof Prisma.PrismaClientUnknownRequestError &&
-      error.message.includes("violates RESTRICT setting") &&
-      error.message.includes("OrderItem_menuItemId_fkey")
     ) {
       throw new AppError(
         "This menu item cannot be deleted because it has already been used in customer orders.",
@@ -372,6 +411,12 @@ export const removeMenuItem = async (
       "Failed to write menu deletion audit log",
     );
   }
+
+  return {
+    deleted: true,
+    disabled: false,
+    menuItem: null,
+  };
 };
 
 
