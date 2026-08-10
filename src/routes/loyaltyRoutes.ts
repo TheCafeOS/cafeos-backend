@@ -1,197 +1,130 @@
 import { Router } from "express";
-import { requireAuth } from "../middleware/auth.js";
-import { asyncHandler } from "../utils/asyncHandler.js";
-import { validate } from "../middleware/validate.js";
-import { requireRole } from "../middleware/authorize.js";
+
 import {
-  getCustomer,
+  requireAuth,
+} from "../middleware/auth.js";
+
+import {
+  requireRole,
+} from "../middleware/authorize.js";
+
+import {
+  asyncHandler,
+} from "../utils/asyncHandler.js";
+
+import {
+  validate,
+} from "../middleware/validate.js";
+
+import {
+  createProgram,
+  listPrograms,
   getProgram,
-  listCustomers,
+  updateProgram,
+  updateProgramStatus,
+  deleteProgram,
+  getCustomer,
   redeemReward,
-  upsertProgram,
+  listCustomers,
 } from "../controllers/loyaltyController.js";
+
 import {
   loyaltyProgramSchema,
-  loyaltyRedeemSchema,
+  loyaltyProgramIdSchema,
+  loyaltyProgramStatusSchema,
   loyaltyCustomerSchema,
+  loyaltyRedeemSchema,
   listLoyaltyCustomersSchema,
 } from "../validations/loyalty.validation.js";
 
 const router = Router();
 
-/**
- * @swagger
- * /loyalty/program:
- *   put:
- *     tags:
- *       - Loyalty
- *     summary: Configure loyalty program
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/LoyaltyProgramRequest'
- *     responses:
- *       200:
- *         description: Loyalty program updated successfully.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/LoyaltyProgramUpdatedResponse'
- *       400:
- *         $ref: '#/components/responses/ValidationError'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- *       403:
- *         $ref: '#/components/responses/Forbidden'
- */
-router.put("/program", requireAuth, requireRole("OWNER", "MANAGER"), validate(loyaltyProgramSchema), asyncHandler(upsertProgram));
+const managementRoles = [
+  "OWNER",
+  "MANAGER",
+] as const;
 
-/**
- * @swagger
- * /loyalty/program:
- *   get:
- *     tags:
- *       - Loyalty
- *     summary: Get loyalty program
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Loyalty program fetched successfully.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/LoyaltyProgramFetchedResponse'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- *       403:
- *         $ref: '#/components/responses/Forbidden'
- */
-router.get("/program", requireAuth, requireRole("OWNER", "MANAGER", "STAFF"), asyncHandler(getProgram));
+const staffRoles = [
+  "OWNER",
+  "MANAGER",
+  "STAFF",
+] as const;
 
-/**
- * @swagger
- * /loyalty/customers:
- *   get:
- *     tags:
- *       - Loyalty
- *     summary: List loyalty customers
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *       - in: query
- *         name: search
- *         schema:
- *           type: string
- *       - in: query
- *         name: sort
- *         schema:
- *           type: string
- *           enum:
- *             - lastOrderAt
- *             - visitCount
- *             - totalSpend
- *             - createdAt
- *       - in: query
- *         name: order
- *         schema:
- *           type: string
- *           enum:
- *             - asc
- *             - desc
- *     responses:
- *       200:
- *         description: Loyalty customers fetched successfully.
- */
+// Program CRUD
+
+router.get(
+  "/programs",
+  requireAuth,
+  requireRole(...staffRoles),
+  asyncHandler(listPrograms),
+);
+
+router.post(
+  "/programs",
+  requireAuth,
+  requireRole(...managementRoles),
+  validate(loyaltyProgramSchema),
+  asyncHandler(createProgram),
+);
+
+router.get(
+  "/programs/:programId",
+  requireAuth,
+  requireRole(...staffRoles),
+  validate(loyaltyProgramIdSchema),
+  asyncHandler(getProgram),
+);
+
+router.patch(
+  "/programs/:programId",
+  requireAuth,
+  requireRole(...managementRoles),
+  validate(loyaltyProgramSchema),
+  asyncHandler(updateProgram),
+);
+
+router.patch(
+  "/programs/:programId/status",
+  requireAuth,
+  requireRole(...managementRoles),
+  validate(
+    loyaltyProgramStatusSchema,
+  ),
+  asyncHandler(updateProgramStatus),
+);
+
+router.delete(
+  "/programs/:programId",
+  requireAuth,
+  requireRole(...managementRoles),
+  validate(loyaltyProgramIdSchema),
+  asyncHandler(deleteProgram),
+);
+
+// Existing customer endpoints
+
 router.get(
   "/customers",
   requireAuth,
-  requireRole("OWNER", "MANAGER", "STAFF"),
+  requireRole(...staffRoles),
   validate(listLoyaltyCustomersSchema),
   asyncHandler(listCustomers),
 );
 
-/**
- * @swagger
- * /loyalty/customers/{phone}:
- *   get:
- *     tags:
- *       - Loyalty
- *     summary: Get loyalty customer profile
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: phone
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Customer loyalty profile fetched successfully.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/LoyaltyCustomerProfileResponse'
- *       400:
- *         $ref: '#/components/responses/ValidationError'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- *       403:
- *         $ref: '#/components/responses/Forbidden'
- *       404:
- *         $ref: '#/components/responses/NotFound'
- */
-router.get("/customers/:phone", requireAuth, requireRole("OWNER", "MANAGER", "STAFF"), validate(loyaltyCustomerSchema), asyncHandler(getCustomer));
+router.get(
+  "/customers/:phone",
+  requireAuth,
+  requireRole(...staffRoles),
+  validate(loyaltyCustomerSchema),
+  asyncHandler(getCustomer),
+);
 
-/**
- * @swagger
- * /loyalty/customers/{customerId}/rewards/{rewardId}/redeem:
- *   post:
- *     tags:
- *       - Loyalty
- *     summary: Redeem a reward
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: customerId
- *         required: true
- *         schema:
- *           type: string
- *       - in: path
- *         name: rewardId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Reward redeemed successfully.
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/LoyaltyRewardRedeemedResponse'
- *       400:
- *         $ref: '#/components/responses/ValidationError'
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- *       403:
- *         $ref: '#/components/responses/Forbidden'
- *       404:
- *         $ref: '#/components/responses/NotFound'
- */
-router.post("/customers/:customerId/rewards/:rewardId/redeem", requireAuth, requireRole("OWNER", "MANAGER", "STAFF"), validate(loyaltyRedeemSchema), asyncHandler(redeemReward));
+router.post(
+  "/customers/:customerId/rewards/:rewardId/redeem",
+  requireAuth,
+  requireRole(...staffRoles),
+  validate(loyaltyRedeemSchema),
+  asyncHandler(redeemReward),
+);
 
 export default router;
