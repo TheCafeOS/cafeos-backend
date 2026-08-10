@@ -103,6 +103,7 @@ export const createRestaurantOrder = async (
 
 export const createPublicOrder = async (
   qrToken: string,
+  customerIp: string | undefined,
   customerPhone: string | null,
   items: OrderItemInput[],
 ) => {
@@ -126,6 +127,7 @@ export const createPublicOrder = async (
     table.id,
     customerPhone,
     items,
+    customerIp ?? null,
   );
 };
 
@@ -135,6 +137,7 @@ async function createOrderForTable(
   tableId: string,
   customerPhone: string | null,
   items: OrderItemInput[],
+  customerIp: string | null = null,
 ) {
   if (!items.length) {
     throw new AppError("Items are required", 400);
@@ -185,22 +188,84 @@ async function createOrderForTable(
   );
 
   const customer = customerPhone
-    ? await loyaltyService.getOrCreateCustomer(restaurantId, customerPhone)
+    ? await loyaltyService.getOrCreateCustomer(
+        restaurantId,
+        customerPhone,
+      )
     : null;
 
-  const order = await prisma.order.create({
-    data: {
-      restaurantId,
-      tableId,
-      customerPhone,
-      customerId: customer?.id ?? null,
-      total,
-      items: {
-        create: orderItems,
-      },
+  const order = await prisma.$transaction(
+    async (tx) => {
+      // Lock the table row so concurrent public-order
+      // requests cannot bypass the table/IP restrictions.
+      await tx.$queryRaw`
+        SELECT "id"
+        FROM "RestaurantTable"
+        WHERE "id" = ${tableId}
+        FOR UPDATE
+      `;
+
+      const activeOrders =
+        customerIp
+          ? await tx.order.findMany({
+              where: {
+                tableId,
+                customerIp: {
+                  not: null,
+                },
+                status: {
+                  in: [
+                    "PENDING",
+                    "CONFIRMED",
+                    "PREPARING",
+                  ],
+                },
+              },
+              select: {
+                id: true,
+                customerIp: true,
+              },
+              orderBy: {
+                createdAt: "asc",
+              },
+            })
+          : [];
+
+      if (customerIp && activeOrders.length > 0) {
+        const lockedIp =
+          activeOrders[0].customerIp;
+
+        if (lockedIp !== customerIp) {
+          throw new AppError(
+            "This table is currently being used by another customer.",
+            409,
+          );
+        }
+
+        if (activeOrders.length >= 2) {
+          throw new AppError(
+            "You already have the maximum of 2 active orders for this table.",
+            409,
+          );
+        }
+      }
+
+      return tx.order.create({
+        data: {
+          restaurantId,
+          tableId,
+          customerPhone,
+          customerIp,
+          customerId: customer?.id ?? null,
+          total,
+          items: {
+            create: orderItems,
+          },
+        },
+        include: orderWithRelations,
+      });
     },
-    include: orderWithRelations,
-  });
+  );
 
   await auditService.log({
     restaurantId,

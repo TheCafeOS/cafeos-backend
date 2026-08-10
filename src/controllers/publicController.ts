@@ -30,6 +30,7 @@ export const createPublicOrder = async (
 
   const order = await orderService.createPublicOrder(
     qrToken,
+    req.ip,
     req.body.customerPhone ?? null,
     req.body.items,
   );

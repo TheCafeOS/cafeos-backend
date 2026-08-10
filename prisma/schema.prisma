@@ -232,6 +232,7 @@ model Order {
   restaurantId     String
   tableId          String
   customerPhone    String?
+  customerIp       String?
   total            Decimal          @db.Decimal(10, 2)
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
@@ -249,6 +250,7 @@ model Order {
   @@index([restaurantId, createdAt])
   @@index([restaurantId, status])
   @@index([restaurantId, tableId])
+  @@index([tableId, customerIp, status])
 }
 
 model OrderItem {
