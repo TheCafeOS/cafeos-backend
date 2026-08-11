@@ -184,9 +184,7 @@ app.use(`${API_PREFIX}/settings`, settingsRoutes);
 app.use(`${API_PREFIX}/employees`, employeeRoutes);
 app.use(`${API_PREFIX}/audit-logs`, auditRoutes);
 app.use(`${API_PREFIX}/loyalty`, loyaltyRoutes);
-app.use(`${API_PREFIX}/orders`, orderRoutes);
-app.use(`${API_PREFIX}notifications`, notificationRoutes);
-app.use(`${API_PREFIX}settings`, settingsRoutes);
+app.use(`${API_PREFIX}/notifications`, notificationRoutes);
 
 
 /**
