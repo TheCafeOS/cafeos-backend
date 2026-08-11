@@ -425,39 +425,106 @@ export const updateOrderStatus = async (
   orderId: string,
   status: OrderStatus,
 ) => {
-  const existingOrder = await getOrderOrThrow(
-    restaurantId,
-    orderId,
+  const result = await prisma.$transaction(
+    async (tx) => {
+      // Lock the order row so concurrent status updates
+      // for the same order are serialized.
+      const lockedOrders =
+        await tx.$queryRaw<
+          { id: string }[]
+        >`
+          SELECT "id"
+          FROM "Order"
+          WHERE "id" = ${orderId}
+            AND "restaurantId" = ${restaurantId}
+          FOR UPDATE
+        `;
+
+      if (lockedOrders.length === 0) {
+        throw new AppError(
+          "Order not found.",
+          404,
+        );
+      }
+
+      const existingOrder =
+        await tx.order.findUnique({
+          where: {
+            id: orderId,
+          },
+          include: orderWithRelations,
+        });
+
+      if (!existingOrder) {
+        throw new AppError(
+          "Order not found.",
+          404,
+        );
+      }
+
+      const currentStatus =
+        existingOrder.status as OrderStatus;
+
+      // Idempotent status update:
+      // if the requested status is already the current
+      // status, return the current order without performing
+      // any side effects.
+      if (currentStatus === status) {
+        return {
+          order: existingOrder,
+          previousStatus: currentStatus,
+          changed: false,
+        };
+      }
+
+      if (
+        !canTransitionOrderStatus(
+          currentStatus,
+          status,
+        )
+      ) {
+        throw new AppError(
+          "Invalid order status transition.",
+          409,
+        );
+      }
+
+      const updatedOrder =
+        await tx.order.update({
+          where: {
+            id: orderId,
+          },
+          data: {
+            status,
+          },
+          include: orderWithRelations,
+        });
+
+      return {
+        order: updatedOrder,
+        previousStatus: currentStatus,
+        changed: true,
+      };
+    },
   );
 
-  const currentStatus =
-    existingOrder.status as OrderStatus;
+  const {
+    order,
+    previousStatus,
+    changed,
+  } = result;
 
-  if (
-    !canTransitionOrderStatus(
-      currentStatus,
-      status,
-    )
-  ) {
-    throw new AppError(
-      "Invalid order status transition.",
-      409,
-    );
+  // Idempotent duplicate request:
+  // return the already-current order and do nothing else.
+  if (!changed) {
+    return toOrderResponse(order);
   }
 
-  const updatedOrder =
-    await prisma.order.update({
-      where: {
-        id: orderId,
-      },
-      data: {
-        status,
-      },
-      include: orderWithRelations,
-    });
-
   if (status === "COMPLETED") {
-    await loyaltyService.applyOrderCompletion(restaurantId, updatedOrder.id);
+    await loyaltyService.applyOrderCompletion(
+      restaurantId,
+      order.id,
+    );
   }
 
   await auditService.log({
@@ -468,27 +535,27 @@ export const updateOrderStatus = async (
       AuditAction.ORDER_STATUS_CHANGED,
 
     entity: AuditEntity.Order,
-    entityId: updatedOrder.id,
+    entityId: order.id,
 
     metadata: {
-      previousStatus: currentStatus,
-      newStatus: updatedOrder.status,
-      tableId: updatedOrder.tableId,
+      previousStatus,
+      newStatus: order.status,
+      tableId: order.tableId,
     },
   });
 
-broadcastOrderEvent(
-  updatedOrder.restaurantId,
-  updatedOrder.tableId,
-  SocketEvents.ORDER_UPDATED,
-  {
-    orderId: updatedOrder.id,
-    status: updatedOrder.status,
-    timestamp: updatedOrder.updatedAt,
-  },
-);
+  broadcastOrderEvent(
+    order.restaurantId,
+    order.tableId,
+    SocketEvents.ORDER_UPDATED,
+    {
+      orderId: order.id,
+      status: order.status,
+      timestamp: order.updatedAt,
+    },
+  );
 
-  return toOrderResponse(updatedOrder);
+  return toOrderResponse(order);
 };
 
 export const cancelExpiredPendingOrders = async () => {
