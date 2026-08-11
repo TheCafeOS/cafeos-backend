@@ -163,10 +163,6 @@ app.use(
   swaggerUi.setup(swaggerSpec),
 );
 
-app.use(
-  "/api/v1/notifications",
-  notificationRoutes,
-);
 
 /**
  * Routes
