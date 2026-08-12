@@ -5,6 +5,7 @@ import * as orderService from "../services/order.service.js";
 
 import { successResponse } from "../utils/apiResponse.js";
 import { getRouteParam } from "../utils/request.js";
+import { logger } from "../lib/logger.js";
 
 export const getPublicMenu = async (
   req: Request,
@@ -27,6 +28,14 @@ export const createPublicOrder = async (
   res: Response,
 ) => {
   const qrToken = getRouteParam(req.params.qrToken);
+
+  logger.info(
+    {
+      qrToken,
+      customerIp: req.ip,
+    },
+    "Public order customer session",
+  );
 
   const order = await orderService.createPublicOrder(
     qrToken,
@@ -75,6 +84,14 @@ export const getPublicActiveOrders = async (
 ) => {
   const qrToken = getRouteParam(
     req.params.qrToken,
+  );
+
+  logger.info(
+    {
+      qrToken,
+      customerIp: req.ip,
+    },
+    "Public active orders customer session",
   );
 
   const data =
