@@ -52,6 +52,31 @@ const orderWithRelations = Prisma.validator<Prisma.OrderInclude>()({
   },
 });
 
+const ACTIVE_ORDER_STATUSES: OrderStatus[] = [
+  "PENDING",
+  "CONFIRMED",
+  "PREPARING",
+];
+
+export const getActiveOrdersForTableSession = async (
+  tableId: string,
+  customerIp: string,
+) => {
+  return prisma.order.findMany({
+    where: {
+      tableId,
+      customerIp,
+      status: {
+        in: ACTIVE_ORDER_STATUSES,
+      },
+    },
+    include: orderWithRelations,
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+};
+
 async function getOrderOrThrow(
   restaurantId: string,
   orderId: string,
@@ -417,6 +442,87 @@ export const getRestaurantOrder = async (
   }
 
   return toOrderResponse(order);
+};
+
+export const getActiveOrderSessions = async (
+  restaurantId: string,
+) => {
+  const orders = await prisma.order.findMany({
+    where: {
+      restaurantId,
+      customerIp: {
+        not: null,
+      },
+      status: {
+        in: ACTIVE_ORDER_STATUSES,
+      },
+    },
+    include: orderWithRelations,
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+
+  const sessions = new Map<
+    string,
+    typeof orders
+  >();
+
+  for (const order of orders) {
+    const customerIp = order.customerIp;
+
+    if (!customerIp) {
+      continue;
+    }
+
+    const sessionKey = `${order.tableId}:${customerIp}`;
+
+    const existing = sessions.get(sessionKey);
+
+    if (existing) {
+      existing.push(order);
+    } else {
+      sessions.set(sessionKey, [order]);
+    }
+  }
+
+  return Array.from(sessions.values()).map(
+    (sessionOrders) => {
+      const isCombined =
+        sessionOrders.length === 2 &&
+        sessionOrders.every(
+          (order) => order.status === "PENDING",
+        );
+
+      const combinedTotal = sessionOrders.reduce(
+        (sum, order) =>
+          sum + Number(order.total),
+        0,
+      );
+
+      return {
+        type: isCombined
+          ? "COMBINED"
+          : "SEPARATE",
+
+        table: {
+          id: sessionOrders[0].table.id,
+          name: sessionOrders[0].table.name,
+        },
+
+        orderCount: sessionOrders.length,
+
+        combinedTotal,
+
+        orders: sessionOrders.map(
+          toOrderResponse,
+        ),
+
+        createdAt:
+          sessionOrders[0].createdAt,
+      };
+    },
+  );
 };
 
 export const updateOrderStatus = async (

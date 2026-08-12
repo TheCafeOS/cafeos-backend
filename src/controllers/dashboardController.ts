@@ -1,5 +1,6 @@
 import { Response } from "express";
 import * as dashboardService from "../services/dashboard.service.js";
+import * as orderService from "../services/order.service.js";
 import { successResponse } from "../utils/apiResponse.js";
 import { AuthenticatedRequest } from "../middleware/auth.js";
 
@@ -72,6 +73,23 @@ export const getDashboardSummary = async (
     successResponse(
       "Dashboard summary fetched successfully",
       summary,
+    ),
+  );
+};
+
+export const getActiveOrderSessions = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const sessions =
+    await orderService.getActiveOrderSessions(
+      req.employee!.restaurantId,
+    );
+
+  return res.json(
+    successResponse(
+      "Active order sessions fetched successfully",
+      sessions,
     ),
   );
 };

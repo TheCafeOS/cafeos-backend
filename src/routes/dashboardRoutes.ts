@@ -5,6 +5,7 @@ import {
   getRecentOrders,
   getOrdersByStatus,
   getDashboardSummary,
+  getActiveOrderSessions,
 } from "../controllers/dashboardController.js";
 
 import { requireAuth } from "../middleware/auth.js";
@@ -72,6 +73,35 @@ router.get(
   requireAuth,
   requireRole("OWNER"),
   asyncHandler(getOrdersByStatus),
+);
+
+/**
+ * @swagger
+ * /dashboard/orders/active:
+ *   get:
+ *     tags:
+ *       - Dashboard
+ *     summary: Get active order sessions
+ *     description: Returns active customer order sessions grouped by table and customer session. Two pending orders from the same session are presented as one combined session. Once either order is accepted, they are returned separately.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Active order sessions fetched successfully.
+ *       401:
+ *         description: Unauthorized.
+ *       403:
+ *         description: Forbidden.
+ */
+router.get(
+  "/orders/active",
+  requireAuth,
+  requireRole(
+    "OWNER",
+    "MANAGER",
+    "STAFF",
+  ),
+  asyncHandler(getActiveOrderSessions),
 );
 
 /**

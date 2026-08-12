@@ -69,6 +69,28 @@ export const getPublicOrder = async (
   );
 };
 
+export const getPublicActiveOrders = async (
+  req: Request,
+  res: Response,
+) => {
+  const qrToken = getRouteParam(
+    req.params.qrToken,
+  );
+
+  const data =
+    await publicService.getActiveOrders(
+      qrToken,
+      req.ip ?? "",
+    );
+
+  return res.json(
+    successResponse(
+      "Active orders fetched successfully",
+      data,
+    ),
+  );
+};
+
 export const getPublicLoyaltyProgram = async (
   req: Request,
   res: Response,

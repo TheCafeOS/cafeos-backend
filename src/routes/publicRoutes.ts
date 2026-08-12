@@ -4,6 +4,7 @@ import {
   getPublicMenu,
   createPublicOrder,
   getPublicOrder,
+  getPublicActiveOrders,
   getPublicLoyaltyProgram,
   getPublicCustomerLoyalty,
 } from "../controllers/publicController.js";
@@ -146,6 +147,34 @@ router.post(
   publicOrderLimiter,
   validate(publicOrderCreateSchema),
   asyncHandler(createPublicOrder),
+);
+
+/**
+ * @swagger
+ * /public/orders/{qrToken}/active:
+ *   get:
+ *     tags:
+ *       - Public
+ *     summary: Get active orders for the current table session
+ *     description: Returns all active orders belonging to the current customer session for the table. Two pending orders are presented as one combined order view. Once either order is accepted, the orders are returned separately.
+ *     parameters:
+ *       - in: path
+ *         name: qrToken
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Active orders fetched successfully.
+ *       403:
+ *         description: Table is inactive.
+ *       404:
+ *         description: Invalid QR code.
+ */
+router.get(
+  "/orders/:qrToken/active",
+  validate(publicMenuSchema),
+  asyncHandler(getPublicActiveOrders),
 );
 
 /**

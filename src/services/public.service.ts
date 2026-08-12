@@ -1,6 +1,9 @@
 import { prisma } from "../lib/prisma.js";
 import { AppError } from "../utils/AppError.js";
 import { loyaltyService } from "./loyalty.service.js";
+import {
+  getActiveOrdersForTableSession,
+} from "./order.service.js";
 
 export const getMenu = async (qrToken: string) => {
   if (!qrToken) {
@@ -229,6 +232,124 @@ export const getOrder = async (
         imagePositionX: item.menuItem.imagePositionX,
         imagePositionY: item.menuItem.imagePositionY,
       },
+    })),
+  };
+};
+
+export const getActiveOrders = async (
+  qrToken: string,
+  customerIp: string,
+) => {
+  if (!qrToken) {
+    throw new AppError(
+      "QR token is required",
+      400,
+    );
+  }
+
+  if (!customerIp) {
+    throw new AppError(
+      "Customer session could not be identified",
+      400,
+    );
+  }
+
+  const table =
+    await prisma.restaurantTable.findUnique({
+      where: {
+        qrCode: qrToken,
+      },
+      select: {
+        id: true,
+        name: true,
+        status: true,
+      },
+    });
+
+  if (!table) {
+    throw new AppError(
+      "Invalid QR code",
+      404,
+    );
+  }
+
+  if (table.status === "INACTIVE") {
+    throw new AppError(
+      "This table is inactive",
+      403,
+    );
+  }
+
+  const orders =
+    await getActiveOrdersForTableSession(
+      table.id,
+      customerIp,
+    );
+
+  if (orders.length === 0) {
+    return {
+      table: {
+        id: table.id,
+        name: table.name,
+      },
+      type: "NONE",
+      orderCount: 0,
+      combinedTotal: 0,
+      orders: [],
+    };
+  }
+
+  const isCombined =
+    orders.length === 2 &&
+    orders.every(
+      (order) => order.status === "PENDING",
+    );
+
+  const combinedTotal = orders.reduce(
+    (sum, order) =>
+      sum + Number(order.total),
+    0,
+  );
+
+  return {
+    table: {
+      id: table.id,
+      name: table.name,
+    },
+
+    type: isCombined
+      ? "COMBINED"
+      : "SEPARATE",
+
+    orderCount: orders.length,
+
+    combinedTotal,
+
+    orders: orders.map((order) => ({
+      id: order.id,
+      status: order.status,
+      total: Number(order.total),
+      customerPhone:
+        order.customerPhone,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+
+      items: order.items.map(
+        (item) => ({
+          id: item.id,
+          quantity: item.quantity,
+          price: Number(item.price),
+
+          menuItem: item.menuItem
+            ? {
+                id: item.menuItem.id,
+                name: item.menuItem.name,
+                imageUrl:
+                  item.menuItem.imageUrl,
+              }
+            : null,
+        }),
+      ),
     })),
   };
 };
