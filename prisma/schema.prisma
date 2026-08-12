@@ -228,29 +228,30 @@ model LoyaltyReward {
 }
 
 model Order {
-  id               String           @id @default(cuid())
-  restaurantId     String
-  tableId          String
-  customerPhone    String?
-  customerIp       String?
-  total            Decimal          @db.Decimal(10, 2)
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  customerId       String?
-  status           OrderStatus      @default(PENDING)
-  loyaltyProcessed Boolean          @default(false)
-  rewards          LoyaltyReward[]
-  customer         LoyaltyCustomer? @relation(fields: [customerId], references: [id])
-  restaurant       Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  table            RestaurantTable  @relation(fields: [tableId], references: [id])
-  items            OrderItem[]
+  id                 String           @id @default(cuid())
+  restaurantId       String
+  tableId            String
+  customerPhone      String?
+  customerSessionId  String?
+  customerId         String?
+  total              Decimal          @db.Decimal(10, 2)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  status             OrderStatus      @default(PENDING)
+  loyaltyProcessed   Boolean          @default(false)
+
+  rewards            LoyaltyReward[]
+  customer           LoyaltyCustomer? @relation(fields: [customerId], references: [id])
+  restaurant         Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  table              RestaurantTable  @relation(fields: [tableId], references: [id])
+  items              OrderItem[]
 
   @@index([restaurantId])
   @@index([tableId])
   @@index([restaurantId, createdAt])
   @@index([restaurantId, status])
   @@index([restaurantId, tableId])
-  @@index([tableId, customerIp, status])
+  @@index([tableId, customerSessionId, status])
 }
 
 model OrderItem {

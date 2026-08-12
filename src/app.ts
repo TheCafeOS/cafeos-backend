@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import cookieParser from "cookie-parser";
 import swaggerUi from "swagger-ui-express";
 import { pinoHttp } from "pino-http";
 
@@ -87,6 +88,8 @@ app.use(
     limit: "1mb",
   }),
 );
+
+app.use(cookieParser());
 
 app.use(requestId);
 

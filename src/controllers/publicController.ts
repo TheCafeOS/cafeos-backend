@@ -6,14 +6,19 @@ import * as orderService from "../services/order.service.js";
 import { successResponse } from "../utils/apiResponse.js";
 import { getRouteParam } from "../utils/request.js";
 import { logger } from "../lib/logger.js";
+import { getOrCreateCustomerSessionId } from "../utils/customerSession.js";
 
 export const getPublicMenu = async (
   req: Request,
   res: Response,
 ) => {
-  const qrToken = getRouteParam(req.params.qrToken);
+  const qrToken = getRouteParam(
+    req.params.qrToken,
+  );
 
-  const data = await publicService.getMenu(qrToken);
+  const data = await publicService.getMenu(
+    qrToken,
+  );
 
   return res.json(
     successResponse(
@@ -27,22 +32,31 @@ export const createPublicOrder = async (
   req: Request,
   res: Response,
 ) => {
-  const qrToken = getRouteParam(req.params.qrToken);
+  const qrToken = getRouteParam(
+    req.params.qrToken,
+  );
+
+  const customerSessionId =
+    getOrCreateCustomerSessionId(
+      req,
+      res,
+    );
 
   logger.info(
     {
       qrToken,
-      customerIp: req.ip,
+      customerSessionId,
     },
     "Public order customer session",
   );
 
-  const order = await orderService.createPublicOrder(
-    qrToken,
-    req.ip,
-    req.body.customerPhone ?? null,
-    req.body.items,
-  );
+  const order =
+    await orderService.createPublicOrder(
+      qrToken,
+      customerSessionId,
+      req.body.customerPhone ?? null,
+      req.body.items,
+    );
 
   return res.status(201).json(
     successResponse(
@@ -62,13 +76,19 @@ export const getPublicOrder = async (
   req: Request,
   res: Response,
 ) => {
-  const qrToken = getRouteParam(req.params.qrToken);
-  const orderId = getRouteParam(req.params.orderId);
-
-  const data = await publicService.getOrder(
-    qrToken,
-    orderId,
+  const qrToken = getRouteParam(
+    req.params.qrToken,
   );
+
+  const orderId = getRouteParam(
+    req.params.orderId,
+  );
+
+  const data =
+    await publicService.getOrder(
+      qrToken,
+      orderId,
+    );
 
   return res.json(
     successResponse(
@@ -86,10 +106,16 @@ export const getPublicActiveOrders = async (
     req.params.qrToken,
   );
 
+  const customerSessionId =
+    getOrCreateCustomerSessionId(
+      req,
+      res,
+    );
+
   logger.info(
     {
       qrToken,
-      customerIp: req.ip,
+      customerSessionId,
     },
     "Public active orders customer session",
   );
@@ -97,7 +123,7 @@ export const getPublicActiveOrders = async (
   const data =
     await publicService.getActiveOrders(
       qrToken,
-      req.ip ?? "",
+      customerSessionId,
     );
 
   return res.json(
@@ -108,26 +134,27 @@ export const getPublicActiveOrders = async (
   );
 };
 
-export const getPublicLoyaltyProgram = async (
-  req: Request,
-  res: Response,
-) => {
-  const qrToken = getRouteParam(
-    req.params.qrToken,
-  );
-
-  const program =
-    await publicService.getPublicLoyaltyProgram(
-      qrToken,
+export const getPublicLoyaltyProgram =
+  async (
+    req: Request,
+    res: Response,
+  ) => {
+    const qrToken = getRouteParam(
+      req.params.qrToken,
     );
 
-  return res.json(
-    successResponse(
-      "Loyalty program fetched successfully",
-      program,
-    ),
-  );
-};
+    const program =
+      await publicService.getPublicLoyaltyProgram(
+        qrToken,
+      );
+
+    return res.json(
+      successResponse(
+        "Loyalty program fetched successfully",
+        program,
+      ),
+    );
+  };
 
 export const getPublicCustomerLoyalty =
   async (

@@ -238,7 +238,7 @@ export const getOrder = async (
 
 export const getActiveOrders = async (
   qrToken: string,
-  customerIp: string,
+  customerSessionId: string,
 ) => {
   if (!qrToken) {
     throw new AppError(
@@ -247,7 +247,7 @@ export const getActiveOrders = async (
     );
   }
 
-  if (!customerIp) {
+  if (!customerSessionId) {
     throw new AppError(
       "Customer session could not be identified",
       400,
@@ -283,7 +283,7 @@ export const getActiveOrders = async (
   const orders =
     await getActiveOrdersForTableSession(
       table.id,
-      customerIp,
+      customerSessionId,
     );
 
   if (orders.length === 0) {
@@ -302,14 +302,16 @@ export const getActiveOrders = async (
   const isCombined =
     orders.length === 2 &&
     orders.every(
-      (order) => order.status === "PENDING",
+      (order) =>
+        order.status === "PENDING",
     );
 
-  const combinedTotal = orders.reduce(
-    (sum, order) =>
-      sum + Number(order.total),
-    0,
-  );
+  const combinedTotal =
+    orders.reduce(
+      (sum, order) =>
+        sum + Number(order.total),
+      0,
+    );
 
   return {
     table: {
@@ -340,14 +342,16 @@ export const getActiveOrders = async (
           quantity: item.quantity,
           price: Number(item.price),
 
-          menuItem: item.menuItem
-            ? {
-                id: item.menuItem.id,
-                name: item.menuItem.name,
-                imageUrl:
-                  item.menuItem.imageUrl,
-              }
-            : null,
+          menuItem:
+            item.menuItem
+              ? {
+                  id: item.menuItem.id,
+                  name: item.menuItem.name,
+                  imageUrl:
+                    item.menuItem
+                      .imageUrl,
+                }
+              : null,
         }),
       ),
     })),

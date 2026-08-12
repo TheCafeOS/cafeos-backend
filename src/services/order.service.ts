@@ -58,24 +58,25 @@ const ACTIVE_ORDER_STATUSES: OrderStatus[] = [
   "PREPARING",
 ];
 
-export const getActiveOrdersForTableSession = async (
-  tableId: string,
-  customerIp: string,
-) => {
-  return prisma.order.findMany({
-    where: {
-      tableId,
-      customerIp,
-      status: {
-        in: ACTIVE_ORDER_STATUSES,
+export const getActiveOrdersForTableSession =
+  async (
+    tableId: string,
+    customerSessionId: string,
+  ) => {
+    return prisma.order.findMany({
+      where: {
+        tableId,
+        customerSessionId,
+        status: {
+          in: ACTIVE_ORDER_STATUSES,
+        },
       },
-    },
-    include: orderWithRelations,
-    orderBy: {
-      createdAt: "asc",
-    },
-  });
-};
+      include: orderWithRelations,
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+  };
 
 async function getOrderOrThrow(
   restaurantId: string,
@@ -128,22 +129,29 @@ export const createRestaurantOrder = async (
 
 export const createPublicOrder = async (
   qrToken: string,
-  customerIp: string | undefined,
+  customerSessionId: string,
   customerPhone: string | null,
   items: OrderItemInput[],
 ) => {
-  const table = await prisma.restaurantTable.findFirst({
-    where: {
-      qrCode: qrToken,
-    },
-  });
+  const table =
+    await prisma.restaurantTable.findFirst({
+      where: {
+        qrCode: qrToken,
+      },
+    });
 
   if (!table) {
-    throw new AppError("Invalid QR code", 404);
+    throw new AppError(
+      "Invalid QR code",
+      404,
+    );
   }
 
   if (table.status === "INACTIVE") {
-    throw new AppError("This table is inactive", 403);
+    throw new AppError(
+      "This table is inactive",
+      403,
+    );
   }
 
   return createOrderForTable(
@@ -152,7 +160,7 @@ export const createPublicOrder = async (
     table.id,
     customerPhone,
     items,
-    customerIp ?? null,
+    customerSessionId,
   );
 };
 
@@ -162,7 +170,7 @@ async function createOrderForTable(
   tableId: string,
   customerPhone: string | null,
   items: OrderItemInput[],
-  customerIp: string | null = null,
+  customerSessionId: string | null = null,
 ) {
   if (!items.length) {
     throw new AppError("Items are required", 400);
@@ -222,7 +230,7 @@ async function createOrderForTable(
   const order = await prisma.$transaction(
     async (tx) => {
       // Lock the table row so concurrent public-order
-      // requests cannot bypass the table/IP restrictions.
+      // requests cannot bypass the table/session restrictions.
       await tx.$queryRaw`
         SELECT "id"
         FROM "RestaurantTable"
@@ -230,49 +238,37 @@ async function createOrderForTable(
         FOR UPDATE
       `;
 
-      const activeOrders =
-        customerIp
-          ? await tx.order.findMany({
-              where: {
-                tableId,
-                customerIp: {
-                  not: null,
-                },
-                status: {
-                  in: [
-                    "PENDING",
-                    "CONFIRMED",
-                    "PREPARING",
-                  ],
-                },
+      const activeOrders = customerSessionId
+        ? await tx.order.findMany({
+            where: {
+              tableId,
+              customerSessionId,
+              status: {
+                in: [
+                  "PENDING",
+                  "CONFIRMED",
+                  "PREPARING",
+                ],
               },
-              select: {
-                id: true,
-                customerIp: true,
-              },
-              orderBy: {
-                createdAt: "asc",
-              },
-            })
-          : [];
+            },
+            select: {
+              id: true,
+              customerSessionId: true,
+            },
+            orderBy: {
+              createdAt: "asc",
+            },
+          })
+        : [];
 
-      if (customerIp && activeOrders.length > 0) {
-        const lockedIp =
-          activeOrders[0].customerIp;
-
-        if (lockedIp !== customerIp) {
-          throw new AppError(
-            "This table is currently being used by another customer.",
-            409,
-          );
-        }
-
-        if (activeOrders.length >= 2) {
-          throw new AppError(
-            "You already have the maximum of 2 active orders for this table.",
-            409,
-          );
-        }
+      if (
+        customerSessionId &&
+        activeOrders.length >= 2
+      ) {
+        throw new AppError(
+          "You already have the maximum of 2 active orders for this table.",
+          409,
+        );
       }
 
       return tx.order.create({
@@ -280,7 +276,7 @@ async function createOrderForTable(
           restaurantId,
           tableId,
           customerPhone,
-          customerIp,
+          customerSessionId,
           customerId: customer?.id ?? null,
           total,
           items: {
@@ -450,7 +446,7 @@ export const getActiveOrderSessions = async (
   const orders = await prisma.order.findMany({
     where: {
       restaurantId,
-      customerIp: {
+      customerSessionId: {
         not: null,
       },
       status: {
@@ -469,15 +465,18 @@ export const getActiveOrderSessions = async (
   >();
 
   for (const order of orders) {
-    const customerIp = order.customerIp;
+    const customerSessionId =
+      order.customerSessionId;
 
-    if (!customerIp) {
+    if (!customerSessionId) {
       continue;
     }
 
-    const sessionKey = `${order.tableId}:${customerIp}`;
+    const sessionKey =
+      `${order.tableId}:${customerSessionId}`;
 
-    const existing = sessions.get(sessionKey);
+    const existing =
+      sessions.get(sessionKey);
 
     if (existing) {
       existing.push(order);
@@ -494,11 +493,12 @@ export const getActiveOrderSessions = async (
           (order) => order.status === "PENDING",
         );
 
-      const combinedTotal = sessionOrders.reduce(
-        (sum, order) =>
-          sum + Number(order.total),
-        0,
-      );
+      const combinedTotal =
+        sessionOrders.reduce(
+          (sum, order) =>
+            sum + Number(order.total),
+          0,
+        );
 
       return {
         type: isCombined
@@ -572,7 +572,7 @@ export const updateOrderStatus = async (
         existingOrder.status as OrderStatus;
 
       // Idempotent status update:
-      // if the requested status is already the current
+      // If the requested status is already the current
       // status, return the current order without performing
       // any side effects.
       if (currentStatus === status) {
@@ -620,7 +620,7 @@ export const updateOrderStatus = async (
     changed,
   } = result;
 
-  // Idempotent duplicate request:
+  // Duplicate/idempotent request:
   // return the already-current order and do nothing else.
   if (!changed) {
     return toOrderResponse(order);
