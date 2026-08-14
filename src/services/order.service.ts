@@ -302,6 +302,7 @@ async function createOrderForTable(
           restaurantId,
           tableId,
           customerPhone,
+          customerSessionId,
           customerId: customer?.id ?? null,
 
           subtotal,
