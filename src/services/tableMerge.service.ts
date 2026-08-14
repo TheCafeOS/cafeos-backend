@@ -251,10 +251,10 @@ export async function mergeTables(
           status: {
             in: BILLABLE_ORDER_STATUSES,
           },
-          mergeId: null,
+          tableMergeId: null,
         },
         data: {
-          mergeId: createdMerge.id,
+          tableMergeId: createdMerge.id,
         },
       });
 
@@ -368,10 +368,10 @@ export async function unmergeTables(
       await tx.order.updateMany({
         where: {
           restaurantId,
-          mergeId,
+          tableMergeId: mergeId,
         },
         data: {
-          mergeId: null,
+          tableMergeId: null,
         },
       });
 

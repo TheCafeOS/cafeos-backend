@@ -1147,4 +1147,141 @@ Notification: {
     },
   },
 },
+
+Offer: {
+  type: "object",
+  properties: {
+    id: {
+      type: "string",
+      example: "cmoffer123",
+    },
+
+    name: {
+      type: "string",
+      example: "5% OFF on ₹2000+",
+    },
+
+    description: {
+      type: "string",
+      nullable: true,
+      example:
+        "Get 5% off on orders above ₹2000.",
+    },
+
+    discountType: {
+      type: "string",
+      enum: ["PERCENTAGE", "FIXED"],
+      example: "PERCENTAGE",
+    },
+
+    discountValue: {
+      type: "number",
+      example: 5,
+    },
+
+    minimumOrderValue: {
+      type: "number",
+      example: 2000,
+    },
+
+    maximumDiscount: {
+      type: "number",
+      nullable: true,
+      example: 500,
+    },
+
+    isActive: {
+      type: "boolean",
+      example: true,
+    },
+
+    startsAt: {
+      type: "string",
+      format: "date-time",
+      nullable: true,
+    },
+
+    endsAt: {
+      type: "string",
+      format: "date-time",
+      nullable: true,
+    },
+
+    createdAt: {
+      type: "string",
+      format: "date-time",
+    },
+
+    updatedAt: {
+      type: "string",
+      format: "date-time",
+    },
+  },
+},
+
+OfferRequest: {
+  type: "object",
+  required: [
+    "name",
+    "discountType",
+    "discountValue",
+    "minimumOrderValue",
+    "isActive",
+  ],
+  properties: {
+    name: {
+      type: "string",
+      example: "5% OFF",
+    },
+
+    description: {
+      type: "string",
+      nullable: true,
+      example:
+        "Get 5% off on orders above ₹2,000",
+    },
+
+    discountType: {
+      type: "string",
+      enum: [
+        "PERCENTAGE",
+        "FIXED",
+      ],
+    },
+
+    discountValue: {
+      type: "number",
+      example: 5,
+    },
+
+    minimumOrderValue: {
+      type: "number",
+      example: 2000,
+    },
+
+    maximumDiscount: {
+      type: "number",
+      nullable: true,
+      example: 500,
+    },
+
+    isActive: {
+      type: "boolean",
+      example: true,
+    },
+
+    startsAt: {
+      type: "string",
+      format: "date-time",
+      nullable: true,
+    },
+
+    endsAt: {
+      type: "string",
+      format: "date-time",
+      nullable: true,
+    },
+  },
+},
+
 };

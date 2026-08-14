@@ -70,6 +70,11 @@ export const swaggerSpec = swaggerJsdoc({
         name: "Notifications",
         description: "Notification management APIs",
       },
+      {
+        name: "Offers",
+        description:
+          "Restaurant discount offers and promotions",
+      },
     ],
 
     components: {

@@ -16,6 +16,7 @@ import { toOrderResponse } from "../utils/order.mapper.js";
 import { getPaginationMeta } from "../utils/pagination.js";
 import { loyaltyService } from "./loyalty.service.js";
 import * as notificationService from "./notification.service.js";
+import { offerService } from "./offer.service.js";
 
 type OrderItemInput = {
   menuItemId: string;
@@ -40,24 +41,33 @@ const orderWithRelations =
         name: true,
       },
     },
-    merge: {
-      select: {
-        id: true,
-        isActive: true,
-      },
-    },
     items: {
-    include: {
-      menuItem: {
-        select: {
-          id: true,
-          name: true,
-          imageUrl: true,
+      include: {
+        menuItem: {
+          select: {
+            id: true,
+            name: true,
+            imageUrl: true,
+          },
         },
       },
     },
-  },
-});
+    appliedOffer: true,
+    tableMerge: {
+      include: {
+        tables: {
+          include: {
+            table: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    },
+  });
 
 const ACTIVE_ORDER_STATUSES: OrderStatus[] = [
   "PENDING",
@@ -221,7 +231,7 @@ async function createOrderForTable(
     };
   });
 
-  const total = orderItems.reduce(
+  const subtotal = orderItems.reduce(
     (sum, item) =>
       sum + item.price * item.quantity,
     0,
@@ -277,6 +287,21 @@ async function createOrderForTable(
           409,
         );
       }
+      
+      const {
+        offer,
+        discountAmount,
+      } =
+        await offerService.findBestOffer(
+          restaurantId,
+          subtotal,
+          tx,
+        );
+
+      const finalTotal = Math.max(
+        subtotal - discountAmount,
+        0,
+      );
 
       return tx.order.create({
         data: {
@@ -285,11 +310,19 @@ async function createOrderForTable(
           customerPhone,
           customerSessionId,
           customerId: customer?.id ?? null,
-          total,
+
+          subtotal,
+          discountAmount,
+          total: finalTotal,
+
+          appliedOfferId:
+            offer?.id ?? null,
+
           items: {
             create: orderItems,
           },
         },
+
         include: orderWithRelations,
       });
     },

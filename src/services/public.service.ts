@@ -4,6 +4,7 @@ import { loyaltyService } from "./loyalty.service.js";
 import {
   getActiveOrdersForTableSession,
 } from "./order.service.js";
+import { offerService } from "./offer.service.js";
 
 export const getMenu = async (qrToken: string) => {
   if (!qrToken) {
@@ -46,7 +47,11 @@ export const getMenu = async (qrToken: string) => {
     throw new AppError("This table is inactive", 403);
   }
 
-  const [categories, menuItems] = await Promise.all([
+  const [
+    categories,
+    menuItems,
+    offers,
+  ] = await Promise.all([
     prisma.category.findMany({
       where: {
         restaurantId: table.restaurantId,
@@ -56,19 +61,23 @@ export const getMenu = async (qrToken: string) => {
       },
     }),
 
-    prisma.menuItem.findMany({
-      where: {
-        restaurantId: table.restaurantId,
-        isAvailable: true,
-      },
-      include: {
-        category: true,
-      },
-      orderBy: {
-        createdAt: "asc",
-      },
-    }),
-  ]);
+  prisma.menuItem.findMany({
+    where: {
+      restaurantId: table.restaurantId,
+      isAvailable: true,
+    },
+    include: {
+      category: true,
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  }),
+
+  offerService.getPublicOffers(
+    table.restaurantId,
+  ),
+]);
 
   return {
     table: {
@@ -76,6 +85,7 @@ export const getMenu = async (qrToken: string) => {
       name: table.name,
       status: table.status,
     },
+
     restaurant: {
       id: table.restaurant.id,
       name: table.restaurant.name,
@@ -97,10 +107,12 @@ export const getMenu = async (qrToken: string) => {
       mapsUrl: table.restaurant.customLink,
       openingHours: table.restaurant.openingHours,
     },
+
     categories: categories.map((category) => ({
       id: category.id,
       name: category.name,
     })),
+
     menuItems: menuItems.map((item) => ({
       id: item.id,
       name: item.name,
@@ -123,6 +135,8 @@ export const getMenu = async (qrToken: string) => {
           }
         : null,
     })),
+
+    offers,
   };
 };
 
@@ -198,6 +212,8 @@ export const getOrder = async (
       tableId: table.id,
     },
     include: {
+      appliedOffer: true,
+
       items: {
         include: {
           menuItem: true,
@@ -213,7 +229,41 @@ export const getOrder = async (
   return {
     id: order.id,
     status: order.status,
-    total: order.total,
+
+    subtotal:
+      Number(order.subtotal ?? order.total),
+
+    discountAmount:
+      Number(order.discountAmount ?? 0),
+
+    total:
+      Number(order.total),
+
+    appliedOffer: order.appliedOffer
+      ? {
+          id: order.appliedOffer.id,
+          name: order.appliedOffer.name,
+          description:
+            order.appliedOffer.description,
+          discountType:
+            order.appliedOffer.discountType,
+          discountValue:
+            Number(
+              order.appliedOffer.discountValue,
+            ),
+          minimumOrderValue:
+            Number(
+              order.appliedOffer.minimumOrderValue,
+            ),
+          maximumDiscount:
+            order.appliedOffer.maximumDiscount !==
+            null
+              ? Number(
+                  order.appliedOffer.maximumDiscount,
+                )
+              : null,
+        }
+      : null,
     customerPhone: order.customerPhone,
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
@@ -330,7 +380,40 @@ export const getActiveOrders = async (
     orders: orders.map((order) => ({
       id: order.id,
       status: order.status,
-      total: Number(order.total),
+      subtotal:
+        Number(order.subtotal ?? order.total),
+
+      discountAmount:
+        Number(order.discountAmount ?? 0),
+
+      total:
+        Number(order.total),
+
+      appliedOffer: order.appliedOffer
+        ? {
+            id: order.appliedOffer.id,
+            name: order.appliedOffer.name,
+            description:
+              order.appliedOffer.description,
+            discountType:
+              order.appliedOffer.discountType,
+            discountValue:
+              Number(
+                order.appliedOffer.discountValue,
+              ),
+            minimumOrderValue:
+              Number(
+                order.appliedOffer.minimumOrderValue,
+              ),
+            maximumDiscount:
+              order.appliedOffer.maximumDiscount !==
+              null
+                ? Number(
+                    order.appliedOffer.maximumDiscount,
+                  )
+                : null,
+          }
+        : null,
       customerPhone:
         order.customerPhone,
       createdAt: order.createdAt,

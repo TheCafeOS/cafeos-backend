@@ -31,6 +31,7 @@ import employeeRoutes from "./routes/employeeRoutes.js";
 import auditRoutes from "./routes/auditRoutes.js";
 import { prisma } from "./lib/prisma.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import offerRoutes from "./routes/offerRoutes.js";
 
 const app = express();
 
@@ -184,6 +185,7 @@ app.use(`${API_PREFIX}/employees`, employeeRoutes);
 app.use(`${API_PREFIX}/audit-logs`, auditRoutes);
 app.use(`${API_PREFIX}/loyalty`, loyaltyRoutes);
 app.use(`${API_PREFIX}/notifications`, notificationRoutes);
+app.use(`${API_PREFIX}/offers`, offerRoutes);
 
 
 /**

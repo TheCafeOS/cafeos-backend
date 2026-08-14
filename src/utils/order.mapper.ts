@@ -3,7 +3,41 @@ export function toOrderResponse(order: any) {
     id: order.id,
     status: order.status,
     customerPhone: order.customerPhone,
-    total: Number(order.total),
+    subtotal:
+      Number(order.subtotal ?? order.total),
+
+    discountAmount:
+      Number(order.discountAmount ?? 0),
+
+    total:
+      Number(order.total),
+
+    appliedOffer: order.appliedOffer
+      ? {
+          id: order.appliedOffer.id,
+          name: order.appliedOffer.name,
+          description:
+            order.appliedOffer.description,
+          discountType:
+            order.appliedOffer.discountType,
+          discountValue:
+            Number(
+              order.appliedOffer.discountValue,
+            ),
+          minimumOrderValue:
+            Number(
+              order.appliedOffer.minimumOrderValue,
+            ),
+          maximumDiscount:
+            order.appliedOffer.maximumDiscount !==
+            null
+              ? Number(
+                  order.appliedOffer.maximumDiscount,
+                )
+              : null,
+        }
+      : null,
+
     createdAt: order.createdAt,
     updatedAt: order.updatedAt,
 
