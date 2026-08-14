@@ -244,10 +244,19 @@ async function createOrderForTable(
       )
     : null;
 
+  const { offer, discountAmount } =
+    await offerService.findBestOffer(
+      restaurantId,
+      subtotal,
+    );
+
+  const finalTotal = Math.max(
+    subtotal - discountAmount,
+    0,
+  );
+
   const order = await prisma.$transaction(
     async (tx) => {
-      // Lock the table row so concurrent public-order
-      // requests cannot bypass the table/session restrictions.
       await tx.$queryRaw`
         SELECT "id"
         FROM "RestaurantTable"
@@ -287,28 +296,12 @@ async function createOrderForTable(
           409,
         );
       }
-      
-      const {
-        offer,
-        discountAmount,
-      } =
-        await offerService.findBestOffer(
-          restaurantId,
-          subtotal,
-          tx,
-        );
-
-      const finalTotal = Math.max(
-        subtotal - discountAmount,
-        0,
-      );
 
       return tx.order.create({
         data: {
           restaurantId,
           tableId,
           customerPhone,
-          customerSessionId,
           customerId: customer?.id ?? null,
 
           subtotal,
@@ -322,7 +315,6 @@ async function createOrderForTable(
             create: orderItems,
           },
         },
-
         include: orderWithRelations,
       });
     },
