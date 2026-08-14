@@ -9,28 +9,27 @@ datasource db {
 }
 
 model Restaurant {
-  id              String   @id @default(cuid())
-  name            String
-  slug            String   @unique
-  phone           String?
-  address         String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  restaurantEmail String   @default("")
-  coverImageUrl   String?
-  cuisineType     String?
-  customLink      String?
-  description     String?
-  facebook        String?
-  instagram       String?
-  logoUrl         String?
-  tagline         String?
-  themeColor      String?
-  website         String?
-  coverPublicId   String?
-  logoPublicId    String?
-  openingHours    Json?
-
+  id               String            @id @default(cuid())
+  name             String
+  slug             String            @unique
+  phone            String?
+  address          String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  restaurantEmail  String            @default("")
+  coverImageUrl    String?
+  cuisineType      String?
+  customLink       String?
+  description      String?
+  facebook         String?
+  instagram        String?
+  logoUrl          String?
+  tagline          String?
+  themeColor       String?
+  website          String?
+  coverPublicId    String?
+  logoPublicId     String?
+  openingHours     Json?
   auditLogs        AuditLog[]
   categories       Category[]
   employees        Employee[]
@@ -38,10 +37,9 @@ model Restaurant {
   loyaltyPrograms  LoyaltyProgram[]
   loyaltyRewards   LoyaltyReward[]
   menuItems        MenuItem[]
+  offers           Offer[]
   orders           Order[]
   tables           RestaurantTable[]
-  offers           Offer[]
-
   tableMerges      TableMerge[]
   tableMergeTables TableMergeTable[]
 }
@@ -103,17 +101,16 @@ model AuditLog {
 }
 
 model RestaurantTable {
-  id           String      @id @default(cuid())
+  id           String            @id @default(cuid())
   restaurantId String
   name         String
-  qrCode       String      @unique @default(uuid())
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  status       TableStatus @default(AVAILABLE)
-
-  orders      Order[]
-  restaurant  Restaurant        @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  mergeTables TableMergeTable[]
+  qrCode       String            @unique @default(uuid())
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  status       TableStatus       @default(AVAILABLE)
+  orders       Order[]
+  restaurant   Restaurant        @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  mergeTables  TableMergeTable[]
 
   @@unique([restaurantId, name])
   @@index([restaurantId, status])
@@ -121,30 +118,28 @@ model RestaurantTable {
 }
 
 model TableMerge {
-  id           String   @id @default(cuid())
+  id           String            @id @default(cuid())
   restaurantId String
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  restaurant Restaurant        @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  tables     TableMergeTable[]
-  orders     Order[]
+  isActive     Boolean           @default(true)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  orders       Order[]
+  restaurant   Restaurant        @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  tables       TableMergeTable[]
 
   @@index([restaurantId, isActive])
   @@index([restaurantId, createdAt])
 }
 
 model TableMergeTable {
-  id           String   @id @default(cuid())
+  id           String          @id @default(cuid())
   restaurantId String
   mergeId      String
   tableId      String
-  createdAt    DateTime @default(now())
-
-  restaurant Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  merge      TableMerge      @relation(fields: [mergeId], references: [id], onDelete: Cascade)
-  table      RestaurantTable @relation(fields: [tableId], references: [id], onDelete: Cascade)
+  createdAt    DateTime        @default(now())
+  merge        TableMerge      @relation(fields: [mergeId], references: [id], onDelete: Cascade)
+  restaurant   Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  table        RestaurantTable @relation(fields: [tableId], references: [id], onDelete: Cascade)
 
   @@unique([mergeId, tableId])
   @@index([restaurantId, tableId])
@@ -193,35 +188,33 @@ model MenuItem {
 }
 
 model LoyaltyProgram {
-  id                String   @id @default(cuid())
+  id                String                   @id @default(cuid())
   restaurantId      String
   rewardName        String
   purchaseThreshold Int
-  rewardQuantity    Int      @default(1)
-  minimumOrderValue Decimal  @default(0) @db.Decimal(10, 2)
-  isActive          Boolean  @default(true)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  restaurant       Restaurant               @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  customerPrograms LoyaltyCustomerProgram[]
-  rewards          LoyaltyReward[]
+  rewardQuantity    Int                      @default(1)
+  minimumOrderValue Decimal                  @default(0) @db.Decimal(10, 2)
+  isActive          Boolean                  @default(true)
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  customerPrograms  LoyaltyCustomerProgram[]
+  restaurant        Restaurant               @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  rewards           LoyaltyReward[]
 
   @@index([restaurantId])
   @@index([restaurantId, isActive])
 }
 
 model LoyaltyCustomer {
-  id           String    @id @default(cuid())
-  restaurantId String
-  phone        String
-  name         String?
-  visitCount   Int       @default(0)
-  totalSpend   Decimal   @default(0) @db.Decimal(10, 2)
-  lastOrderAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-
+  id               String                   @id @default(cuid())
+  restaurantId     String
+  phone            String
+  name             String?
+  visitCount       Int                      @default(0)
+  totalSpend       Decimal                  @default(0) @db.Decimal(10, 2)
+  lastOrderAt      DateTime?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
   restaurant       Restaurant               @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   customerPrograms LoyaltyCustomerProgram[]
   rewards          LoyaltyReward[]
@@ -232,15 +225,14 @@ model LoyaltyCustomer {
 }
 
 model LoyaltyCustomerProgram {
-  id            String   @id @default(cuid())
+  id            String          @id @default(cuid())
   customerId    String
   programId     String
-  progressCount Int      @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  customer LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  program  LoyaltyProgram  @relation(fields: [programId], references: [id], onDelete: Cascade)
+  progressCount Int             @default(0)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  customer      LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  program       LoyaltyProgram  @relation(fields: [programId], references: [id], onDelete: Cascade)
 
   @@unique([customerId, programId])
   @@index([customerId])
@@ -256,43 +248,38 @@ model LoyaltyReward {
   orderId      String?
   createdAt    DateTime            @default(now())
   redeemedAt   DateTime?
-
-  customer   LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  order      Order?          @relation(fields: [orderId], references: [id])
-  program    LoyaltyProgram? @relation(fields: [programId], references: [id], onDelete: SetNull)
-  restaurant Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  customer     LoyaltyCustomer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  order        Order?              @relation(fields: [orderId], references: [id])
+  program      LoyaltyProgram?     @relation(fields: [programId], references: [id])
+  restaurant   Restaurant          @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@index([restaurantId, customerId, status])
   @@index([programId, status])
 }
 
 model Order {
-  id                 String           @id @default(cuid())
-  restaurantId       String
-  tableId            String
-  customerPhone      String?
-  customerSessionId  String?
-  customerId         String?
-
-  subtotal           Decimal          @db.Decimal(10, 2)
-  discountAmount     Decimal          @default(0) @db.Decimal(10, 2)
-  total              Decimal          @db.Decimal(10, 2)
-  appliedOfferId     String?
-
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
-  status             OrderStatus      @default(PENDING)
-  loyaltyProcessed   Boolean          @default(false)
-
-  rewards            LoyaltyReward[]
-  customer           LoyaltyCustomer? @relation(fields: [customerId], references: [id])
-  restaurant         Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  table              RestaurantTable  @relation(fields: [tableId], references: [id])
-  items              OrderItem[]
-
-  appliedOffer       Offer?           @relation(fields: [appliedOfferId], references: [id], onDelete: SetNull)
-  tableMerge         TableMerge?      @relation(fields: [tableMergeId], references: [id], onDelete: SetNull)
-  tableMergeId       String?
+  id                String           @id @default(cuid())
+  restaurantId      String
+  tableId           String
+  customerPhone     String?
+  total             Decimal          @db.Decimal(10, 2)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  customerId        String?
+  status            OrderStatus      @default(PENDING)
+  loyaltyProcessed  Boolean          @default(false)
+  customerSessionId String?
+  tableMergeId      String?
+  appliedOfferId    String?
+  discountAmount    Decimal          @default(0) @db.Decimal(10, 2)
+  subtotal          Decimal          @db.Decimal(10, 2)
+  rewards           LoyaltyReward[]
+  appliedOffer      Offer?           @relation(fields: [appliedOfferId], references: [id])
+  customer          LoyaltyCustomer? @relation(fields: [customerId], references: [id])
+  restaurant        Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  table             RestaurantTable  @relation(fields: [tableId], references: [id])
+  tableMerge        TableMerge?      @relation(fields: [tableMergeId], references: [id])
+  items             OrderItem[]
 
   @@index([restaurantId])
   @@index([tableId])
@@ -333,9 +320,8 @@ model Offer {
   endsAt            DateTime?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
-
-  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  orders     Order[]
+  restaurant        Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  orders            Order[]
 
   @@index([restaurantId])
   @@index([restaurantId, isActive])
@@ -379,12 +365,12 @@ enum AuditAction {
   TABLE_CREATED
   TABLE_UPDATED
   TABLE_DELETED
-  TABLES_MERGED
-  TABLES_UNMERGED
   ORDER_CREATED
   ORDER_STATUS_CHANGED
   ORDER_CANCELLED
   SETTINGS_UPDATED
+  TABLES_MERGED
+  TABLES_UNMERGED
 }
 
 enum FoodType {

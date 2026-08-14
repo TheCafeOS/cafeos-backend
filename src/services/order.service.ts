@@ -318,6 +318,10 @@ async function createOrderForTable(
         include: orderWithRelations,
       });
     },
+    {
+      maxWait: 10000,
+      timeout: 15000,
+    },
   );
 
   await auditService.log({
