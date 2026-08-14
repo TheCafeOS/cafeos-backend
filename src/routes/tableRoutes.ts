@@ -6,6 +6,10 @@ import {
   downloadQr,
   listTables,
   updateTable,
+  listTableMerges,
+  getTableMerge,
+  mergeTables,
+  unmergeTables,
 } from "../controllers/tableController.js";
 
 import { requireAuth } from "../middleware/auth.js";
@@ -19,6 +23,8 @@ import {
   updateTableSchema,
   deleteTableSchema,
   downloadQrSchema,
+  mergeTablesSchema,
+  tableMergeIdSchema,
 } from "../validations/table.validation.js";
 
 const router = Router();
@@ -151,6 +157,67 @@ router.delete(
   requireRole("OWNER"),
   validate(deleteTableSchema),
   asyncHandler(deleteTable),
+);
+
+/**
+ * @swagger
+ * /tables/merge:
+ *   post:
+ *     tags:
+ *       - Tables
+ *     summary: Merge multiple tables
+ *     description: Merges two or more restaurant tables into a single management and billing group. Existing non-cancelled orders are attached to the merge.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - tableIds
+ *             properties:
+ *               tableIds:
+ *                 type: array
+ *                 minItems: 2
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       201:
+ *         description: Tables merged successfully.
+ *       400:
+ *         description: Validation error.
+ *       401:
+ *         description: Unauthorized.
+ *       403:
+ *         description: Forbidden.
+ *       404:
+ *         description: Table not found.
+ *       409:
+ *         description: One or more tables are already part of an active merge.
+ */
+router.get(
+  "/merges",
+  requireAuth,
+  requireRole("OWNER", "MANAGER"),
+  asyncHandler(listTableMerges),
+);
+
+router.get(
+  "/merges/:mergeId",
+  requireAuth,
+  requireRole("OWNER", "MANAGER"),
+  validate(tableMergeIdSchema),
+  asyncHandler(getTableMerge),
+);
+
+router.post(
+  "/merges/:mergeId/unmerge",
+  requireAuth,
+  requireRole("OWNER", "MANAGER"),
+  validate(tableMergeIdSchema),
+  asyncHandler(unmergeTables),
 );
 
 /**

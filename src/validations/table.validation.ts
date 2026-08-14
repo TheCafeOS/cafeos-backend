@@ -38,3 +38,24 @@ export const downloadQrSchema = z.object({
     id: z.string().cuid(),
   }),
 });
+
+export const mergeTablesSchema = z.object({
+  body: z.object({
+    tableIds: z
+      .array(z.string().cuid())
+      .min(
+        2,
+        "At least 2 tables are required",
+      )
+      .max(
+        50,
+        "A maximum of 50 tables can be merged at once",
+      ),
+  }),
+});
+
+export const tableMergeIdSchema = z.object({
+  params: z.object({
+    mergeId: z.string().cuid(),
+  }),
+});

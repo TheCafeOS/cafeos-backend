@@ -1,6 +1,9 @@
 import { Response } from "express";
+
 import { AuthenticatedRequest } from "../middleware/auth.js";
 import * as tableService from "../services/table.service.js";
+import * as tableMergeService from "../services/tableMerge.service.js";
+
 import { successResponse } from "../utils/apiResponse.js";
 import { getRouteParam } from "../utils/request.js";
 
@@ -98,4 +101,85 @@ export const downloadQr = async (
   );
 
   res.send(png);
+};
+
+export const listTableMerges = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const merges =
+  await tableMergeService.listTableMerges(
+    req.employee!.restaurantId,
+  );
+
+  return res.json(
+    successResponse(
+      "Table merges fetched successfully",
+      merges,
+    ),
+  );
+};
+
+export const getTableMerge = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const mergeId = getRouteParam(
+    req.params.mergeId,
+  );
+
+  const merge =
+    await tableMergeService.getTableMerge(
+      req.employee!.restaurantId,
+      mergeId,
+    );
+
+  return res.json(
+    successResponse(
+      "Table merge fetched successfully",
+      merge,
+    ),
+  );
+};
+
+export const mergeTables = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const merge =
+    await tableMergeService.mergeTables(
+      req.employee!.restaurantId,
+      req.employee!.id,
+      req.body.tableIds,
+    );
+
+  return res.status(201).json(
+    successResponse(
+      "Tables merged successfully",
+      merge,
+    ),
+  );
+};
+
+export const unmergeTables = async (
+  req: AuthenticatedRequest,
+  res: Response,
+) => {
+  const mergeId = getRouteParam(
+    req.params.mergeId,
+  );
+
+  const merge =
+    await tableMergeService.unmergeTables(
+      req.employee!.restaurantId,
+      req.employee!.id,
+      mergeId,
+    );
+
+  return res.json(
+    successResponse(
+      "Tables unmerged successfully",
+      merge,
+    ),
+  );
 };

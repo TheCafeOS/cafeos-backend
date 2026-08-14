@@ -32,14 +32,21 @@ type OrderFilters = {
   order?: "asc" | "desc";
 };
 
-const orderWithRelations = Prisma.validator<Prisma.OrderInclude>()({
-  table: {
-    select: {
-      id: true,
-      name: true,
+const orderWithRelations =
+  Prisma.validator<Prisma.OrderInclude>()({
+    table: {
+      select: {
+        id: true,
+        name: true,
+      },
     },
-  },
-  items: {
+    merge: {
+      select: {
+        id: true,
+        isActive: true,
+      },
+    },
+    items: {
     include: {
       menuItem: {
         select: {

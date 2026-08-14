@@ -14,6 +14,13 @@ export function toOrderResponse(order: any) {
         }
       : null,
 
+    merge: order.merge
+      ? {
+          id: order.merge.id,
+          isActive: order.merge.isActive,
+        }
+      : null,
+
     items: order.items.map((item: any) => ({
       id: item.id,
       quantity: item.quantity,

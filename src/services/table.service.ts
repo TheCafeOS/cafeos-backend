@@ -27,15 +27,53 @@ async function getTableOrThrow(
   return table;
 }
 
-export const getTables = async (restaurantId: string) => {
-  return prisma.restaurantTable.findMany({
-    where: {
-      restaurantId,
-    },
-    orderBy: {
-      createdAt: "asc",
-    },
-  });
+export const getTables = async (
+  restaurantId: string,
+) => {
+  const tables =
+    await prisma.restaurantTable.findMany({
+      where: {
+        restaurantId,
+      },
+      include: {
+        mergeTables: {
+          where: {
+            merge: {
+              isActive: true,
+            },
+          },
+          select: {
+            merge: {
+              select: {
+                id: true,
+                isActive: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
+  return tables.map((table) => ({
+    id: table.id,
+    restaurantId: table.restaurantId,
+    name: table.name,
+    qrCode: table.qrCode,
+    createdAt: table.createdAt,
+    updatedAt: table.updatedAt,
+    status: table.status,
+
+    activeMerge: table.mergeTables[0]?.merge
+      ? {
+          id: table.mergeTables[0].merge.id,
+          isActive:
+            table.mergeTables[0].merge.isActive,
+        }
+      : null,
+  }));
 };
 
 export const addTable = async (

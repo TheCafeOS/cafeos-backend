@@ -30,6 +30,7 @@ model Restaurant {
   coverPublicId    String?
   logoPublicId     String?
   openingHours     Json?
+
   auditLogs        AuditLog[]
   categories       Category[]
   employees        Employee[]
@@ -39,6 +40,9 @@ model Restaurant {
   menuItems        MenuItem[]
   orders           Order[]
   tables           RestaurantTable[]
+
+  tableMerges      TableMerge[]
+  tableMergeTables TableMergeTable[]
 }
 
 model Employee {
@@ -105,12 +109,46 @@ model RestaurantTable {
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
   status       TableStatus @default(AVAILABLE)
-  orders       Order[]
-  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  orders        Order[]
+  restaurant    Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  mergeTables   TableMergeTable[]
 
   @@unique([restaurantId, name])
   @@index([restaurantId, status])
   @@index([restaurantId, createdAt])
+}
+
+model TableMerge {
+  id           String   @id @default(cuid())
+  restaurantId String
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  restaurant   Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  tables       TableMergeTable[]
+  orders       Order[]
+
+  @@index([restaurantId, isActive])
+  @@index([restaurantId, createdAt])
+}
+
+model TableMergeTable {
+  id           String   @id @default(cuid())
+  restaurantId String
+  mergeId      String
+  tableId      String
+  createdAt    DateTime @default(now())
+
+  restaurant   Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  merge        TableMerge      @relation(fields: [mergeId], references: [id], onDelete: Cascade)
+  table        RestaurantTable @relation(fields: [tableId], references: [id], onDelete: Cascade)
+
+  @@unique([mergeId, tableId])
+  @@index([restaurantId, tableId])
+  @@index([restaurantId, mergeId])
+  @@index([tableId])
 }
 
 model Category {
@@ -231,6 +269,7 @@ model Order {
   id                 String           @id @default(cuid())
   restaurantId       String
   tableId            String
+  mergeId            String?
   customerPhone      String?
   customerSessionId  String?
   customerId         String?
@@ -244,6 +283,7 @@ model Order {
   customer           LoyaltyCustomer? @relation(fields: [customerId], references: [id])
   restaurant         Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   table              RestaurantTable  @relation(fields: [tableId], references: [id])
+  merge              TableMerge?      @relation(fields: [mergeId], references: [id], onDelete: SetNull)
   items              OrderItem[]
 
   @@index([restaurantId])
@@ -252,6 +292,7 @@ model Order {
   @@index([restaurantId, status])
   @@index([restaurantId, tableId])
   @@index([tableId, customerSessionId, status])
+  @@index([mergeId])
 }
 
 model OrderItem {
@@ -306,6 +347,8 @@ enum AuditAction {
   TABLE_CREATED
   TABLE_UPDATED
   TABLE_DELETED
+  TABLES_MERGED
+  TABLES_UNMERGED
   ORDER_CREATED
   ORDER_STATUS_CHANGED
   ORDER_CANCELLED

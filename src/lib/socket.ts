@@ -225,3 +225,43 @@ export const broadcastNotification = (
     );
   }
 };
+
+export const broadcastTableMergeEvent = (
+  restaurantId: string,
+  event:
+    | typeof SocketEvents.TABLES_MERGED
+    | typeof SocketEvents.TABLES_UNMERGED,
+  data: Record<string, unknown>,
+) => {
+  try {
+    const socket = getIO();
+
+    logger.debug(
+      {
+        event,
+        restaurantId,
+      },
+      "Broadcasting table merge event",
+    );
+
+    socket
+      .to(
+        SocketRooms.restaurant(
+          restaurantId,
+        ),
+      )
+      .emit(event, data);
+  } catch (error) {
+    logger.warn(
+      {
+        event,
+        restaurantId,
+        error:
+          error instanceof Error
+            ? error.message
+            : error,
+      },
+      "Socket.IO not available for table merge event broadcast",
+    );
+  }
+};
