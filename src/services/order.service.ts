@@ -265,37 +265,51 @@ async function createOrderForTable(
         FOR UPDATE
       `;
 
-      const activeOrders = customerSessionId
-        ? await tx.order.findMany({
-            where: {
-              tableId,
-              customerSessionId,
-              status: {
-                in: [
-                  "PENDING",
-                  "CONFIRMED",
-                  "PREPARING",
-                ],
-              },
+      const activeOrders =
+        await tx.order.findMany({
+          where: {
+            tableId,
+            status: {
+              in: [
+                "PENDING",
+                "CONFIRMED",
+                "PREPARING",
+              ],
             },
-            select: {
-              id: true,
-              customerSessionId: true,
-            },
-            orderBy: {
-              createdAt: "asc",
-            },
-          })
-        : [];
+          },
+          select: {
+            id: true,
+            customerSessionId: true,
+          },
+          orderBy: {
+            createdAt: "asc",
+          },
+        });
 
       if (
         customerSessionId &&
-        activeOrders.length >= 2
+        activeOrders.length > 0
       ) {
-        throw new AppError(
-          "You already have the maximum of 2 active orders for this table.",
-          409,
-        );
+        const belongsToAnotherCustomer =
+          activeOrders.some(
+            (order) =>
+              order.customerSessionId !==
+              customerSessionId,
+          );
+
+        if (belongsToAnotherCustomer) {
+          throw new AppError(
+            "This table is currently being used by another customer.",
+            409,
+          );
+        }
+
+        if (activeOrders.length >= 2) {
+          throw new AppError(
+            "You already have the maximum of 2 active orders for this table.",
+            409,
+          );
+        }
       }
 
       return tx.order.create({
