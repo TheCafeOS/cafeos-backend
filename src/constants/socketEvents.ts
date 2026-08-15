@@ -10,6 +10,9 @@ export const SocketRooms = {
   restaurant: (restaurantId: string) =>
     `restaurant_${restaurantId}`,
 
+  employee: (employeeId: string) =>
+    `employee_${employeeId}`,
+
   table: (tableId: string) =>
     `table_${tableId}`,
-} as const;
+}; 

@@ -71,10 +71,7 @@ interface RewardRedeemedNotificationInput {
     }
 
     notifications.forEach((notification) => {
-      broadcastNotification(
-        restaurantId,
-        notification,
-      );
+      broadcastNotification(notification);
     });
   }
 

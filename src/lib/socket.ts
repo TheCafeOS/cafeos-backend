@@ -71,6 +71,16 @@ export const initializeSocket = (
       );
     }
 
+    const employeeId = socket.data.employeeId;
+
+    if (employeeId) {
+      socket.join(
+        SocketRooms.employee(
+          employeeId,
+        ),
+      );
+    }
+
     logger.info(
       {
         socketId: socket.id,
@@ -196,14 +206,13 @@ export const broadcastOrderEvent = (
 };
 
 export const broadcastNotification = (
-  restaurantId: string,
   notification: Notification,
 ) => {
   try {
     getIO()
       .to(
-        SocketRooms.restaurant(
-          restaurantId,
+        SocketRooms.employee(
+          notification.employeeId,
         ),
       )
       .emit(
@@ -213,9 +222,8 @@ export const broadcastNotification = (
   } catch (error) {
     logger.warn(
       {
-        restaurantId,
-        notificationId:
-          notification.id,
+        notificationId: notification.id,
+        employeeId: notification.employeeId,
         error:
           error instanceof Error
             ? error.message
